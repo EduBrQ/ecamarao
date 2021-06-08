@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "shrimpApp": {
+    "ecamarao": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/shrimpApp",
+            "outputPath": "dist/ecamarao",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -71,18 +71,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "shrimpApp:build"
+            "browserTarget": "ecamarao:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "shrimpApp:build:production"
+              "browserTarget": "ecamarao:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "shrimpApp:build"
+            "browserTarget": "ecamarao:build"
           }
         },
         "test": {
@@ -120,11 +120,11 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "shrimpApp:serve"
+            "devServerTarget": "ecamarao:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "shrimpApp:serve:production"
+              "devServerTarget": "ecamarao:serve:production"
             }
           }
         },
@@ -135,5 +135,5 @@
       }
     }
   },
-  "defaultProject": "shrimpApp"
+  "defaultProject": "ecamarao"
 }
