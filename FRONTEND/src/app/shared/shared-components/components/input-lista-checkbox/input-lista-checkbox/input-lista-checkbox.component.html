@@ -1,0 +1,17 @@
+<div class="row row-form">
+  <div [class]="labelSize" *ngIf="valorLabel != null">
+    <span class="bold-text" [class.required-field]="required">{{valorLabel}}</span>
+  </div>
+  <div *ngIf="exibirLoading && listaCheckboxModel?.length <=0 ">
+    <i class="fa fa-spinner fa-spin"></i>
+  </div>
+  <div [class]="bodySize" *ngIf="listaCheckboxModel != undefined">
+    <div class="form-check" [class.form-check-inline]="inline"
+      *ngFor="let radioModel of listaCheckboxModel;let i = index">
+      <label class="form-check-label" [class.text-disabled]="disabled">
+        <input [disabled]="disabled" class="form-check-input" type="checkbox" [checked]="radioModel?.checked"
+          (click)="setValue(radioModel,$event)">{{radioModel.valorExibicao}}
+      </label>
+    </div>
+  </div>
+</div>

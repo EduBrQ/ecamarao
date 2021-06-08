@@ -1,0 +1,92 @@
+<app-header></app-header>
+<app-container-formulario backGradient="true" tituloClasse="h4" titulo="Viveiros">
+  <div>
+    <div class="box mr-4">
+      <img data-toggle="modal" data-target="#exampleModal" style=" cursor: pointer" class="img-btn-acesso mb-2 plus-btn"
+        src="assets/img/plus.svg" alt="">
+    </div>
+  </div>
+  <div class="animation-fade row">
+
+    <div class="viveiro-lista col-md-4 d-flex justify-content-center container mb-4 mt-4">
+      <div *ngFor="let viveiro of viveiros">
+        <div class="box mr-4 viveiro" (click)="visualizarViveiro(viveiro)">
+          <button class="btn-acesso btn-acesso-dir align-self-end">
+            <img class="img-btn-acesso" src="assets/img/planilha.svg" alt="">
+            <span class="text-acesso">Viveiro {{viveiro.id}}</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Inserir novo viveiro</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="formViveiro">
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('volume')"
+                class="col-form-label font-weight-bold control-label" required>Volume do Viveiro (m³):</label>
+              <input formControlName="volume" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('volume')" errorMsg="Insira a dimensão do viveiro">
+              </app-field-error-display>
+            </div>
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('densidade')"
+                class="col-form-label font-weight-bold control-label" required>Quantidade de povoamento:</label>
+              <input formControlName="densidade" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('densidade')"
+                errorMsg="Insira a quantidade de larvas">
+              </app-field-error-display>
+            </div>
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('laboratorio')"
+                class="col-form-label font-weight-bold control-label" required>Laboratorio:</label>
+              <select formControlName="laboratorio" class="form-control" [disabled]="false">
+                <option value="" selected></option>
+                <option value="aquatec">AquaTec</option>
+                <option value="tecmari">TecMari</option>
+                <option value="touros">Touros</option>
+              </select>
+              <app-field-error-display [displayError]="isFieldValid('laboratorio')"
+                errorMsg="Insira o laboratório de origem">
+              </app-field-error-display>
+            </div>
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('proprietario')"
+                class="col-form-label font-weight-bold control-label" required>Proprietário:</label>
+              <input formControlName="proprietario" type="text" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('proprietario')"
+                errorMsg="Insira o nome do proprietário">
+              </app-field-error-display>
+            </div>
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('dataInicioCiclo')"
+                class="col-form-label font-weight-bold control-label" required>Data de início do ciclo:</label>
+              <input formControlName="dataInicioCiclo" type="date" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('dataInicioCiclo')"
+                errorMsg="Insira a data de início do ciclo">
+              </app-field-error-display>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal"
+            (click)="adicionarViveiro()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-container-formulario>

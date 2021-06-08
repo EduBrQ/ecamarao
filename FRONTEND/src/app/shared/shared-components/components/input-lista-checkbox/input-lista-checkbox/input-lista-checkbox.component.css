@@ -1,0 +1,15 @@
+.required-field::after {
+    content: "*";
+    color: red;
+    font-size: 1.25rem;
+    line-height: 0;
+    padding-left: 0.15rem;
+}
+
+.text-disabled {
+    opacity: 0.8;
+}
+
+.fa{
+    font-size:20px;
+}

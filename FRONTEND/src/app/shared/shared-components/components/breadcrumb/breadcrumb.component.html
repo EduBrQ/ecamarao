@@ -1,0 +1,12 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item" [class.active]="i === (breadcrumbs.length -1)" *ngFor="let breadcrumb of breadcrumbs;let i = index">
+      <a *ngIf="i === 0; else titulo" href="#">
+        {{breadcrumb.titulo}}
+      </a>
+      <ng-template #titulo>
+        {{breadcrumb.titulo}}
+      </ng-template>
+    </li>
+  </ol>
+</nav>

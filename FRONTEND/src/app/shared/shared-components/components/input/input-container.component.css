@@ -1,0 +1,27 @@
+.has-error-block {
+    color: #dd4b39;
+}
+
+.has-error {
+    font-size: 14px;
+}
+
+.times-close {
+    display: none;
+}
+
+.fadisplayNone {
+    display: none;
+}
+
+#erro {
+    display: flex;
+}
+
+#erro-close {
+    margin-right: 5px;
+}
+
+#msg-erro {
+    margin-left: auto;
+}

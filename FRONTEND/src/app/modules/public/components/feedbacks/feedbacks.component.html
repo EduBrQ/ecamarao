@@ -1,0 +1,56 @@
+<app-container-formulario>
+
+  <div class="row">
+
+    <div class="chart-feedback">
+      <app-container-formulario titulo="Qualidade da água">
+        <app-bar-chart [barChartLabels]="['pH', 'O2', 'Temperatura', 'Alcalinidade', 'Transparência', 'Dureza']"
+          [barChartData]="[{data: [7, 3, 4, 5, 23, 2], label:'atual'}, {data: [7, 6, 3, 3, 20, 5], label:'ideal'}]">
+        </app-bar-chart>
+      </app-container-formulario>
+    </div>
+
+
+    <div *ngFor="let feedback of feedbacks">
+      <div class="container mb-4">
+        <div style="border: 1px solid lightgray;
+        border-radius: 10px; align-items: center;" class="row">
+          <div style="margin-right: inherit;" class="col-sm-1">
+            <button data-toggle="modal" data-target="#exampleModal" class="btn btn-block"
+              (click)="removerCamera(camera)" mat-icon-button color="primary"
+              aria-label="Example icon button with a heart icon">
+              <mat-icon>info</mat-icon>
+            </button>
+          </div>
+          <div class="col-sm">
+            <label></label>
+            <p>- {{feedback.descricao}};</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Dicas de manejo
+              </h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <h5>{{feedback.medida}} - {{feedback.condicao}}</h5>
+              <p>
+                {{feedback.manejo}}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</app-container-formulario>

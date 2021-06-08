@@ -1,0 +1,140 @@
+.img-logo {
+  height: 60px;
+}
+
+span.titulo {
+  font-size: 19px;
+}
+
+.div-vertical {
+  background-color: #010101;
+  height: 30px;
+  width: 2px;
+  float: left;
+  position: relative;
+}
+
+.nav-btn-outter {
+  width: fit-content;
+}
+
+.nav-btn {
+  width: 100%;
+  display: inline-flex;
+}
+
+.nav-link {
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.color-hover:hover {
+  color: #555;
+  background-color: #e7e7e7;
+}
+
+.dropdown-header {
+  background-color: #a9a9a929;
+}
+
+.dropdown-menu {
+  left: unset;
+  right: 20%;
+  padding: 0%;
+  text-align: left;
+}
+
+.dropdown-item {
+  cursor: pointer;
+  font-size: 14px;
+  padding: 12px;
+  padding-bottom: 3px;
+  padding-top: 3px;
+}
+
+.btn-disabled {
+  opacity: 0.65;
+  cursor: default !important;
+}
+
+.dropdown-submenu {
+  position: relative;
+}
+
+.dropdown-submenu > .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  -webkit-border-radius: 0 6px 6px 6px;
+  -moz-border-radius: 0 6px 6px;
+  border-radius: 0 6px 6px 6px;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+  display: block;
+}
+
+.dropdown-submenu > a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #ccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+
+.dropdown-submenu:hover > a:after {
+  border-left-color: #fff;
+}
+
+.dropdown-submenu.pull-left {
+  float: none;
+}
+
+.dropdown-submenu.pull-left > .dropdown-menu {
+  left: -100%;
+  -webkit-border-radius: 6px 0 6px 6px;
+  -moz-border-radius: 6px 0 6px 6px;
+  border-radius: 6px 0 6px 6px;
+}
+
+.dropdown-header {
+  display: block;
+  padding: 3px 20px;
+  font-size: 12px;
+  line-height: 1.42857143;
+  color: #777;
+  white-space: nowrap;
+}
+
+.sub-analise {
+  width: fit-content;
+}
+
+.bordered-transparency {
+  background-color: rgba(255, 255, 255, 1) !important;
+  border-radius: 10px;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: monospace;
+  background: -webkit-linear-gradient(45deg, #9f0000, #ffae00 70%);
+  /* background: rgb(131, 58, 180);
+  background: linear-gradient(
+    90deg,
+    rgb(95, 58, 180) 0%,
+    rgba(253, 29, 29, 1) 50%,
+    rgba(252, 176, 69, 1) 100% */
+  /* ); */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}

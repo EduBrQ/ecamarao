@@ -1,0 +1,9 @@
+.lista-vazia{
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.1; 
+    color: darkgray;
+    font-size: 18px;
+    margin-top: 10px; 
+    margin-bottom: 10px;
+}

@@ -1,0 +1,25 @@
+.breadcrumb-item+.breadcrumb-item.active::before {
+    content: "";
+}
+
+.breadcrumb-item+.breadcrumb-item {
+    color: #666;
+}
+
+.breadcrumb-item.active>a {
+    color: #6c757d !important;
+    text-decoration: none;
+}
+
+.breadcrumb {
+    background-color: transparent;
+    border-radius: 0;
+    font-size: .85rem;
+    padding: .35rem .55rem;
+    padding-left: 0;
+    margin-bottom: 0.25rem;
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+    content: ">";
+}

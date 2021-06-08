@@ -1,0 +1,123 @@
+<app-container-formulario tituloClasse="h6" titulo="Dados coletados da água">
+
+  <!-- Button trigger modal -->
+  <div class="text-right">
+    <button type="button" class="btn btn-primary mb-4" data-toggle="modal" data-target="#exampleModal">
+      Inserir Coleta
+    </button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Inserir nova coleta</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+
+          <form [formGroup]="formMedicoes">
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('data')"
+                class="col-form-label font-weight-bold control-label" required>Data:</label>
+              <input formControlName="data" type="date" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('data')" errorMsg="Insira uma data">
+              </app-field-error-display>
+            </div>
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('oxigenio')"
+                class="col-form-label font-weight-bold control-label" required>O²:</label>
+              <input formControlName="oxigenio" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('oxigenio')" errorMsg="Insira a coleta do Oxigênio">
+              </app-field-error-display>
+            </div>
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('ph')"
+                class="col-form-label font-weight-bold control-label" required>pH:</label>
+              <input formControlName="ph" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('ph')" errorMsg="Insira a coleta do pH">
+              </app-field-error-display>
+            </div>
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('temperatura')"
+                class="col-form-label font-weight-bold control-label" required>Temperatura:</label>
+              <input formControlName="temperatura" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('temperatura')" errorMsg="Insira uma quantidade">
+              </app-field-error-display>
+            </div>
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('alcalinidade')"
+                class="col-form-label font-weight-bold control-label" required>Alcalinidade:</label>
+              <input formControlName="alcalinidade" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('alcalinidade')" errorMsg="Insira uma quantidade">
+              </app-field-error-display>
+            </div>
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('dureza')"
+                class="col-form-label font-weight-bold control-label" required>Dureza:</label>
+              <input formControlName="dureza" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('dureza')" errorMsg="Insira uma quantidade">
+              </app-field-error-display>
+            </div>
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('transparencia')"
+                class="col-form-label font-weight-bold control-label" required>Transparência:</label>
+              <input formControlName="transparencia" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('transparencia')" errorMsg="Insira uma quantidade">
+              </app-field-error-display>
+            </div>
+          </form>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" (click)="adicionarMedicoes()" data-dismiss="modal"
+            class="btn btn-primary">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <table style="text-align: center;" class="table table-striped table-responsive">
+    <thead style="background-color: black; color: white" class="thead-dark">
+      <tr>
+        <th class="optional" scope="col">Data</th>
+        <th scope="col">O²</th>
+        <th scope="col">pH</th>
+        <th class="optional-2" scope="col">Temperatura</th>
+        <th scope="col">Alcalinidade</th>
+        <th class="optional" scope="col">Dureza</th>
+        <th class="optional" scope="col">Transparência</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody *ngFor="let medicao of medicoes">
+      <tr>
+        <th class="optional" scope="row">{{medicao.data | date:'dd/MM/yyyy, h:mm a'}}</th>
+        <th>{{medicao.oxigenio}} ppm</th>
+        <td>{{medicao.ph}} ppm</td>
+        <td class="optional-2">{{medicao.temperatura}} °C</td>
+        <td>{{medicao.alcalinidade}} ppm</td>
+        <td class="optional">{{medicao.dureza}} ppm</td>
+        <td class="optional">{{medicao.transparencia}} cm</td>
+        <td class="text-right">
+          <button class="btn btn-info mr-4" (click)="removerColeta(medicao.id)">
+            <mat-icon style="display: flex;" aria-hidden="false" aria-label="Apagar">delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</app-container-formulario>

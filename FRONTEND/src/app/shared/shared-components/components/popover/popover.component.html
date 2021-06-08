@@ -1,0 +1,8 @@
+<ng-template class="template" #templateRequerimento>
+    <div *ngFor="let item of itens">
+        <div id="lista" [innerHtml]="item"></div>
+    </div>
+</ng-template>
+<span *ngIf="itens?.length >= 1" [tooltip]="templateRequerimento" placement="right">
+    <i class="fa fa-ellipsis-v"></i>
+</span>

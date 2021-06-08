@@ -1,0 +1,25 @@
+.card-form-box {
+    background-color: white;
+    padding: 15px;
+    box-shadow: 0 1px 19px #00000045;
+    min-height: 50px;
+}
+
+.backGradient {
+  background-image: linear-gradient(#e4efe9,#93a5cf) !important;
+}
+
+.card-table-box {
+    background-color: white;
+    padding: 2%;
+    box-shadow: 0 1px 19px #00000045;
+    min-height: 50px;
+}
+
+.row-titulo {
+    height: 40px;
+}
+
+.bordered {
+  border-radius: 8px;
+}

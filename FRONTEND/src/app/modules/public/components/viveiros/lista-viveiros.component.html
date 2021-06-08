@@ -1,0 +1,22 @@
+<app-header></app-header>
+<div>
+  <button (click)="addViveiro()">
+    +
+  </button>
+</div>
+<app-container-formulario backGradient="true" tituloClasse="h4" titulo="Viveiros">
+  <div class="animation-fade row">
+
+    <div style="max-width: max-content;" class="col-md-4 d-flex justify-content-center text-center container mb-4 mt-4">
+      <div *ngFor="let viveiro of viveiros">
+        <div class="box mr-4" (click)="visualizarViveiro(viveiro.id)">
+          <button class="btn-acesso btn-acesso-dir align-self-end">
+            <img class="img-btn-acesso" src="assets/img/planilha.svg" alt="">
+            <span class="text-acesso">Viveiro {{viveiro.id}}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</app-container-formulario>

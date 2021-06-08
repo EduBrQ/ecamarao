@@ -1,0 +1,13 @@
+<div class="table-lote-info">
+  <div class="table-lote-info-header bg-primary">
+    <h6 [class]="titleClass">{{titulo}}</h6>
+  </div>
+  <div class="table-lote-info-body">
+    <div class="loading-table-container" *ngIf="loading">
+      <i class="fa fa-spinner fa-spin" style="font-size:30px"></i>
+    </div>
+    <div class="table-lote-info-row-contanier" [class.table-opac]="loading">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>

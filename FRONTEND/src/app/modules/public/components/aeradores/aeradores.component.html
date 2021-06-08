@@ -1,0 +1,16 @@
+<app-container-formulario tituloClasse="h4" titulo="Aeradores do viveiro - {{viveiroID}}">
+
+  <div class="text-right">
+    <button class="btn btn-primary" (click)="adicionarAerador()">Adicionar aerador</button>
+  </div>
+
+  <div class="row animation-fade mt-4">
+    <div *ngFor="let aerador of aeradores; let i = index"
+      class="col-md-4 d-flex justify-content-center text-center container">
+      <div>
+        <app-aerador (eventRemoverAerador)="removerAerador($event)" [aerador]="aerador"></app-aerador>
+      </div>
+    </div>
+  </div>
+
+</app-container-formulario>

@@ -1,0 +1,20 @@
+@media screen and (max-width: 990px) {
+  table{
+    font-size: 10px;
+  }
+
+  .optional {
+    display:none;
+  }
+
+  .btn-info {
+    margin: 0 !important;
+    padding: 2px;
+  }
+}
+
+@media screen and (max-width: 310px) {
+  .optional-2 {
+    display: none;
+  }
+}

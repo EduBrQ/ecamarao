@@ -1,0 +1,57 @@
+<app-container-formulario tituloClasse="h4" titulo="Câmeras do viveiro - {{viveiroID}}">
+  <div class="animation-fade row">
+    <div class="text-right">
+      <button data-toggle="modal" data-target="#exampleModal" class="btn btn-primary">Adicionar câmera</button>
+    </div>
+    <div *ngFor="let camera of cameras" class="container2 mr-4">
+      <div style="margin: 20px;" class="grid-container">
+        <div class="container">
+          <div class="row">
+            <div class="col-sm-3">
+              <h6 style="margin-top: 9px;" class="">Câmera - {{camera.id}}</h6>
+            </div>
+            <div class="col-sm">
+              <button class="btn btn-block" (click)="removerCamera(camera)" mat-icon-button color="warn"
+                aria-label="Example icon button with a heart icon">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+        <a rel="nofollow" target="new"><img style="width: 500px;" id="image0" src="{{camera.ipCamera}}"
+            class="img-responsive img-rounded detailimage" alt=""></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Inserir novo viveiro</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="formCamera">
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('ipCamera')"
+                class="col-form-label font-weight-bold control-label" required>IP da câmera: </label>
+              <input formControlName="ipCamera" type="text" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('ipCamera')" errorMsg="Insira o IP da câmera">
+              </app-field-error-display>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="adicionarCamera()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</app-container-formulario>

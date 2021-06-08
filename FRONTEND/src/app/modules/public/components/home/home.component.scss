@@ -1,0 +1,134 @@
+.titulo {
+  padding: 10px;
+}
+
+.img-background {
+  position: absolute;
+  width: 100%;
+  height: 90%;
+  z-index: -100;
+}
+
+.linha-options {
+  margin-right: 230px;
+  margin-left: 230px;
+  margin-top: 12%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.sub-titulo-aplicacao {
+  margin-left: 2%;
+}
+
+.item-text {
+  white-space: nowrap;
+  font-size: 19px;
+  font-weight: 600;
+  margin-top: 1%;
+}
+
+.btn-acesso {
+  background-image: linear-gradient(#667eea, #764ba2);
+  width: 160px;
+  height: 160px;
+  border-radius: 10px;
+  padding: 12% 12% 20% 12%;
+  border: 0;
+  box-shadow: -4px 5px 25px -8px black;
+}
+
+.btn-acesso:hover {
+  background-image: linear-gradient(#93a5f3, #8263a1);
+  cursor: pointer;
+}
+
+.btn-acesso:active {
+  background-image: red;
+}
+
+.text-acesso {
+  // text-transform: uppercase;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.img-btn-acesso {
+  width: 60px;
+  margin-bottom: 13px;
+}
+
+.panel {
+  border: 0;
+  border-radius: 0;
+  background-color: #fff;
+}
+
+// .panel, .panel-center, .popover {
+//   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .1), 0 2px 15px 0 rgba(0, 0, 0, .1)
+// }
+
+.panel,
+.panel-center,
+.popover {
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1),
+    5px 5px 15px 5px rgba(207, 87, 17, 0.1);
+}
+
+.panel-body {
+  padding: 15px;
+}
+
+.home-acesso-interno-esquerdo {
+  position: absolute;
+  z-index: 100;
+  border-radius: 100px 0 200px 19px;
+  cursor: pointer;
+  color: #333;
+  text-decoration: none;
+  width: 35%;
+}
+
+.home-acesso-interno {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  right: 100px;
+  border-radius: 0 0 10px 10px;
+  cursor: pointer;
+  color: #333;
+  text-decoration: none;
+}
+
+.home-acesso-interno:hover {
+  color: #333;
+  text-decoration: none;
+  background-color: #ecf0f1;
+}
+
+.home-acesso-interno > .panel-body {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.plus-btn:hover {
+  opacity: 0.7;
+}
+
+
+@media screen and (max-width: 576px) {
+  .viveiro {
+    margin-right: 0px !important;
+    margin-bottom: 15px;
+  }
+
+  .viveiro-lista {
+    flex-direction: column-reverse;
+    text-align: center;
+  }
+}

@@ -1,0 +1,5 @@
+export enum TipoLogado {
+    PROPRIETARIO,
+	RESPONSAVEL_TECNICO,
+	INTERNO = "INTERNO"
+}

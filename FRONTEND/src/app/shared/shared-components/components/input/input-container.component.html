@@ -1,0 +1,14 @@
+<div class="form-group {{classContainer}}">
+    <ng-content></ng-content>
+    <span class="has-error  has-error-block">
+
+        <div id="erro">
+            <div *ngIf="canClose()" id="erro-close">
+                <i class="fas fa-times"></i>
+            </div>
+            <a id="msg-erro">{{mensagemErroAtual}}</a>
+        </div>
+
+
+    </span>
+</div>

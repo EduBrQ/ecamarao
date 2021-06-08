@@ -1,0 +1,97 @@
+.input-container-ms {
+    height: auto;
+    padding: 1px 1px 0px 4px;
+    display: block;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    position: relative;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.input-ms {
+    background-color: transparent !important;
+    border: none;
+    outline: 0;
+    box-shadow: none;
+    height: 1.6666em;
+    padding: 0;
+    margin-bottom: 3px;
+    width: 100%;
+}
+
+.input-drop-ms {
+    width: fit-content;
+    height: auto;
+    max-height: 200px;
+    overflow-x: hidden;
+    margin-top: 0;
+    position: absolute;
+}
+
+.btn.input-ms-icon {
+    padding: 0 0px 0 8px;
+    font-size: 13px;
+    color: #a1a5a9;
+}
+
+.btn {
+    text-transform: none;
+}
+
+.input-selected-item {
+    white-space: normal !important;
+    margin: 1px 1px 0 0;
+    border: 1px solid #ced4da;
+}
+
+.input-selected-ms {
+    word-break: break-all;
+    padding: 1px;
+}
+
+.container-disabled {
+    background-color: rgb(235, 235, 228);
+}
+
+.pb-icon-xs {
+    height: 16px;
+    width: 16px;
+}
+
+.pb-icon {
+    margin-right: 5px;
+    display: inline-block;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+.pb-icon-PDF {
+    background-image: url(../../../../../../assets/img/pdf-outline.png);
+}
+
+.pb-icon-XLS-XLSX {
+    background-image: url(../../../../../../assets/img/excel-icon.png);
+}
+
+.pb-icon-JPG-JPEG {
+    background-image: url(../../../../../../assets/img/img-icon.png);
+}
+
+.pb-icon-PNG {
+    background-image: url(../../../../../../assets/img/img-icon.png);
+}
+
+.pb-icon-DWG {
+    background-image: url(../../../../../../assets/img/dwg-icon.png);
+}
+
+.error {
+    border-color: #dc3545;
+}
+

@@ -1,0 +1,84 @@
+<app-container-formulario tituloClasse="h4" titulo="Controle de Ração">
+
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-primary mb-4" data-toggle="modal" data-target="#exampleModal">
+    Inserir
+  </button>
+
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Inserir nova coleta</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="formRacao">
+
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('data')"
+                class="col-form-label font-weight-bold control-label" required>Data:</label>
+              <input formControlName="data" type="date" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('data')" errorMsg="Insira uma data">
+              </app-field-error-display>
+            </div>
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('qntManha')"
+                class="col-form-label font-weight-bold control-label" required>Manhã:</label>
+              <input formControlName="qntManha" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('qntManha')" errorMsg="Insira uma quantidade">
+              </app-field-error-display>
+            </div>
+            <div class="form-group">
+              <label for="recipient-name" [ngClass]="displayFieldCss('qntTarde')"
+                class="col-form-label font-weight-bold control-label" required>Tarde:</label>
+              <input formControlName="qntTarde" type="number" class="form-control">
+              <app-field-error-display [displayError]="isFieldValid('qntTarde')" errorMsg="Insira uma quantidade">
+              </app-field-error-display>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal" (click)="adicionarRacao()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-racao">
+    <table style="text-align: center;" class="table">
+      <thead style="background-color: black; color: white" class="thead-dark">
+        <tr>
+          <th scope="col">Data</th>
+          <th scope="col" class="text-right">Manhã</th>
+          <th scope="col" class="text-right">Tarde</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody *ngFor="let racao of racao">
+        <tr>
+          <th scope="row">{{racao.data | date:'dd/MM/yyyy'}}</th>
+          <td class="text-right">{{racao.qntManha}} kg</td>
+          <td class="text-right">{{racao.qntTarde}} kg</td>
+          <td class="text-right">
+
+            <button class="btn btn-info" (click)="removerColeta(racao.id)">
+              <mat-icon style="display: flex;" aria-hidden="false" aria-label="Apagar">delete</mat-icon>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <a><strong>Total: </strong> {{racaoTotal}} kg</a>
+    <br>
+    <a><strong>Gasto estimado: </strong> R$ {{gastoRacao}},00 </a>
+  </div>
+</app-container-formulario>

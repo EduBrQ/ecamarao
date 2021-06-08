@@ -1,0 +1,66 @@
+legend {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    padding: 0 8px 4px 8px;
+    width: auto;
+}
+
+.lista-vazia{
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.1; 
+    color: darkgray;
+    font-size: 18px;
+    margin-top: 10px; 
+    margin-bottom: 10px;
+}
+
+.sortable td {
+    cursor: pointer;
+}
+
+.campos-geo{
+    width: 123%;
+}
+
+.campos-quart {
+    width: 144% !important;
+}
+
+.row-campos-geo{
+    margin-right: auto;
+}
+
+.label-geo{
+    width: 5px;
+}
+
+.badge-env {
+    background-color: #2E6DA4;
+    color: #ffffff;
+}
+
+.badge-cdst {
+    background-color: #5BC0DE;
+    color: #ffffff;
+}
+
+.badge-enva {
+    background-color: rgb(231, 189, 49);
+    color: #ffffff;
+}
+
+.badge-ean {
+    background-color: rgb(219, 102, 6);
+    color: #ffffff;
+}
+
+.badge-acat {
+    background-color: rgb(0, 207, 28);
+    color: #ffffff;
+}
+
+.badge-nacat {
+    background-color: rgb(190, 13, 13);
+    color: #ffffff;
+}

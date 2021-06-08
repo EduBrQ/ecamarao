@@ -1,0 +1,232 @@
+<div class="container pt-3">
+
+  <div class="row">
+    <div class="col-12">
+
+      <app-container-formulario titulo="{{tituloContainer}}" tituloClasse="h4">
+        <form [formGroup]="formPesquisaRequerimento" (ngSubmit)="pesquisar()">
+
+          <div class="row mb-3">
+            <div class="col-md-2 text-md-right col-xs-12 text-sx-left">
+              <label for="status">Status</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <select class="form-control" id="status" formControlName="status">
+                <option value=""></option>
+                <ng-container *ngFor="let status of statusList">
+                  <option maxlength="50" [value]="status?.codigo">{{ status?.nome }}</option>
+                </ng-container>
+              </select>
+            </div>
+
+            <div class="col-md-2 text-md-right col-xs-12 text-xs-left">
+              <label for="requerimento">Requerimento</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <input type="text" maxlength="13" class="form-control" id="requerimento"
+                formControlName="hashRequerimento">
+            </div>
+          </div>
+
+          <legend class="font-weight-bold">{{exibirZonaFiscal() ? 'Lote' : ''}}</legend>
+
+          <div class="row mb-3">
+            <div class="col-md-2 text-md-right col-xs-12 text-xs-left">
+              <label form="zonaFiscal" *ngIf="exibirZonaFiscal()">Zona fiscal</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <div class="row row-campos-geo" *ngIf="exibirZonaFiscal()">
+                <div class="col-md col-xs-12">
+                  <input maxlength="3" type="text" class="form-control campos-geo" id="zonaFiscal"
+                    formControlName="zonaFiscal">
+                </div>
+                <div class="col-md col-xs-12">
+                  <label for="quarteirao">Quart.</label>
+                </div>
+                <div class="col-md col-xs-10 pl-0">
+                  <input maxlength="4" type="text" class="form-control campos-quart" id="quarteirao"
+                    formControlName="quarteirao">
+                </div>
+                <div class="col-md col-xs-12">
+                  <label for="lote">Lote</label>
+                </div>
+                <div class="col-md col-xs-12 pl-0 campos-quart">
+                  <input maxlength="4" type="text" class="form-control campos-quart" id="lote"
+                    formControlName="lote">
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-2 text-right col-xs-12 text-xs-left">
+              <label for="indiceCadastral">Índice cadastral</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <input maxlength="15" type="text" class="form-control" id="indiceCadastral" appIptuMask
+                formControlName="iptu">
+            </div>
+
+          </div>
+
+          <legend class="font-weight-bold">Responsável Técnico</legend>
+
+          <div class="row mb-3">
+            <div class="col-md-2 text-right col-xs-12 text-xs-left">
+              <label for="nomeResponsavelTecnico">Nome</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <input maxlength="100" type="text" class="form-control" id="nomeResponsavelTecnico"
+                formControlName="nomeResponsavelTecnico">
+            </div>
+
+            <div class="col-md-2 text-right col-xs-12 text-xs-left">
+              <label for="cpfCnpjResponsavelTecnico">CPF/CNPJ</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <input appCpfCnpjMask maxlength="18" type="text" class="form-control" id="cpfCnpjResponsavelTecnico"
+                formControlName="cpfCnpjResponsavelTecnico">
+            </div>
+          </div>
+
+          <legend class="font-weight-bold">Requerente</legend>
+
+          <div class="row mb-3">
+            <div class="col-md-2 text-right col-xs-12 text-xs-left">
+              <label for="nomeProprietario">Nome</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <input maxlength="100" type="text" class="form-control" id="nomeProprietario"
+                formControlName="nomeProprietario">
+            </div>
+
+            <div class="col-md-2 text-right col-xs-12 text-xs-left">
+              <label for="cpfCnpjProprietario">CPF/CNPJ</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <input appCpfCnpjMask maxlength="18" type="text" class="form-control" id="cpfCnpjProprietario"
+                formControlName="cpfCnpjProprietario">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-2"></div>
+
+            <div *ngIf="permissaoUsuario()" class="col col-xs-12">
+              <div class="form-group">
+                <div class="form-check">
+                  <label class="form-check-label">
+                    <input class="form-check-input" type="checkbox" formControlName="guiasPagasOuIsentas"
+                      (change)="checkValueGuiasPagas($event)">
+                      <b>
+                        Guia(s) paga(s) ou isentada(s)
+                      </b>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-2 text-right col-xs-12 text-xs-left">
+              <label for="numeroGuia" *ngIf="!exibirNumeroDaGuia()">Número da Guia</label>
+            </div>
+
+            <div class="col-md-4 col-xs-12">
+              <select *ngIf="!exibirNumeroDaGuia()" class="form-control" id="numeroGuia" formControlName="numeroGuia">
+                <option value=""></option>
+                <ng-container *ngFor="let guia of guias">
+                  <option value="{{guia.numeroGuia}}">{{guia.numeroGuia}}</option>
+                </ng-container>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-2"></div>
+
+            <div class="col col-xs-12">
+              <div class="form-group">
+                <div class="form-check">
+                  <label class="form-check-label">
+                    <input class="form-check-input" type="checkbox" id="requerimentoDoResponsavel"
+                      formControlName="requerimentoDoResponsavel" (change)="checkValueMeusRequerimentos($event)">
+                    <b>Exibir somente os meus Requerimentos</b>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col text-right">
+              <button type="submit" class="btn-form btn btn-primary">Pesquisar</button>
+            </div>
+          </div>
+
+        </form>
+
+      </app-container-formulario>
+
+    </div>
+  </div>
+
+</div>
+
+<div *ngIf="paginaAtual?.itens?.length == 0" class="container pt-3">
+  <div class="row">
+    <div class="col-12">
+      <app-container-formulario [removerPadding]="true">
+        <div class="card-body table-responsive">
+          <p class="text-center lista-vazia">Nenhum resultado encontrado</p>
+        </div>
+      </app-container-formulario>
+    </div>
+  </div>
+</div>
+
+
+<div class="container pt-3" *ngIf="paginaAtual?.itens?.length > 0">
+  <div class="row">
+    <div class="col-12">
+
+      <app-container-formulario [removerPadding]="true">
+        <table class="sortable table table-striped table-hover">
+          <tbody>
+            <tr>
+              <th scope="col">Número do Requerimento</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Índice Cadastral</th>
+              <th scope="col">Última atualização</th>
+              <th scope="col">Status</th>
+            </tr>
+
+            <tr class="link" *ngFor="let requerimento of paginaAtual?.itens"
+              (click)="visualizarRequerimento(requerimento?.idRequerimento, requerimento?.tipo)">
+              <td>{{ requerimento?.numeroRequerimento }}</td>
+              <td>{{ requerimento?.tipo | tipoRequerimentoTradutor }}</td>
+              <td>{{ requerimento?.iptu[0] }}
+                <app-popover [itens]='requerimento?.iptu'></app-popover>
+              </td>
+              <td>{{ requerimento?.ultimaAtualizacao }}</td>
+              <td>
+                <span
+                  [appStatusBadge]="requerimento?.status">{{ requerimento?.status | statusRequerimentoTradutor }}</span>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+
+        <app-paginacao [totalItems]="paginaAtual?.totalRegistros" [pageIndex]="numeroPagina"
+          (consultarPagina)="trocarPagina($event)"></app-paginacao>
+
+      </app-container-formulario>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+.control-label.required:after {
+  color: #d00;
+  content: "*";
+  position: absolute;
+  margin-left: 5px;
+  top: 7px;
+}
+
+
+@media screen and (max-width: 576px) {
+
+.table{
+  font-size: 10px;
+}
+
+.btn {
+  padding: 2px;
+}
+}

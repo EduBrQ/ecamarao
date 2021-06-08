@@ -1,0 +1,42 @@
+<div class="input-container-ms form-control" [ngClass]="{'error': (error && obrigatorio)}" [ngStyle]="{'width':itensSelecionados?.length > 0 ? '100%' : '100%' }"
+    [class.container-disabled]="isDisabled" >
+    <div class="input-selected-ms" *ngIf="itensSelecionados?.length > 0">
+        {{customTemplate}}
+        <span *ngFor="let itemModel of itensSelecionados" [id]="itemModel.id">
+            <!-- <ng-container *ngTemplateOutlet="customTemplate; context: {$implicit:itemModel}"></ng-container> -->
+            <!-- <ng-container *ngIf="customTemplate else templatePadrao">
+            </ng-container>
+            <ng-template #templatePadrao>
+            </ng-template> -->
+
+            <span class="btn btn-light btn-sm input-selected-item">
+                <span *ngIf="isArquivo(itemModel.item[atributoExibicao])" class="pb-icon pb-icon-xs pb-icon-{{ itemModel.item[atributoExibicao] }}"></span>
+                <span>{{itemModel.item[atributoExibicao]}}</span>
+                <button (click)="removerItem(itemModel)" class="btn btn-link pull-right float-right input-ms-icon"
+                    [disabled]="isDisabled">
+                    <i class="fas fa-times"></i>
+                </button>
+            </span>
+        </span>
+    </div>
+
+    <input [formControl]="formControl" [id]="mInputId" class="input-ms" autocapitalize="off" autocomplete="off"
+        autocorrect="off" role="combobox" spellcheck="false" type="text" tabindex="0" (keydown)="interceptEnter($event)"
+        [placeholder]="placeholder?placeholder :''">
+
+    <ul class="input-drop-ms dropdown-menu" [id]="mDropId" role="menu" [hidden]="fonteDadosOpcoes?.length <= 0">
+        <li class="input-drop-g-ms" role="menuitem" *ngFor="let item of fonteDadosOpcoes" (click)="selectItem(item)">
+            <a class="input-drop-i-ms dropdown-item" [class.disabled]="isDisabled">
+                <span>{{item[atributoExibicao]}}</span>
+            </a>
+        </li>
+    </ul>
+    <!-- <ul class="input-drop-ms dropdown-menu show" role="menu" *ngIf="fonteDadosOpcoes?.length <= 0">
+        <li class="input-drop-g-ms" role="menuitem">
+            <a class="input-drop-i-ms dropdown-item disabled">
+                <span>Valor não encontrado</span>
+            </a>
+        </li>
+    </ul> -->
+
+</div>

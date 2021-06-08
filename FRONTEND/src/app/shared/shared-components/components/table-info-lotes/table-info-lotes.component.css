@@ -1,0 +1,29 @@
+.table-lote-info {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.table-lote-info-header {
+    text-align: center;
+    width: 100%;
+    height: 40px;
+    text-transform: uppercase;
+    color: white;
+    padding-top: 9px;
+}
+
+.table-lote-info-body {
+    padding-top: 5px;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 5px;
+}
+
+.loading-table-container{
+    margin-top: 35px;
+}
+
+.table-lote-info-row-contanier {
+    border-top: 5px #e5e5e5 solid;
+    border-bottom: 5px #e5e5e5 solid;
+}
