@@ -43,7 +43,10 @@ function getStatusLabel(doc: number): string {
 
 function Home() {
   const navigate = useNavigate()
-  const [viveiros, setViveiros] = useState<ViveiroDTO[]>(initialViveiros)
+  const [viveiros, setViveiros] = useState<ViveiroDTO[]>(() => {
+    const stored = localStorage.getItem('viveiros')
+    return stored ? JSON.parse(stored) : initialViveiros
+  })
   const [modalOpen, setModalOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [form, setForm] = useState({
@@ -72,7 +75,9 @@ function Home() {
       pesoMedioAtual: 0,
       precoRacaoKg: 3,
     }
-    setViveiros([...viveiros, newViveiro])
+    const updated = [...viveiros, newViveiro]
+    setViveiros(updated)
+    localStorage.setItem('viveiros', JSON.stringify(updated))
     setModalOpen(false)
     setSubmitted(false)
     setForm({ densidade: '', laboratorio: '', proprietario: '', dataInicioCiclo: '' })
@@ -90,6 +95,16 @@ function Home() {
         <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
           + Novo Viveiro
         </button>
+      </div>
+
+      {/* Farm-level quick access */}
+      <div className="farm-nav-card" onClick={() => navigate('/fazenda/racao')}>
+        <div className="farm-nav-icon">&#127834;</div>
+        <div className="farm-nav-text">
+          <span className="farm-nav-title">Racao da Fazenda</span>
+          <span className="farm-nav-desc">Gestao de racao de todos os viveiros &middot; Recomendacao diaria</span>
+        </div>
+        <span className="farm-nav-arrow">&rsaquo;</span>
       </div>
 
       <div className="viveiro-list">

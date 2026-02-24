@@ -103,6 +103,57 @@ export function calcularFCR(racaoTotalKg: number, biomassakg: number): number {
   return racaoTotalKg / biomassakg;
 }
 
+// Feed rate table based on academic research
+// Sources: FAO Technical Paper 583 (Hung & Quy, 2013), Aqua Culture Asia Pacific (Akiyama & Yukasano, 2024),
+// Skretting Feed Management Guide (2022), SciELO Brasil (Ciencia Animal Brasileira, 2018)
+// Feeding Rate (FR) = % of estimated biomass per day
+// Distribution: Morning 40% / Afternoon 60% (shrimp are more active in late afternoon)
+export interface FaixaRacao {
+  docMin: number;
+  docMax: number;
+  pesoMedioMin: number;
+  pesoMedioMax: number;
+  taxaAlimentacao: number; // % of biomass/day
+  frequencia: number; // feedings per day
+  tipoRacao: string;
+  proteina: number; // % protein content
+  fase: string;
+}
+
+export const TABELA_RACAO: FaixaRacao[] = [
+  { docMin: 1, docMax: 15, pesoMedioMin: 0, pesoMedioMax: 1, taxaAlimentacao: 15, frequencia: 4, tipoRacao: 'Farelado/Triturado', proteina: 40, fase: 'Bercario' },
+  { docMin: 16, docMax: 30, pesoMedioMin: 1, pesoMedioMax: 3, taxaAlimentacao: 8, frequencia: 3, tipoRacao: 'Pellet 1.0mm', proteina: 38, fase: 'Fase Inicial' },
+  { docMin: 31, docMax: 45, pesoMedioMin: 3, pesoMedioMax: 5, taxaAlimentacao: 6, frequencia: 2, tipoRacao: 'Pellet 1.5mm', proteina: 36, fase: 'Crescimento I' },
+  { docMin: 46, docMax: 60, pesoMedioMin: 5, pesoMedioMax: 8, taxaAlimentacao: 5, frequencia: 2, tipoRacao: 'Pellet 2.0mm', proteina: 35, fase: 'Crescimento II' },
+  { docMin: 61, docMax: 75, pesoMedioMin: 8, pesoMedioMax: 12, taxaAlimentacao: 4, frequencia: 2, tipoRacao: 'Pellet 2.5mm', proteina: 35, fase: 'Engorda I' },
+  { docMin: 76, docMax: 90, pesoMedioMin: 12, pesoMedioMax: 18, taxaAlimentacao: 3, frequencia: 2, tipoRacao: 'Pellet 2.5mm', proteina: 34, fase: 'Engorda II' },
+  { docMin: 91, docMax: 110, pesoMedioMin: 18, pesoMedioMax: 25, taxaAlimentacao: 2.5, frequencia: 2, tipoRacao: 'Pellet 3.0mm', proteina: 32, fase: 'Pre-Despesca' },
+  { docMin: 111, docMax: 130, pesoMedioMin: 25, pesoMedioMax: 35, taxaAlimentacao: 2, frequencia: 2, tipoRacao: 'Pellet 3.0mm', proteina: 32, fase: 'Despesca' },
+];
+
+// Get the current feed rate phase based on DOC
+export function getFaixaRacao(doc: number): FaixaRacao | null {
+  return TABELA_RACAO.find(f => doc >= f.docMin && doc <= f.docMax) ?? null;
+}
+
+// Calculate recommended daily feed (kg) for a viveiro
+export function calcularRacaoDiaria(
+  densidadeMilLarvas: number,
+  mortalidadeTotal: number,
+  pesoMedioG: number,
+  doc: number
+): { totalKg: number; manhaKg: number; tardeKg: number; faixa: FaixaRacao | null } {
+  const faixa = getFaixaRacao(doc);
+  if (!faixa) return { totalKg: 0, manhaKg: 0, tardeKg: 0, faixa: null };
+  const vivos = Math.max(0, (densidadeMilLarvas * 1000) - mortalidadeTotal);
+  const biomassaKg = (vivos * pesoMedioG) / 1000;
+  const totalKg = (biomassaKg * faixa.taxaAlimentacao) / 100;
+  // Morning 40% / Afternoon 60% based on Akiyama & Yukasano (2024)
+  const manhaKg = totalKg * 0.4;
+  const tardeKg = totalKg * 0.6;
+  return { totalKg: Math.round(totalKg * 100) / 100, manhaKg: Math.round(manhaKg * 100) / 100, tardeKg: Math.round(tardeKg * 100) / 100, faixa };
+}
+
 // Helper: generate water quality alerts from a measurement
 export function gerarAlertas(medicao: Medicao): Alerta[] {
   const alertas: Alerta[] = [];
