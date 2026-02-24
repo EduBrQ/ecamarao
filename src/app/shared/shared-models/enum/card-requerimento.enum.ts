@@ -1,6 +1,0 @@
-export enum CardRequerimentoEnum {
-    PRIORIDADE = "PRIORIDADE",
-    MODIFICACAO = "MODIFICACAO",
-    DIRETRIZES = "DIRETRIZES",
-    VERIFICACAO = "VERIFICACAO",
-}
