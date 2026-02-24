@@ -21,7 +21,7 @@ function Header() {
           style={{ cursor: 'pointer' }}
         />
         <div className="header-divider" />
-        <h1 className="header-title">E-Camarao</h1>
+        <h1 className="header-title">AquaFarm</h1>
       </div>
     </header>
   )
