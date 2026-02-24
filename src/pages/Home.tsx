@@ -7,7 +7,6 @@ import { ViveiroDTO, calcularDOC } from '../models/types'
 const initialViveiros: ViveiroDTO[] = [
   {
     id: 1,
-    tamanho: 1500,
     densidade: 70,
     laboratorio: 'AquaTec',
     proprietario: 'Erica',
@@ -17,7 +16,6 @@ const initialViveiros: ViveiroDTO[] = [
   },
   {
     id: 2,
-    tamanho: 1100,
     densidade: 50,
     laboratorio: 'AquaTec',
     proprietario: 'Eduardo',
@@ -49,7 +47,6 @@ function Home() {
   const [modalOpen, setModalOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [form, setForm] = useState({
-    volume: '',
     densidade: '',
     laboratorio: '',
     proprietario: '',
@@ -62,13 +59,12 @@ function Home() {
 
   const handleSave = () => {
     setSubmitted(true)
-    if (!form.volume || !form.densidade || !form.laboratorio || !form.proprietario || !form.dataInicioCiclo) {
+    if (!form.densidade || !form.laboratorio || !form.proprietario || !form.dataInicioCiclo) {
       return
     }
     const newId = viveiros.length > 0 ? Math.max(...viveiros.map(v => v.id)) + 1 : 1
     const newViveiro: ViveiroDTO = {
       id: newId,
-      tamanho: Number(form.volume),
       densidade: Number(form.densidade),
       laboratorio: form.laboratorio,
       proprietario: form.proprietario,
@@ -79,7 +75,7 @@ function Home() {
     setViveiros([...viveiros, newViveiro])
     setModalOpen(false)
     setSubmitted(false)
-    setForm({ volume: '', densidade: '', laboratorio: '', proprietario: '', dataInicioCiclo: '' })
+    setForm({ densidade: '', laboratorio: '', proprietario: '', dataInicioCiclo: '' })
   }
 
   const visualizarViveiro = (viveiro: ViveiroDTO) => {
@@ -129,10 +125,6 @@ function Home() {
                   <span className="viveiro-kpi-label">Larvas</span>
                 </div>
                 <div className="viveiro-kpi">
-                  <span className="viveiro-kpi-value">{v.tamanho ?? '-'}</span>
-                  <span className="viveiro-kpi-label">m3</span>
-                </div>
-                <div className="viveiro-kpi">
                   <span className="viveiro-kpi-value">{v.pesoMedioAtual ?? 0}g</span>
                   <span className="viveiro-kpi-label">Peso Med.</span>
                 </div>
@@ -148,21 +140,6 @@ function Home() {
         onClose={() => { setModalOpen(false); setSubmitted(false) }}
         onSave={handleSave}
       >
-        <div className="form-group">
-          <label className={`form-label required ${submitted && !form.volume ? 'has-error' : ''}`}>
-            Volume (m3):
-          </label>
-          <input
-            name="volume"
-            type="number"
-            className={`form-control ${submitted && !form.volume ? 'is-invalid' : ''}`}
-            value={form.volume}
-            onChange={handleChange}
-            placeholder="Ex: 1500"
-          />
-          <FieldError show={submitted && !form.volume} message="Insira a dimensao do viveiro" />
-        </div>
-
         <div className="form-group">
           <label className={`form-label required ${submitted && !form.densidade ? 'has-error' : ''}`}>
             Povoamento (milheiros):

@@ -1,6 +1,5 @@
 export interface ViveiroDTO {
   id: number;
-  tamanho?: number;
   densidade?: number;
   laboratorio?: string;
   proprietario?: string;

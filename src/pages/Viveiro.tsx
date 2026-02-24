@@ -54,10 +54,6 @@ function Viveiro() {
           <span className="quick-stat-label">Larvas</span>
         </div>
         <div className="quick-stat">
-          <span className="quick-stat-value">{viveiro.tamanho ?? '-'} m3</span>
-          <span className="quick-stat-label">Volume</span>
-        </div>
-        <div className="quick-stat">
           <span className="quick-stat-value">{viveiro.pesoMedioAtual ?? 0}g</span>
           <span className="quick-stat-label">Peso Medio</span>
         </div>
