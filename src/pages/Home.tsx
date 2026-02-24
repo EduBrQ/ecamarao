@@ -2,32 +2,46 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
 import FieldError from '../components/FieldError'
-import { ViveiroDTO } from '../models/types'
+import { ViveiroDTO, calcularDOC } from '../models/types'
 
 const initialViveiros: ViveiroDTO[] = [
   {
     id: 1,
     tamanho: 1500,
-    ipCamera: 'http://208.72.70.171:80/mjpg/video.mjpg',
     densidade: 70,
-    latitude: '-7.397094',
-    longitude: '-35.540758',
     laboratorio: 'AquaTec',
     proprietario: 'Erica',
-    dataInicioCiclo: '15/08/2020',
+    dataInicioCiclo: '2025-08-15',
+    pesoMedioAtual: 12,
+    precoRacaoKg: 3,
   },
   {
     id: 2,
     tamanho: 1100,
-    ipCamera: 'http://208.72.70.171:80/mjpg/video.mjpg',
     densidade: 50,
-    latitude: '-7.392803',
-    longitude: '-35.542637',
     laboratorio: 'AquaTec',
     proprietario: 'Eduardo',
-    dataInicioCiclo: '15/08/2020',
+    dataInicioCiclo: '2025-09-01',
+    pesoMedioAtual: 9,
+    precoRacaoKg: 3,
   },
 ]
+
+function getStatusColor(doc: number): string {
+  if (doc === 0) return 'var(--text-light)'
+  if (doc < 30) return 'var(--info)'
+  if (doc < 90) return 'var(--success)'
+  if (doc < 120) return 'var(--warning)'
+  return 'var(--danger)'
+}
+
+function getStatusLabel(doc: number): string {
+  if (doc === 0) return 'Sem ciclo'
+  if (doc < 30) return 'Inicio'
+  if (doc < 90) return 'Crescimento'
+  if (doc < 120) return 'Engorda'
+  return 'Despesca'
+}
 
 function Home() {
   const navigate = useNavigate()
@@ -51,7 +65,7 @@ function Home() {
     if (!form.volume || !form.densidade || !form.laboratorio || !form.proprietario || !form.dataInicioCiclo) {
       return
     }
-    const newId = viveiros.length + 1
+    const newId = viveiros.length > 0 ? Math.max(...viveiros.map(v => v.id)) + 1 : 1
     const newViveiro: ViveiroDTO = {
       id: newId,
       tamanho: Number(form.volume),
@@ -59,6 +73,8 @@ function Home() {
       laboratorio: form.laboratorio,
       proprietario: form.proprietario,
       dataInicioCiclo: form.dataInicioCiclo,
+      pesoMedioAtual: 0,
+      precoRacaoKg: 3,
     }
     setViveiros([...viveiros, newViveiro])
     setModalOpen(false)
@@ -73,32 +89,68 @@ function Home() {
 
   return (
     <div className="container fade-in">
-      <div className="card">
-        <div className="card-header-accent">Viveiros</div>
+      <div className="home-header">
+        <h2 className="page-title">Meus Viveiros</h2>
+        <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
+          + Novo Viveiro
+        </button>
+      </div>
 
-        <div className="viveiro-grid">
-          <div className="add-btn" onClick={() => setModalOpen(true)}>
-            <img src="/img/plus.svg" alt="Adicionar" />
-            <span>Adicionar</span>
-          </div>
-          {viveiros.map((v) => (
-            <div key={v.id} className="viveiro-card" onClick={() => visualizarViveiro(v)}>
-              <img src="/img/planilha.svg" alt="Viveiro" />
-              <span>Viveiro {v.id}</span>
+      <div className="viveiro-list">
+        {viveiros.map((v) => {
+          const doc = calcularDOC(v.dataInicioCiclo)
+          const statusColor = getStatusColor(doc)
+          const statusLabel = getStatusLabel(doc)
+          const populacao = (v.densidade ?? 0) * 1000
+
+          return (
+            <div key={v.id} className="viveiro-status-card" onClick={() => visualizarViveiro(v)}>
+              <div className="viveiro-status-header">
+                <div className="viveiro-status-title">
+                  <span className="viveiro-status-dot" style={{ background: statusColor }} />
+                  <h3>Viveiro {v.id}</h3>
+                </div>
+                <span className="viveiro-status-badge" style={{ background: statusColor }}>
+                  {statusLabel}
+                </span>
+              </div>
+
+              <div className="viveiro-status-info">
+                <span className="viveiro-owner">{v.proprietario} &mdash; {v.laboratorio}</span>
+              </div>
+
+              <div className="viveiro-kpi-row">
+                <div className="viveiro-kpi">
+                  <span className="viveiro-kpi-value">{doc}</span>
+                  <span className="viveiro-kpi-label">DOC</span>
+                </div>
+                <div className="viveiro-kpi">
+                  <span className="viveiro-kpi-value">{populacao.toLocaleString('pt-BR')}</span>
+                  <span className="viveiro-kpi-label">Larvas</span>
+                </div>
+                <div className="viveiro-kpi">
+                  <span className="viveiro-kpi-value">{v.tamanho ?? '-'}</span>
+                  <span className="viveiro-kpi-label">m3</span>
+                </div>
+                <div className="viveiro-kpi">
+                  <span className="viveiro-kpi-value">{v.pesoMedioAtual ?? 0}g</span>
+                  <span className="viveiro-kpi-label">Peso Med.</span>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
+          )
+        })}
       </div>
 
       <Modal
-        title="Inserir novo viveiro"
+        title="Novo Viveiro"
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setSubmitted(false) }}
         onSave={handleSave}
       >
         <div className="form-group">
           <label className={`form-label required ${submitted && !form.volume ? 'has-error' : ''}`}>
-            Volume do Viveiro (m3):
+            Volume (m3):
           </label>
           <input
             name="volume"
@@ -106,13 +158,14 @@ function Home() {
             className={`form-control ${submitted && !form.volume ? 'is-invalid' : ''}`}
             value={form.volume}
             onChange={handleChange}
+            placeholder="Ex: 1500"
           />
           <FieldError show={submitted && !form.volume} message="Insira a dimensao do viveiro" />
         </div>
 
         <div className="form-group">
           <label className={`form-label required ${submitted && !form.densidade ? 'has-error' : ''}`}>
-            Quantidade de povoamento:
+            Povoamento (milheiros):
           </label>
           <input
             name="densidade"
@@ -120,8 +173,9 @@ function Home() {
             className={`form-control ${submitted && !form.densidade ? 'is-invalid' : ''}`}
             value={form.densidade}
             onChange={handleChange}
+            placeholder="Ex: 70 (= 70.000 larvas)"
           />
-          <FieldError show={submitted && !form.densidade} message="Insira a quantidade de larvas" />
+          <FieldError show={submitted && !form.densidade} message="Insira a quantidade em milheiros" />
         </div>
 
         <div className="form-group">
@@ -135,11 +189,11 @@ function Home() {
             onChange={handleChange}
           >
             <option value="">Selecione...</option>
-            <option value="aquatec">AquaTec</option>
-            <option value="tecmari">TecMari</option>
-            <option value="touros">Touros</option>
+            <option value="AquaTec">AquaTec</option>
+            <option value="TecMari">TecMari</option>
+            <option value="Touros">Touros</option>
           </select>
-          <FieldError show={submitted && !form.laboratorio} message="Insira o laboratorio de origem" />
+          <FieldError show={submitted && !form.laboratorio} message="Selecione o laboratorio" />
         </div>
 
         <div className="form-group">
@@ -152,13 +206,14 @@ function Home() {
             className={`form-control ${submitted && !form.proprietario ? 'is-invalid' : ''}`}
             value={form.proprietario}
             onChange={handleChange}
+            placeholder="Nome do proprietario"
           />
           <FieldError show={submitted && !form.proprietario} message="Insira o nome do proprietario" />
         </div>
 
         <div className="form-group">
           <label className={`form-label required ${submitted && !form.dataInicioCiclo ? 'has-error' : ''}`}>
-            Data de inicio do ciclo:
+            Data inicio do ciclo:
           </label>
           <input
             name="dataInicioCiclo"
@@ -167,7 +222,7 @@ function Home() {
             value={form.dataInicioCiclo}
             onChange={handleChange}
           />
-          <FieldError show={submitted && !form.dataInicioCiclo} message="Insira a data de inicio do ciclo" />
+          <FieldError show={submitted && !form.dataInicioCiclo} message="Insira a data de inicio" />
         </div>
       </Modal>
     </div>
