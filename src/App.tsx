@@ -9,6 +9,7 @@ import Anotacoes from './pages/Anotacoes'
 import Mortalidade from './pages/Mortalidade'
 import Ciclo from './pages/Ciclo'
 import Aeradores from './pages/Aeradores'
+import FazendaRacao from './pages/FazendaRacao'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/viveiro/:id/mortalidade" element={<Mortalidade />} />
           <Route path="/viveiro/:id/ciclo" element={<Ciclo />} />
           <Route path="/viveiro/:id/aeradores" element={<Aeradores />} />
+          <Route path="/fazenda/racao" element={<FazendaRacao />} />
         </Routes>
       </main>
       <Footer />

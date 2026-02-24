@@ -193,4 +193,56 @@ select.form-control{cursor:pointer}
 @media(max-width:360px){.viveiro-kpi-row{grid-template-columns:repeat(2,1fr)}.kpi-grid{grid-template-columns:1fr}.water-params-grid{grid-template-columns:repeat(2,1fr)}.ranges-grid{grid-template-columns:repeat(2,1fr)}.fcr-summary,.mortality-summary{flex-direction:column;text-align:center}.summary-row{grid-template-columns:1fr}}
 @media(min-width:768px){.modal-overlay{align-items:center;padding:1rem}.modal{border-radius:var(--radius-lg)}.kpi-grid{grid-template-columns:repeat(3,1fr)}.container{padding:1.5rem}.header{padding:.875rem 1.5rem}.nav-grid-v2{display:grid;grid-template-columns:repeat(2,1fr)}}
 @media(min-width:1024px){.nav-grid-v2{grid-template-columns:repeat(3,1fr)}}
+/* Daily Feed Card */
+.daily-feed-card{overflow:hidden}
+.daily-feed-phase{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.25rem}
+.daily-feed-phase-name{font-size:1rem;font-weight:700;color:var(--accent)}
+.daily-feed-phase-info{font-size:.78rem;color:var(--text-light)}
+.daily-feed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.75rem}
+.daily-feed-item{text-align:center;padding:.75rem .5rem;border-radius:var(--radius-sm);background:var(--bg)}
+.daily-feed-total{background:var(--accent-light)}
+.daily-feed-done{background:var(--success-light);border:2px solid var(--success)}
+.daily-feed-pending{background:var(--warning-light);border:2px dashed var(--warning)}
+.daily-feed-value{display:block;font-size:1.5rem;font-weight:700;line-height:1.1;color:var(--text)}
+.daily-feed-unit{display:block;font-size:.7rem;color:var(--text-muted)}
+.daily-feed-label{display:block;font-size:.68rem;color:var(--text-light);text-transform:uppercase;letter-spacing:.3px;margin-top:.2rem}
+.daily-feed-taxa{display:flex;flex-direction:column;gap:.15rem;font-size:.8rem;color:var(--text-light);padding:.5rem 0;border-top:1px solid var(--border)}
+.daily-feed-taxa-detail{font-size:.75rem;color:var(--text-muted)}
+.btn-block{width:100%;display:flex;justify-content:center}
+/* Modal Recommendation */
+.modal-recommendation{background:var(--accent-light);border-radius:var(--radius-sm);padding:.75rem;margin-bottom:1rem}
+.modal-rec-title{display:block;font-size:.78rem;font-weight:600;color:var(--accent);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.3px}
+.modal-rec-values{display:flex;gap:1rem;font-size:.85rem;color:var(--text);flex-wrap:wrap}
+/* Farm Navigation Card */
+.farm-nav-card{display:flex;align-items:center;gap:.75rem;background:var(--accent);color:#fff;border-radius:var(--radius);box-shadow:var(--shadow-md);padding:1rem;margin-bottom:1rem;cursor:pointer;transition:var(--transition);-webkit-tap-highlight-color:transparent}
+.farm-nav-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.farm-nav-card:active{transform:scale(.99)}
+.farm-nav-icon{font-size:1.75rem;flex-shrink:0}
+.farm-nav-text{display:flex;flex-direction:column;flex:1}
+.farm-nav-title{font-size:.95rem;font-weight:700}
+.farm-nav-desc{font-size:.75rem;opacity:.85}
+.farm-nav-arrow{font-size:1.5rem;opacity:.7;font-weight:300}
+/* Farm KPI Grid */
+.farm-kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem}
+.farm-kpi-item{text-align:center;padding:.75rem .5rem;background:var(--bg);border-radius:var(--radius-sm)}
+.farm-kpi-value{display:block;font-size:1.25rem;font-weight:700;color:var(--text)}
+.farm-kpi-label{display:block;font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-top:.15rem}
+/* Viveiro Feed List (Farm page) */
+.viveiro-feed-list{display:flex;flex-direction:column;gap:.5rem}
+.viveiro-feed-card{background:var(--bg);border-radius:var(--radius-sm);padding:.75rem;cursor:pointer;transition:var(--transition);-webkit-tap-highlight-color:transparent}
+.viveiro-feed-card:hover{background:var(--primary-light)}
+.viveiro-feed-card:active{transform:scale(.99)}
+.viveiro-feed-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.viveiro-feed-header strong{font-size:.9rem}
+.viveiro-feed-phase{display:block;font-size:.72rem;color:var(--text-light)}
+.viveiro-feed-status{flex-shrink:0}
+.feed-status-badge{font-size:.68rem;font-weight:600;padding:.15rem .5rem;border-radius:50px;text-transform:uppercase;letter-spacing:.3px}
+.feed-status-done{background:var(--success-light);color:var(--success)}
+.feed-status-partial{background:var(--warning-light);color:var(--warning)}
+.feed-status-pending{background:var(--danger-light);color:var(--danger)}
+.viveiro-feed-amounts{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem}
+.viveiro-feed-amount{text-align:center}
+.viveiro-feed-amount-label{display:block;font-size:.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px}
+.viveiro-feed-amount-value{display:block;font-size:.85rem;font-weight:600;color:var(--text)}
+@media(max-width:360px){.daily-feed-grid{grid-template-columns:1fr}.farm-kpi-grid{grid-template-columns:1fr}.viveiro-feed-amounts{grid-template-columns:repeat(2,1fr)}}
 @media print{.header,.footer{display:none}}
