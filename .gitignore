@@ -216,7 +216,6 @@ build/
 # 📝 Deployment
 .vercel
 .netlify
-.github/workflows/
 
 # 📝 Local development
 local/
