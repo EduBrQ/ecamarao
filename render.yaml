@@ -1,0 +1,44 @@
+services:
+  # Serviço PostgreSQL (usando imagem direta)
+  - type: pserv
+    name: ecamarao-db
+    env: docker
+    image: postgres:15-alpine
+    envVars:
+      - key: POSTGRES_DB
+        value: ecamarao_prod
+      - key: POSTGRES_USER
+        value: ecamarao_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+    disk:
+      name: postgres-data
+      mountPath: /var/lib/postgresql/data
+
+  # Serviço Backend
+  - type: web
+    name: ecamarao-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecamarao-db
+          property: connectionString
+      - key: PORT
+        value: 8000
+    healthCheck:
+      path: /health
+
+  # Serviço Frontend
+  - type: web
+    name: ecamarao-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    envVars:
+      - key: VITE_API_URL
+        value: ""
+    healthCheck:
+      path: /
