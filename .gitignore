@@ -177,10 +177,10 @@ coverage/
 docs/_build/
 site/
 
-# 📝 Package managers
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# 📝 Package managers (keep one for dependency management)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
 
 # 📝 TypeScript
 *.tsbuildinfo
