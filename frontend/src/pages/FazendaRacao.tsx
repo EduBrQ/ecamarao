@@ -40,6 +40,8 @@ function FazendaRacao() {
 
   // Função para calcular resumo do viveiro
   const calcularResumoViveiro = (viveiro: Viveiro, racao: ColetaRacao[], mortalidade: RegistroMortalidade[]): ViveiroResumo => {
+    console.log(viveiros);
+    
     const doc = calcularDOC(viveiro.data_inicio_ciclo)
     const densidade = viveiro.densidade ?? 0
     const hoje = new Date().toISOString().split('T')[0]
