@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup Database</title>
+</head>
+<body>
+    <h1>Setup Database Tables</h1>
+    <button onclick="setupDatabase()">Criar Tabelas do Banco de Dados</button>
+    <div id="result"></div>
+    
+    <script>
+        async function setupDatabase() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Criando tabelas...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/setup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>✅ Sucesso!</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Erro!</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

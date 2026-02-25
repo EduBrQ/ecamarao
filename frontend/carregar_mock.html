@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carregar Mock - Viveiro 25 Dias</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #e8f4fd;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-danger {
+            background: #e74c3c;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .metric {
+            display: inline-block;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦐 Carregar Mock - Viveiro com 25 Dias</h1>
+        
+        <div class="info-box">
+            <h3>📋 Informações do Mock</h3>
+            <p><strong>Viveiro:</strong> 25 larvas/m² (250.000 camarões)</p>
+            <p><strong>PL Inicial:</strong> PL10-PL12 (3mg)</p>
+            <p><strong>Dias de Cultivo:</strong> 25 dias</p>
+            <p><strong>Fase Atual:</strong> Crescimento II</p>
+            <p><strong>Peso Médio:</strong> 8.5g</p>
+            <p><strong>Mortalidade:</strong> 625 camarões (2.46%)</p>
+            <p><strong>Sobrevivência:</strong> 97.54%</p>
+        </div>
+
+        <div class="info-box">
+            <h3>📊 Métricas Calculadas</h3>
+            <div class="metric">
+                <div class="metric-value">1250.23kg</div>
+                <div class="metric-label">Biomassa</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">50.01kg</div>
+                <div class="metric-label">Ração/Dia</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0.44</div>
+                <div class="metric-label">FCR</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">R$382.08</div>
+                <div class="metric-label">Gasto Total</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="btn" onclick="carregarMock()">🚀 Carregar Mock no Sistema</button>
+            <button class="btn btn-danger" onclick="limparDados()">🗑️ Limpar Todos os Dados</button>
+        </div>
+
+        <div id="successBox" class="success-box">
+            <h3>✅ Mock carregado com sucesso!</h3>
+            <p>O viveiro com 25 dias de manejo foi carregado no sistema. Você pode agora navegar pelo aplicativo para ver todos os dados.</p>
+            <p><strong>Próximos passos:</strong></p>
+            <ul>
+                <li>1. Vá para a página inicial (Home)</li>
+                <li>2. Clique no Viveiro 1</li>
+                <li>3. Navegue pelas seções: Dashboard, Ração, Qualidade da Água, etc.</li>
+                <li>4. Verifique a página "Ração da Fazenda" para ver as recomendações</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h3>📝 Logs Detalhados</h3>
+            <details>
+                <summary>Cálculo de Peso</summary>
+                <pre>Cálculo de peso para DOC 25 com PL10-PL12:
+- Peso inicial PL: 0.003g (3mg)
+- Dias de crescimento: 25 - 11 = 14 dias
+- Taxa de crescimento fase Crescimento II: 0.35g/dia
+- Peso estimado: 8.5g (com fator de redução)
+Fonte: preverPesoAtualComPL()</pre>
+            </details>
+            
+            <details>
+                <summary>Cálculo de População</summary>
+                <pre>Estimativa de população:
+- População inicial: 250.000 camarões
