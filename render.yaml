@@ -1,14 +1,14 @@
 services:
-  # Serviço PostgreSQL
+  # Serviço PostgreSQL (usando imagem direta)
   - type: pserv
     name: ecamarao-db
     env: docker
-    dockerfilePath: ./docker/Dockerfile.postgres
+    image: postgres:15-alpine
     envVars:
       - key: POSTGRES_DB
         value: ecamarao_prod
       - key: POSTGRES_USER
-        value: eamarao_user
+        value: ecamarao_user
       - key: POSTGRES_PASSWORD
         generateValue: true
     disk:
@@ -31,8 +31,6 @@ services:
         value: 8000
     healthCheck:
       path: /health
-    domains:
-      - ecamarao-backend.onrender.com
 
   # Serviço Frontend
   - type: web
@@ -44,5 +42,3 @@ services:
         value: ""
     healthCheck:
       path: /
-    domains:
-      - ecamarao.onrender.com
