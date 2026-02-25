@@ -20,7 +20,6 @@ services:
     name: ecamarao-backend
     env: docker
     rootDir: backend
-    dockerfilePath: ./Dockerfile
     envVars:
       - key: NODE_ENV
         value: production
@@ -38,7 +37,6 @@ services:
     name: ecamarao-frontend
     env: docker
     rootDir: frontend
-    dockerfilePath: ./Dockerfile
     envVars:
       - key: VITE_API_URL
         value: ""
