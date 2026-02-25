@@ -78,7 +78,6 @@ function Viveiro() {
             ['População Inicial', ((viveiro.densidade || 0) * 1000).toLocaleString('pt-BR'), 'camarões'],
             ['Status', viveiro.status, '-'],
             ['Data Início Ciclo', viveiro.data_inicio_ciclo || '-', '-'],
-            
           ]
           filename = `dashboard_${viveiro.nome}_${new Date().toLocaleDateString('pt-BR')}.csv`
           headers = dashboardData[0] as string[]
