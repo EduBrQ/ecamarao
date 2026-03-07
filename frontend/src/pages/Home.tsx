@@ -34,11 +34,11 @@ function Home() {
   const [viveiroToDelete, setViveiroToDelete] = useState<{id: number, nome: string} | null>(null)
   const toast = useToastGlobal()
 
-  // Loading inicial de 5 segundos
+  // Loading inicial de 2 segundos
   useEffect(() => {
     const timer = setTimeout(() => {
       setInitialLoading(false)
-    }, 5000)
+    }, 2000)
 
     return () => clearTimeout(timer)
   }, [])
@@ -210,9 +210,9 @@ function Home() {
       <div className="home-header">
         <h2 className="page-title">Meus Viveiros</h2>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button className="btn btn-secondary" onClick={() => navigate('/viveiros-backend')}>
+          {/* <button className="btn btn-secondary" onClick={() => navigate('/viveiros-backend')}>
             📋 Viveiros Backend
-          </button>
+          </button> */}
           <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
             + Novo Viveiro
           </button>

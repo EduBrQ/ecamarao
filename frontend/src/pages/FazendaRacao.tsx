@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { backendApi } from '../services/backendApi'
 import { useToastGlobal } from '../hooks/useToastGlobal'
+import '../styles/FazendaDashboard.css'
 
 interface ViveiroDashboard {
   viveiro: {
@@ -185,70 +186,96 @@ function FazendaRacao() {
   }
 
   return (
-    <div className="container fade-in">
-      {/* Cabeçalho com informações gerais */}
-      <div className="card">
-        <div className="card-header-accent">
-          📊 Dashboard da Fazenda
+    <div className="fazenda-dashboard-container">
+      {/* Header Principal */}
+      <div className="fazenda-header">
+        <div className="fazenda-header-content">
+          <div>
+            <h1 className="fazenda-title">🦐 Dashboard da Fazenda</h1>
+            <p className="fazenda-subtitle">Visão geral e controle de todos os viveiros</p>
+          </div>
           <button 
-            className="export-button" 
+            className="fazenda-export-btn" 
             onClick={() => handleExportFazenda()}
-            style={{ marginLeft: 'auto' }}
           >
             📊 Exportar Dados
           </button>
         </div>
-        
-        <div className="fazenda-summary">
-          <div className="fazenda-main">
-            <span className="fazenda-value">{dashboard.totais.totalViveiros}</span>
-            <span className="fazenda-label">Viveiros Ativos</span>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="fazenda-kpi-grid">
+        <div className="fazenda-kpi-card">
+          <div className="fazenda-kpi-header">
+            <span className="fazenda-kpi-title">Viveiros Ativos</span>
+            <span className="fazenda-kpi-icon">🏠</span>
           </div>
-          <div className="fazenda-details">
-            <div className="fazenda-detail-item">
-              <span className="fazenda-detail-value">{dashboard.totais.totalRacaoHoje.toFixed(1)} kg</span>
-              <span className="fazenda-detail-label">Ração Hoje</span>
-            </div>
-            <div className="fazenda-detail-item">
-              <span className="fazenda-detail-value">{dashboard.totais.totalRecomendado.toFixed(1)} kg</span>
-              <span className="fazenda-detail-label">Recomendado</span>
-            </div>
-            <div className="fazenda-detail-item">
-              <span className="fazenda-detail-value">{dashboard.totais.totalBiomassa.toFixed(0)} kg</span>
-              <span className="fazenda-detail-label">Biomassa Total</span>
-            </div>
-            <div className="fazenda-detail-item">
-              <span className="fazenda-detail-value">{dashboard.totais.fcrMedio > 0 ? dashboard.totais.fcrMedio.toFixed(2) : '-'}</span>
-              <span className="fazenda-detail-label">FCR Médio</span>
-            </div>
+          <div className="fazenda-kpi-value">{dashboard.totais.totalViveiros}</div>
+          <span className="fazenda-kpi-change neutral">Total na fazenda</span>
+        </div>
+        
+        <div className="fazenda-kpi-card">
+          <div className="fazenda-kpi-header">
+            <span className="fazenda-kpi-title">Ração Hoje</span>
+            <span className="fazenda-kpi-icon">🌾</span>
+          </div>
+          <div className="fazenda-kpi-value">{dashboard.totais.totalRacaoHoje.toFixed(1)} kg</div>
+          <span className="fazenda-kpi-change neutral">Alimentados hoje</span>
+        </div>
+        
+        <div className="fazenda-kpi-card">
+          <div className="fazenda-kpi-header">
+            <span className="fazenda-kpi-title">Biomassa Total</span>
+            <span className="fazenda-kpi-icon">⚖️</span>
+          </div>
+          <div className="fazenda-kpi-value">{dashboard.totais.totalBiomassa.toFixed(0)} kg</div>
+          <span className="fazenda-kpi-change positive">Em crescimento</span>
+        </div>
+        
+        <div className="fazenda-kpi-card">
+          <div className="fazenda-kpi-header">
+            <span className="fazenda-kpi-title">FCR Médio</span>
+            <span className="fazenda-kpi-icon">📈</span>
+          </div>
+          <div className="fazenda-kpi-value">{dashboard.totais.fcrMedio > 0 ? dashboard.totais.fcrMedio.toFixed(2) : '-'}</div>
+          <span className="fazenda-kpi-change neutral">Conversão alimentar</span>
+        </div>
+      </div>
+
+      {/* Status de Alimentação */}
+      <div className="fazenda-status-grid">
+        <div className="fazenda-status-card">
+          <div className="fazenda-status-icon complete">✅</div>
+          <div className="fazenda-status-content">
+            <div className="fazenda-status-label">Alimentação Completa</div>
+            <div className="fazenda-status-value">{dashboard.totais.viveirosAlimentados}</div>
           </div>
         </div>
-
-        {/* Indicadores de status */}
-        <div className="fazenda-status-grid">
-          <div className="fazenda-status-card complete">
-            <span className="fazenda-status-value">{dashboard.totais.viveirosAlimentados}</span>
-            <span className="fazenda-status-label">Alimentação Completa</span>
+        
+        <div className="fazenda-status-card">
+          <div className="fazenda-status-icon partial">🌅</div>
+          <div className="fazenda-status-content">
+            <div className="fazenda-status-label">Alimentação Parcial</div>
+            <div className="fazenda-status-value">{dashboard.totais.viveirosParciais}</div>
           </div>
-          <div className="fazenda-status-card partial">
-            <span className="fazenda-status-value">{dashboard.totais.viveirosParciais}</span>
-            <span className="fazenda-status-label">Alimentação Parcial</span>
-          </div>
-          <div className="fazenda-status-card pending">
-            <span className="fazenda-status-value">{dashboard.totais.viveirosPendentes}</span>
-            <span className="fazenda-status-label">Alimentação Pendente</span>
+        </div>
+        
+        <div className="fazenda-status-card">
+          <div className="fazenda-status-icon pending">⏳</div>
+          <div className="fazenda-status-content">
+            <div className="fazenda-status-label">Pendentes</div>
+            <div className="fazenda-status-value">{dashboard.totais.viveirosPendentes}</div>
           </div>
         </div>
       </div>
 
-      {/* Cards dos viveiros */}
-      <div className="card">
-        <h3 className="card-title">Controle Rápido por Viveiro</h3>
-        <div className="fazenda-viveiros-grid">
-          {dashboard.viveiros.map((viveiro) => (
-            <div key={viveiro.viveiro.id} className="fazenda-viveiro-card">
-              <div className="fazenda-viveiro-header">
-                <h4>{viveiro.viveiro.nome}</h4>
+      {/* Cards dos Viveiros */}
+      <div className="fazenda-viveiros-grid">
+        {dashboard.viveiros.map((viveiro) => (
+          <div key={viveiro.viveiro.id} className="fazenda-viveiro-card">
+            <div className="fazenda-viveiro-header">
+              <div className="fazenda-viveiro-title-row">
+                <h3 className="fazenda-viveiro-name">{viveiro.viveiro.nome}</h3>
                 <span className="fazenda-viveiro-doc">DOC {viveiro.doc}</span>
               </div>
               
@@ -260,122 +287,98 @@ function FazendaRacao() {
                   {viveiro.racaoHojeTotal.toFixed(1)} / {viveiro.recomendadoTotal.toFixed(1)} kg
                 </div>
               </div>
+            </div>
 
-              <div className="fazenda-viveiro-details">
-                <div className="fazenda-detail">
-                  <span className="fazenda-detail-label">Fase:</span>
-                  <span className="fazenda-detail-value">{viveiro.fase}</span>
-                </div>
-                <div className="fazenda-detail">
-                  <span className="fazenda-detail-label">Biomassa:</span>
-                  <span className="fazenda-detail-value">{viveiro.biomassa.toFixed(0)} kg</span>
-                </div>
-                <div className="fazenda-detail">
-                  <span className="fazenda-detail-label">FCR:</span>
-                  <span className="fazenda-detail-value">{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</span>
-                </div>
+            <div className="fazenda-viveiro-details">
+              <div className="fazenda-detail">
+                <span className="fazenda-detail-label">Fase</span>
+                <span className="fazenda-detail-value">{viveiro.fase}</span>
               </div>
-
-              {/* Botões de ação rápida */}
-              <div className="fazenda-viveiro-actions">
-                <button 
-                  className="fazenda-action-btn manha"
-                  onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'manha')}
-                  disabled={viveiro.alimentouManha}
-                >
-                  🌅 Alimentar Manhã
-                </button>
-                <button 
-                  className="fazenda-action-btn tarde"
-                  onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'tarde')}
-                  disabled={viveiro.alimentouTarde}
-                >
-                  🌆 Alimentar Tarde
-                </button>
-                <button 
-                  className="fazenda-action-btn details"
-                  onClick={() => navigate(`/racao/${viveiro.viveiro.id}`)}
-                >
-                  📋 Ver Detalhes
-                </button>
+              <div className="fazenda-detail">
+                <span className="fazenda-detail-label">Biomassa</span>
+                <span className="fazenda-detail-value">{viveiro.biomassa.toFixed(0)} kg</span>
+              </div>
+              <div className="fazenda-detail">
+                <span className="fazenda-detail-label">FCR</span>
+                <span className="fazenda-detail-value">{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</span>
               </div>
             </div>
-          ))}
-        </div>
+
+            <div className="fazenda-viveiro-actions">
+              <button 
+                className="fazenda-action-btn manha"
+                onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'manha')}
+                disabled={viveiro.alimentouManha}
+              >
+                🌅 Manhã
+              </button>
+              <button 
+                className="fazenda-action-btn tarde"
+                onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'tarde')}
+                disabled={viveiro.alimentouTarde}
+              >
+                🌆 Tarde
+              </button>
+              <button 
+                className="fazenda-action-btn details"
+                onClick={() => navigate(`/viveiro/${viveiro.viveiro.id}/racao`)}
+              >
+                📋 Detalhes
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Tabela resumo */}
-      <div className="card">
-        <h3 className="card-title">Resumo Detalhado</h3>
-        <div className="table-wrapper">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Viveiro</th>
-                <th>DOC</th>
-                <th>Fase</th>
-                <th className="text-right">Hoje</th>
-                <th className="text-right">Recomendado</th>
-                <th className="text-right">Biomassa</th>
-                <th className="text-right">FCR</th>
-                <th>Status</th>
-                <th className="text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dashboard.viveiros.map((viveiro) => (
-                <tr key={viveiro.viveiro.id}>
-                  <td>
+      {/* Tabela Resumo */}
+      <div className="fazenda-summary-section">
+        <div className="fazenda-summary-header">
+          <h2 className="fazenda-summary-title">📋 Resumo Detalhado</h2>
+        </div>
+        
+        <table className="fazenda-summary-table">
+          <thead>
+            <tr>
+              <th>Viveiro</th>
+              <th>DOC</th>
+              <th>Fase</th>
+              <th>Ração Hoje</th>
+              <th>Recomendado</th>
+              <th>Biomassa</th>
+              <th>FCR</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dashboard.viveiros.map((viveiro) => (
+              <tr key={viveiro.viveiro.id}>
+                <td><strong>{viveiro.viveiro.nome}</strong></td>
+                <td>{viveiro.doc}</td>
+                <td>{viveiro.fase}</td>
+                <td>{viveiro.racaoHojeTotal.toFixed(1)} kg</td>
+                <td>{viveiro.recomendadoTotal.toFixed(1)} kg</td>
+                <td>{viveiro.biomassa.toFixed(0)} kg</td>
+                <td>{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</td>
+                <td>
+                  <span className={`fazenda-feed-status ${viveiro.alimentouManha && viveiro.alimentouTarde ? 'complete' : viveiro.alimentouManha ? 'partial' : 'pending'}`}>
+                    {viveiro.alimentouManha && viveiro.alimentouTarde ? 'Completo' : viveiro.alimentouManha ? 'Parcial' : 'Pendente'}
+                  </span>
+                </td>
+                <td>
+                  <div className="fazenda-table-actions">
                     <button 
-                      className="btn-link" 
-                      onClick={() => navigate(`/racao/${viveiro.viveiro.id}`)}
+                      className="fazenda-table-btn primary"
+                      onClick={() => navigate(`/viveiro/${viveiro.viveiro.id}/racao`)}
                     >
-                      {viveiro.viveiro.nome}
+                      Ver Detalhes
                     </button>
-                  </td>
-                  <td>{viveiro.doc}</td>
-                  <td>{viveiro.fase}</td>
-                  <td className="text-right">{viveiro.racaoHojeTotal.toFixed(1)} kg</td>
-                  <td className="text-right">{viveiro.recomendadoTotal.toFixed(1)} kg</td>
-                  <td className="text-right">{viveiro.biomassa.toFixed(0)} kg</td>
-                  <td className="text-right">{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</td>
-                  <td>
-                    <span className={`status-badge ${viveiro.alimentouManha && viveiro.alimentouTarde ? 'complete' : viveiro.alimentouManha ? 'partial' : 'pending'}`}>
-                      {viveiro.alimentouManha && viveiro.alimentouTarde ? 'Completo' : viveiro.alimentouManha ? 'Parcial' : 'Pendente'}
-                    </span>
-                  </td>
-                  <td className="text-center">
-                    <div className="table-actions">
-                      <button 
-                        className="table-action-btn"
-                        onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'manha')}
-                        disabled={viveiro.alimentouManha}
-                        title="Alimentar Manhã"
-                      >
-                        🌅
-                      </button>
-                      <button 
-                        className="table-action-btn"
-                        onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'tarde')}
-                        disabled={viveiro.alimentouTarde}
-                        title="Alimentar Tarde"
-                      >
-                        🌆
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Rodapé com última atualização */}
-      <div className="card-footer">
-        <small className="text-muted">
-          Última atualização: {new Date(dashboard.atualizado).toLocaleString('pt-BR')}
-        </small>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
