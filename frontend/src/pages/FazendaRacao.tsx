@@ -56,6 +56,19 @@ function FazendaRacao() {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Estados para modais de quantidade
+  const [quantidadeModal, setQuantidadeModal] = useState<{
+    isOpen: boolean
+    viveiroId: number
+    periodo: 'manha' | 'tarde'
+    quantidade: string
+  }>({
+    isOpen: false,
+    viveiroId: 0,
+    periodo: 'manha',
+    quantidade: ''
+  })
 
   // Carregar dados do dashboard
   useEffect(() => {
@@ -129,23 +142,49 @@ function FazendaRacao() {
 
   // Função para registrar alimentação rápida
   const handleAlimentacaoRapida = async (viveiroId: number, periodo: 'manha' | 'tarde') => {
-    try {
-      const hoje = new Date().toISOString().split('T')[0]
-      const quantidade = 5.0 // Quantidade padrão para alimentação rápida
-      
-      await backendApi.createColetaRacao(viveiroId.toString(), {
-        data: hoje,
-        qnt_manha: periodo === 'manha' ? quantidade : 0,
-        qnt_tarde: periodo === 'tarde' ? quantidade : 0
-      })
+    // Abrir modal com quantidade pré-preenchida
+    const viveiro = dashboard?.viveiros.find(v => v.viveiro.id === viveiroId)
+    if (!viveiro) return
+    
+    const quantidadeRecomendada = periodo === 'manha' ? viveiro.recomendadoManha : viveiro.recomendadoTarde
+    
+    setQuantidadeModal({
+      isOpen: true,
+      viveiroId,
+      periodo,
+      quantidade: quantidadeRecomendada.toString()
+    })
+  }
 
+  const handleConfirmarQuantidade = async () => {
+    const { viveiroId, periodo, quantidade } = quantidadeModal
+    
+    if (!quantidade || parseFloat(quantidade) <= 0) {
+      toast.error('Quantidade inválida', 'Insira uma quantidade válida de ração')
+      return
+    }
+
+    try {
+      await backendApi.registrarAlimentacao(viveiroId, periodo, parseFloat(quantidade))
+      
       // Recarregar dashboard
       const dashboardData = await backendApi.getDashboardFazenda()
       setDashboard(dashboardData)
-
-    } catch (error: any) {
-      console.error('Erro ao registrar alimentação rápida:', error)
       
+      toast.success(
+        'Alimentação registrada', 
+        `${periodo === 'manha' ? 'Manhã' : 'Tarde'}: ${quantidade} kg`
+      )
+      
+      // Fechar modal
+      setQuantidadeModal({
+        isOpen: false,
+        viveiroId: 0,
+        periodo: 'manha',
+        quantidade: ''
+      })
+    } catch (error: any) {
+      console.error('Erro ao registrar alimentação:', error)
       if (error.response?.data?.error) {
         toast.error('Erro ao registrar alimentação', error.response.data.error)
       } else if (error.response?.data?.details) {
@@ -159,6 +198,15 @@ function FazendaRacao() {
         toast.error('Erro ao registrar alimentação', 'Não foi possível registrar. Tente novamente.')
       }
     }
+  }
+
+  const handleCancelarQuantidade = () => {
+    setQuantidadeModal({
+      isOpen: false,
+      viveiroId: 0,
+      periodo: 'manha',
+      quantidade: ''
+    })
   }
 
   if (loading) {
@@ -380,6 +428,148 @@ function FazendaRacao() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Quantidade de Ração */}
+      {quantidadeModal.isOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}
+          onClick={handleCancelarQuantidade}
+        >
+          <div 
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              maxWidth: '400px',
+              width: '90%',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+                {quantidadeModal.periodo === 'manha' ? '🌅' : '🌆'}
+              </div>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#333', fontSize: '1.5rem' }}>
+                Alimentação - {quantidadeModal.periodo === 'manha' ? 'Manhã' : 'Tarde'}
+              </h3>
+              <p style={{ margin: '0 0 1rem 0', color: '#666', lineHeight: '1.5' }}>
+                Viveiro: <strong>{dashboard?.viveiros.find(v => v.viveiro.id === quantidadeModal.viveiroId)?.viveiro.nome}</strong>
+              </p>
+            </div>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '0.875rem', 
+                fontWeight: '600', 
+                color: '#374151', 
+                marginBottom: '0.5rem' 
+              }}>
+                Quantidade de Ração (kg):
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={quantidadeModal.quantidade}
+                onChange={(e) => setQuantidadeModal({
+                  ...quantidadeModal,
+                  quantidade: e.target.value
+                })}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#667eea'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#d1d5db'
+                  e.target.style.boxShadow = 'none'
+                }}
+                placeholder="Ex: 2.5"
+              />
+              <div style={{ 
+                fontSize: '0.75rem', 
+                color: '#6b7280', 
+                marginTop: '0.25rem' 
+              }}>
+                Recomendado: {quantidadeModal.periodo === 'manha' 
+                  ? dashboard?.viveiros.find(v => v.viveiro.id === quantidadeModal.viveiroId)?.recomendadoManha.toFixed(1)
+                  : dashboard?.viveiros.find(v => v.viveiro.id === quantidadeModal.viveiroId)?.recomendadoTarde.toFixed(1)
+                } kg
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button
+                onClick={handleCancelarQuantidade}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f9fafb'
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'white'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarQuantidade}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  backgroundColor: quantidadeModal.periodo === 'manha' ? '#f59e0b' : '#8b5cf6',
+                  color: 'white',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = quantidadeModal.periodo === 'manha' ? '#d97706' : '#7c3aed'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = quantidadeModal.periodo === 'manha' ? '#f59e0b' : '#8b5cf6'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                Confirmar Alimentação
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -396,7 +586,6 @@ const FazendaDashboardStyles = `
 }
 
 .fazenda-status-card {
-  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1rem;

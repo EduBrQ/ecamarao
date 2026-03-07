@@ -216,6 +216,23 @@ export const backendApi = {
     }
   },
 
+  registrarAlimentacao: async (viveiroId: number, periodo: 'manha' | 'tarde', quantidade: number) => {
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      const racaoData = {
+        data: hoje,
+        qnt_manha: periodo === 'manha' ? quantidade : 0,
+        qnt_tarde: periodo === 'tarde' ? quantidade : 0
+      };
+      
+      const response = await axios.post(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao`, racaoData);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao registrar alimentação:', error);
+      throw error;
+    }
+  },
+
   updateColetaRacao: async (viveiroId: string, id: string, racaoData: {
     data: string;
     qnt_manha: number;

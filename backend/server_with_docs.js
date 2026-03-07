@@ -447,6 +447,9 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
           [viveiro.id]
         );
         
+        // Debug: log dos dados de ração
+        console.log(`Viveiro ${viveiro.id} - Ração encontrada:`, racaoResult.rows);
+        
         // Buscar dados de mortalidade
         const mortalidadeResult = await pool.query(
           'SELECT id, data, quantidade, causa FROM registros_mortalidade WHERE viveiro_id = $1 ORDER BY data DESC',
@@ -459,13 +462,22 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
         const pesoMedio = 0.015; // 15g estimado
         
         const mortTotal = mortalidadeResult.rows.reduce((acc, m) => acc + m.quantidade, 0);
-        const racaoAcumulada = racaoResult.rows.reduce((acc, r) => acc + r.qntManha + r.qntTarde, 0);
+        const racaoAcumulada = racaoResult.rows.reduce((acc, r) => acc + (parseFloat(r.qntManha) || 0) + (parseFloat(r.qntTarde) || 0), 0);
         const biomassa = calcularBiomassa(densidade, mortTotal, pesoMedio);
         const fcr = calcularFCR(racaoAcumulada, biomassa);
         
         // Verificar alimentação hoje
         const hoje = new Date().toISOString().split('T')[0];
+        console.log(`Buscando registro para hoje (${hoje}) no viveiro ${viveiro.id}`);
         const registroHoje = racaoResult.rows.find(r => r.data === hoje);
+        console.log(`Registro hoje encontrado:`, registroHoje);
+        
+        // Calcular totais do dia
+        const racaoHojeManha = registroHoje ? (parseFloat(registroHoje.qntManha) || 0) : 0;
+        const racaoHojeTarde = registroHoje ? (parseFloat(registroHoje.qntTarde) || 0) : 0;
+        const racaoHojeTotal = racaoHojeManha + racaoHojeTarde;
+        
+        console.log(`Viveiro ${viveiro.id} - Ração hoje: Manha=${racaoHojeManha}, Tarde=${racaoHojeTarde}, Total=${racaoHojeTotal}`);
         
         // Calcular recomendação
         const calculoAvancado = calcularRacaoDiariaAvancada(
@@ -485,9 +497,9 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
             status: viveiro.status
           },
           doc,
-          racaoHojeTotal: registroHoje ? registroHoje.qntManha + registroHoje.qntTarde : 0,
-          racaoHojeManha: registroHoje ? registroHoje.qntManha : 0,
-          racaoHojeTarde: registroHoje ? registroHoje.qntTarde : 0,
+          racaoHojeTotal: racaoHojeTotal,
+          racaoHojeManha: racaoHojeManha,
+          racaoHojeTarde: racaoHojeTarde,
           recomendadoTotal: calculoAvancado.totalKg,
           recomendadoManha: calculoAvancado.manhaKg,
           recomendadoTarde: calculoAvancado.tardeKg,
@@ -495,8 +507,8 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
           fcrAtual: fcr,
           racaoAcumulada,
           biomassa,
-          alimentouManha: registroHoje ? registroHoje.qntManha > 0 : false,
-          alimentouTarde: registroHoje ? registroHoje.qntTarde > 0 : false,
+          alimentouManha: racaoHojeManha > 0,
+          alimentouTarde: racaoHojeTarde > 0,
           pesoEstimadoG: calculoAvancado.pesoEstimadoG,
           populacaoEstimada: calculoAvancado.populacaoEstimada,
           biomassaEstimadaKg: calculoAvancado.biomassaEstimadaKg,
@@ -602,7 +614,7 @@ app.post('/api/viveiros/:id/racao', async (req, res) => {
       return res.status(404).json({ error: 'Viveiro não encontrado' });
     }
     
-    // Criar tabela se não existir
+    // Criar tabela se não existir (sem constraint UNIQUE para evitar erros)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS coletas_racao (
         id SERIAL PRIMARY KEY,
@@ -614,18 +626,36 @@ app.post('/api/viveiros/:id/racao', async (req, res) => {
       )
     `);
     
-    // Inserir novo registro de ração
-    const insertResult = await pool.query(
-      'INSERT INTO coletas_racao (viveiro_id, data, qnt_manha, qnt_tarde) VALUES ($1, $2, $3, $4) RETURNING id, data, qnt_manha as "qntManha", qnt_tarde as "qntTarde"',
-      [id, data, qnt_manha, qnt_tarde]
+    // Verificar se já existe registro para este viveiro e data
+    const existingRecord = await pool.query(
+      'SELECT id FROM coletas_racao WHERE viveiro_id = $1 AND data = $2',
+      [id, data]
     );
     
+    let record;
+    
+    if (existingRecord.rows.length > 0) {
+      // Atualizar registro existente
+      const updateResult = await pool.query(
+        'UPDATE coletas_racao SET qnt_manha = $1, qnt_tarde = $2, created_at = CURRENT_TIMESTAMP WHERE viveiro_id = $3 AND data = $4 RETURNING id, data, qnt_manha as "qntManha", qnt_tarde as "qntTarde"',
+        [qnt_manha, qnt_tarde, id, data]
+      );
+      record = updateResult.rows[0];
+    } else {
+      // Inserir novo registro
+      const insertResult = await pool.query(
+        'INSERT INTO coletas_racao (viveiro_id, data, qnt_manha, qnt_tarde) VALUES ($1, $2, $3, $4) RETURNING id, data, qnt_manha as "qntManha", qnt_tarde as "qntTarde"',
+        [id, data, qnt_manha, qnt_tarde]
+      );
+      record = insertResult.rows[0];
+    }
+    
     // Converter para garantir que valores numéricos sejam numbers
-    const newRecord = {
-      ...insertResult.rows[0],
-      qntManha: parseFloat(insertResult.rows[0].qntManha) || 0,
-      qntTarde: parseFloat(insertResult.rows[0].qntTarde) || 0,
-      data: new Date(insertResult.rows[0].data).toISOString().split('T')[0] // Formatar data como YYYY-MM-DD
+    const formattedRecord = {
+      ...record,
+      qntManha: parseFloat(record.qntManha) || 0,
+      qntTarde: parseFloat(record.qntTarde) || 0,
+      data: new Date(record.data).toISOString().split('T')[0] // Formatar data como YYYY-MM-DD
     };
     
     // Atualizar quantidade de ração no viveiro (opcional)
@@ -635,11 +665,14 @@ app.post('/api/viveiros/:id/racao', async (req, res) => {
       [totalRacao, data, id]
     );
     
-    // Retornar o registro criado
-    res.status(201).json(newRecord);
+    // Retornar o registro atualizado/criado
+    res.status(200).json(formattedRecord);
   } catch (error) {
     console.error('Erro ao criar coleta de ração:', error);
-    res.status(500).json({ error: 'Erro ao criar coleta de ração' });
+    res.status(500).json({ 
+      error: 'Erro ao criar coleta de ração', 
+      details: error.message 
+    });
   }
 });
 
