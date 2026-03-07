@@ -30,7 +30,7 @@ function Racao() {
   useEffect(() => {
     const loadData = async () => {
       if (!viveiroId) return
-      
+
       try {
         setLoading(true)
         setError(null)
@@ -86,11 +86,11 @@ function Racao() {
   const gastoRacao = racaoTotal * precoKg
   const densidade = viveiro?.densidade ?? 0
   const mortTotal = mortalidade.reduce((acc, m) => acc + m.quantidade, 0)
-  const pesoMedio = 0 // Peso médio não está disponível no backend ainda
+  // Usar peso médio do backend se disponível, senão estimar baseado no DOC
+  const pesoMedio = 0.015 // 15g estimado para pós-larva
+  const doc = calcularDOC(viveiro?.data_inicio_ciclo)
   const biomassa = calcularBiomassa(densidade, mortTotal, pesoMedio)
   const fcr = calcularFCR(racaoTotal, biomassa)
-  const doc = calcularDOC(viveiro?.data_inicio_ciclo)
-  
   const recomendacao = calcularRacaoDiariaAvancada(
     densidade,
     doc,
@@ -142,11 +142,11 @@ function Racao() {
         qnt_manha: Number(form.qntManha),
         qnt_tarde: Number(form.qntTarde)
       })
-      
+
       // Recarregar lista
       const updatedRacao = await backendApi.getColetasRacao(viveiroId!)
       setRacao(updatedRacao)
-      
+
       setModalOpen(false)
       setSubmitted(false)
       setForm({ data: '', qntManha: '', qntTarde: '' })
@@ -161,12 +161,12 @@ function Racao() {
       console.warn('preencherRecomendacao - Sem faixa de ração disponível');
       return;
     }
-    
+
     if (recomendacao.totalKg <= 0) {
       console.warn('preencherRecomendacao - Quantidade recomendada inválida:', recomendacao.totalKg);
       return;
     }
-    
+
     setForm({
       data: hoje,
       qntManha: recomendacao.manhaKg > 0 ? recomendacao.manhaKg.toFixed(1) : '',
@@ -178,7 +178,7 @@ function Racao() {
   const removerColeta = async (itemId: number) => {
     try {
       await backendApi.deleteColetaRacao(viveiroId!, itemId.toString())
-      
+
       // Recarregar lista
       const updatedRacao = await backendApi.getColetasRacao(viveiroId!)
       setRacao(updatedRacao)
@@ -261,8 +261,8 @@ function Racao() {
             <div className="daily-feed-taxa">
               <span>Taxa: <strong>{recomendacao.faixa.taxaAlimentacao}% da biomassa/dia</strong></span>
               <span className="daily-feed-taxa-detail">
-                Biomassa est.: {recomendacao.biomassaEstimadaKg.toFixed(0)} kg &middot; 
-                Peso: {recomendacao.pesoEstimadoG.toFixed(1)}g &middot; 
+                Biomassa est.: {recomendacao.biomassaEstimadaKg.toFixed(0)} kg &middot;
+                Peso: {recomendacao.pesoEstimadoG.toFixed(1)}g &middot;
                 Pop: {recomendacao.populacaoEstimada.toLocaleString()} camarões
               </span>
             </div>

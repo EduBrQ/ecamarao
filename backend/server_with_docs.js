@@ -258,6 +258,174 @@ app.get('/api/viveiros', async (req, res) => {
   }
 });
 
+// Após a linha 236 (GET /api/viveiros)
+app.get('/api/viveiros/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM viveiros WHERE id = $1',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Viveiro não encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar viveiro:', error);
+    res.status(500).json({ error: 'Erro ao buscar viveiro' });
+  }
+});
+
+// Helper: calcular dias de cultivo (DOC)
+function calcularDOC(dataInicio) {
+  if (!dataInicio) return 0;
+  const inicio = new Date(dataInicio);
+  const hoje = new Date();
+  const diff = Math.floor((hoje.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diff);
+}
+
+// Endpoint para dados de ração de um viveiro
+app.get('/api/viveiros/:id/racao', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Verificar se viveiro existe
+    const viveiroResult = await pool.query(
+      'SELECT * FROM viveiros WHERE id = $1',
+      [id]
+    );
+    
+    if (viveiroResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Viveiro não encontrado' });
+    }
+    
+    // Criar tabela se não existir
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS coletas_racao (
+        id SERIAL PRIMARY KEY,
+        viveiro_id INTEGER REFERENCES viveiros(id),
+        data DATE NOT NULL,
+        qnt_manha DECIMAL(10,2) NOT NULL,
+        qnt_tarde DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // Buscar todos os registros de ração do viveiro
+    const racaoResult = await pool.query(
+      'SELECT id, data, qnt_manha as "qntManha", qnt_tarde as "qntTarde" FROM coletas_racao WHERE viveiro_id = $1 ORDER BY data DESC',
+      [id]
+    );
+    
+    // Converter para garantir que valores numéricos sejam numbers
+    const racaoData = racaoResult.rows.map(row => ({
+      ...row,
+      qntManha: parseFloat(row.qntManha) || 0,
+      qntTarde: parseFloat(row.qntTarde) || 0,
+      data: new Date(row.data).toISOString().split('T')[0] // Formatar data como YYYY-MM-DD
+    }));
+    
+    // Adicionar dados simulados para cálculo de FCR (implementação real: criar tabela de pesagens)
+    const pesoMedioEstimado = 0.015; // 15g em média (valor estimado)
+    const diasCultivo = calcularDOC(viveiroResult.rows[0].data_inicio_ciclo);
+    
+    res.json({
+      racoes: racaoData,
+      peso_medio: pesoMedioEstimado,
+      dias_cultivo: diasCultivo
+    });
+  } catch (error) {
+    console.error('Erro ao buscar dados de ração:', error);
+    res.status(500).json({ error: 'Erro ao buscar dados de ração' });
+  }
+});
+
+// Endpoint para criar coleta de ração
+app.post('/api/viveiros/:id/racao', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, qnt_manha, qnt_tarde } = req.body;
+    
+    // Verificar se viveiro existe
+    const viveiroResult = await pool.query(
+      'SELECT * FROM viveiros WHERE id = $1',
+      [id]
+    );
+    
+    if (viveiroResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Viveiro não encontrado' });
+    }
+    
+    // Criar tabela se não existir
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS coletas_racao (
+        id SERIAL PRIMARY KEY,
+        viveiro_id INTEGER REFERENCES viveiros(id),
+        data DATE NOT NULL,
+        qnt_manha DECIMAL(10,2) NOT NULL,
+        qnt_tarde DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // Inserir novo registro de ração
+    const insertResult = await pool.query(
+      'INSERT INTO coletas_racao (viveiro_id, data, qnt_manha, qnt_tarde) VALUES ($1, $2, $3, $4) RETURNING id, data, qnt_manha as "qntManha", qnt_tarde as "qntTarde"',
+      [id, data, qnt_manha, qnt_tarde]
+    );
+    
+    // Converter para garantir que valores numéricos sejam numbers
+    const newRecord = {
+      ...insertResult.rows[0],
+      qntManha: parseFloat(insertResult.rows[0].qntManha) || 0,
+      qntTarde: parseFloat(insertResult.rows[0].qntTarde) || 0,
+      data: new Date(insertResult.rows[0].data).toISOString().split('T')[0] // Formatar data como YYYY-MM-DD
+    };
+    
+    // Atualizar quantidade de ração no viveiro (opcional)
+    const totalRacao = qnt_manha + qnt_tarde;
+    await pool.query(
+      'UPDATE viveiros SET quantidade_racao = $1, data_ultima_alimentacao = $2 WHERE id = $3',
+      [totalRacao, data, id]
+    );
+    
+    // Retornar o registro criado
+    res.status(201).json(newRecord);
+  } catch (error) {
+    console.error('Erro ao criar coleta de ração:', error);
+    res.status(500).json({ error: 'Erro ao criar coleta de ração' });
+  }
+});
+
+// Endpoint para dados de mortalidade de um viveiro
+app.get('/api/viveiros/:id/mortalidade', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Verificar se viveiro existe
+    const viveiroResult = await pool.query(
+      'SELECT * FROM viveiros WHERE id = $1',
+      [id]
+    );
+    
+    if (viveiroResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Viveiro não encontrado' });
+    }
+    
+    // Retornar array vazio por enquanto (implementar tabela real depois)
+    // Frontend espera array de RegistroMortalidade[]
+    const mortalidadeData = [];
+    
+    res.json(mortalidadeData);
+  } catch (error) {
+    console.error('Erro ao buscar dados de mortalidade:', error);
+    res.status(500).json({ error: 'Erro ao buscar dados de mortalidade' });
+  }
+});
+
 // Estatísticas
 app.get('/api/stats', async (req, res) => {
   try {

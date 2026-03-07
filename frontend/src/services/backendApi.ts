@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? 'https://ecamarao-backend.onrender.com' : '');
+  (import.meta.env.PROD ? '' : 'http://localhost:8000');
 
 export interface User {
   id: number;
@@ -183,7 +183,7 @@ export const backendApi = {
   getColetasRacao: async (viveiroId: string) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao`);
-      return response.data;
+  return response.data.racoes || response.data; // compatibilidade
     } catch (error) {
       console.error('Erro ao listar coletas de ração:', error);
       throw error;
