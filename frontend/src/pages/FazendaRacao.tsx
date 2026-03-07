@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  ColetaRacao, RegistroMortalidade,
-  calcularBiomassa, calcularFCR, calcularDOC,
-  calcularRacaoDiariaAvancada,
-} from '../models/types'
-import { backendApi, Viveiro } from '../services/backendApi'
+import { backendApi } from '../services/backendApi'
+import { useToastGlobal } from '../hooks/useToastGlobal'
 
-interface ViveiroResumo {
-  viveiro: Viveiro
+interface ViveiroDashboard {
+  viveiro: {
+    id: number
+    nome: string
+    densidade: number
+    area: number
+    data_inicio_ciclo: string
+    status: string
+  }
   doc: number
   racaoHojeTotal: number
   racaoHojeManha: number
@@ -22,111 +25,140 @@ interface ViveiroResumo {
   biomassa: number
   alimentouManha: boolean
   alimentouTarde: boolean
-  // Novos campos para predição
   pesoEstimadoG: number
   populacaoEstimada: number
   biomassaEstimadaKg: number
-  pesoPreditoG: number
   usandoPesoReal: boolean
-  plData?: any
+}
+
+interface TotaisFazenda {
+  totalViveiros: number
+  totalRacaoHoje: number
+  totalRecomendado: number
+  totalBiomassa: number
+  totalRacaoAcumulada: number
+  fcrMedio: number
+  viveirosAlimentados: number
+  viveirosParciais: number
+  viveirosPendentes: number
+}
+
+interface DashboardResponse {
+  viveiros: ViveiroDashboard[]
+  totais: TotaisFazenda
+  atualizado: string
 }
 
 function FazendaRacao() {
   const navigate = useNavigate()
-  const [viveiros, setViveiros] = useState<Viveiro[]>([])
-  const [resumos, setResumos] = useState<ViveiroResumo[]>([])
+  const toast = useToastGlobal()
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Função para calcular resumo do viveiro
-  const calcularResumoViveiro = (viveiro: Viveiro, racao: ColetaRacao[], mortalidade: RegistroMortalidade[]): ViveiroResumo => {
-    console.log(viveiros);
-    
-    const doc = calcularDOC(viveiro.data_inicio_ciclo)
-    const densidade = viveiro.densidade ?? 0
-    const hoje = new Date().toISOString().split('T')[0]
-
-    // Usar a nova função avançada de cálculo
-    const calculoAvancado = calcularRacaoDiariaAvancada(
-      densidade,
-      doc,
-      mortalidade,
-      0, // pesoMedio não disponível no backend ainda
-      undefined // plInicial não disponível no backend
-    )
-
-    // Calcular métricas tradicionais para comparação
-    const mortTotal = mortalidade.reduce((acc: number, m: RegistroMortalidade) => acc + m.quantidade, 0)
-    const biomassaTradicional = calcularBiomassa(densidade, mortTotal, 0)
-    const racaoAcumulada = racao.reduce((acc: number, r: ColetaRacao) => acc + r.qntManha + r.qntTarde, 0)
-    const fcrAtual = calcularFCR(racaoAcumulada, biomassaTradicional)
-
-    // Check today's feeding
-    const registroHoje = racao.find((r: ColetaRacao) => {
-      const d = typeof r.data === 'string' ? r.data : new Date(r.data).toISOString().split('T')[0]
-      return d === hoje
-    })
-
-    return {
-      viveiro,
-      doc,
-      racaoHojeTotal: registroHoje ? registroHoje.qntManha + registroHoje.qntTarde : 0,
-      racaoHojeManha: registroHoje ? registroHoje.qntManha : 0,
-      racaoHojeTarde: registroHoje ? registroHoje.qntTarde : 0,
-      recomendadoTotal: calculoAvancado.totalKg,
-      recomendadoManha: calculoAvancado.manhaKg,
-      recomendadoTarde: calculoAvancado.tardeKg,
-      fase: calculoAvancado.faixa?.fase ?? 'N/A',
-      fcrAtual,
-      racaoAcumulada,
-      biomassa: biomassaTradicional,
-      alimentouManha: registroHoje ? registroHoje.qntManha > 0 : false,
-      alimentouTarde: registroHoje ? registroHoje.qntTarde > 0 : false,
-      // Novos campos de predição
-      pesoEstimadoG: calculoAvancado.pesoEstimadoG,
-      populacaoEstimada: calculoAvancado.populacaoEstimada,
-      biomassaEstimadaKg: calculoAvancado.biomassaEstimadaKg,
-      pesoPreditoG: calculoAvancado.pesoEstimadoG,
-      usandoPesoReal: false,
-      plData: undefined
-    }
-  }
-
-  // Carregar dados do backend
+  // Carregar dados do dashboard
   useEffect(() => {
-    const loadFazendaData = async () => {
+    const loadDashboard = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // Carregar todos os viveiros
-        const viveirosData = await backendApi.getViveiros()
-        setViveiros(viveirosData)
+        const dashboardData = await backendApi.getDashboardFazenda()
+        setDashboard(dashboardData)
 
-        // Carregar dados de cada viveiro em paralelo
-        const resumosData = await Promise.all(
-          viveirosData.map(async (viveiro: Viveiro) => {
-            const [racaoData, mortalidadeData] = await Promise.all([
-              backendApi.getColetasRacao(viveiro.id.toString()),
-              backendApi.getRegistrosMortalidade(viveiro.id.toString())
-            ])
-
-            return calcularResumoViveiro(viveiro, racaoData, mortalidadeData)
-          })
-        )
-
-        setResumos(resumosData)
-
-      } catch (err) {
-        console.error('Erro ao carregar dados da fazenda:', err)
+      } catch (err: any) {
+        console.error('Erro ao carregar dashboard da fazenda:', err)
+        
+        if (err.response?.data?.error) {
+          toast.error('Erro ao carregar dados', err.response.data.error)
+        } else {
+          toast.error('Erro ao carregar dados', 'Não foi possível carregar o dashboard da fazenda')
+        }
+        
         setError('Erro ao carregar dados da fazenda')
       } finally {
         setLoading(false)
       }
     }
 
-    loadFazendaData()
-  }, [])
+    loadDashboard()
+  }, [toast])
+
+  // Função para exportar dados da fazenda
+  const handleExportFazenda = () => {
+    if (!dashboard) return
+
+    try {
+      const csvData = [
+        ['Viveiro', 'DOC', 'Fase', 'Ração Hoje (kg)', 'Recomendado (kg)', 'Biomassa (kg)', 'FCR', 'Status Alimentação'],
+        ...dashboard.viveiros.map(v => [
+          v.viveiro.nome,
+          v.doc,
+          v.fase,
+          v.racaoHojeTotal.toFixed(1),
+          v.recomendadoTotal.toFixed(1),
+          v.biomassa.toFixed(0),
+          v.fcrAtual > 0 ? v.fcrAtual.toFixed(2) : '-',
+          v.alimentouManha && v.alimentouTarde ? 'Completo' : v.alimentouManha ? 'Parcial' : 'Pendente'
+        ])
+      ]
+
+      const csvContent = csvData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `fazenda_racao_${new Date().toLocaleDateString('pt-BR')}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+    } catch (error: any) {
+      console.error('Erro ao exportar dados da fazenda:', error)
+      
+      if (error.response?.data?.error) {
+        toast.error('Erro ao exportar', error.response.data.error)
+      } else {
+        toast.error('Erro ao exportar', 'Não foi possível exportar os dados. Tente novamente.')
+      }
+    }
+  }
+
+  // Função para registrar alimentação rápida
+  const handleAlimentacaoRapida = async (viveiroId: number, periodo: 'manha' | 'tarde') => {
+    try {
+      const hoje = new Date().toISOString().split('T')[0]
+      const quantidade = 5.0 // Quantidade padrão para alimentação rápida
+      
+      await backendApi.createColetaRacao(viveiroId.toString(), {
+        data: hoje,
+        qnt_manha: periodo === 'manha' ? quantidade : 0,
+        qnt_tarde: periodo === 'tarde' ? quantidade : 0
+      })
+
+      // Recarregar dashboard
+      const dashboardData = await backendApi.getDashboardFazenda()
+      setDashboard(dashboardData)
+
+    } catch (error: any) {
+      console.error('Erro ao registrar alimentação rápida:', error)
+      
+      if (error.response?.data?.error) {
+        toast.error('Erro ao registrar alimentação', error.response.data.error)
+      } else if (error.response?.data?.details) {
+        const errors = error.response.data.details;
+        if (Array.isArray(errors) && errors.length > 0) {
+          toast.error('Erro ao registrar alimentação', errors[0].message)
+        } else {
+          toast.error('Erro ao registrar alimentação', 'Dados inválidos')
+        }
+      } else {
+        toast.error('Erro ao registrar alimentação', 'Não foi possível registrar. Tente novamente.')
+      }
+    }
+  }
 
   if (loading) {
     return (
@@ -144,52 +176,20 @@ function FazendaRacao() {
     )
   }
 
-  const totalRacaoHoje = resumos.reduce((acc, r) => acc + r.racaoHojeTotal, 0)
-  const totalRecomendado = resumos.reduce((acc, r) => acc + r.recomendadoTotal, 0)
-  const totalBiomassa = resumos.reduce((acc, r) => acc + r.biomassa, 0)
-  const totalRacaoAcumulada = resumos.reduce((acc, r) => acc + r.racaoAcumulada, 0)
-  const fcrMedio = totalBiomassa > 0 ? totalRacaoAcumulada / totalBiomassa : 0
-
-  // Função para exportar dados da fazenda
-  const handleExportFazenda = () => {
-    try {
-      const csvData = [
-        ['Viveiro', 'DOC', 'Fase', 'Ração Hoje (kg)', 'Recomendado (kg)', 'Biomassa (kg)', 'FCR', 'Status Alimentação'],
-        ...resumos.map(resumo => [
-          resumo.viveiro.nome,
-          resumo.doc,
-          resumo.fase,
-          resumo.racaoHojeTotal.toFixed(1),
-          resumo.recomendadoTotal.toFixed(1),
-          resumo.biomassa.toFixed(0),
-          resumo.fcrAtual > 0 ? resumo.fcrAtual.toFixed(2) : '-',
-          resumo.alimentouManha && resumo.alimentouTarde ? 'Completo' : resumo.alimentouManha ? 'Parcial' : 'Pendente'
-        ])
-      ]
-
-      const csvContent = csvData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
-      
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      link.setAttribute('href', url)
-      link.setAttribute('download', `fazenda_racao_${new Date().toLocaleDateString('pt-BR')}.csv`)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-    } catch (error) {
-      console.error('Erro ao exportar dados da fazenda:', error)
-      alert('Erro ao exportar dados. Tente novamente.')
-    }
+  if (!dashboard) {
+    return (
+      <div className="container fade-in">
+        <div className="card text-center">Nenhum dado disponível</div>
+      </div>
+    )
   }
 
   return (
     <div className="container fade-in">
+      {/* Cabeçalho com informações gerais */}
       <div className="card">
         <div className="card-header-accent">
-          Visão Geral da Fazenda
+          📊 Dashboard da Fazenda
           <button 
             className="export-button" 
             onClick={() => handleExportFazenda()}
@@ -201,70 +201,112 @@ function FazendaRacao() {
         
         <div className="fazenda-summary">
           <div className="fazenda-main">
-            <span className="fazenda-value">{resumos.length}</span>
+            <span className="fazenda-value">{dashboard.totais.totalViveiros}</span>
             <span className="fazenda-label">Viveiros Ativos</span>
           </div>
           <div className="fazenda-details">
             <div className="fazenda-detail-item">
-              <span className="fazenda-detail-value">{totalRacaoHoje.toFixed(1)} kg</span>
+              <span className="fazenda-detail-value">{dashboard.totais.totalRacaoHoje.toFixed(1)} kg</span>
               <span className="fazenda-detail-label">Ração Hoje</span>
             </div>
             <div className="fazenda-detail-item">
-              <span className="fazenda-detail-value">{totalRecomendado.toFixed(1)} kg</span>
+              <span className="fazenda-detail-value">{dashboard.totais.totalRecomendado.toFixed(1)} kg</span>
               <span className="fazenda-detail-label">Recomendado</span>
             </div>
             <div className="fazenda-detail-item">
-              <span className="fazenda-detail-value">{totalBiomassa.toFixed(0)} kg</span>
+              <span className="fazenda-detail-value">{dashboard.totais.totalBiomassa.toFixed(0)} kg</span>
               <span className="fazenda-detail-label">Biomassa Total</span>
             </div>
             <div className="fazenda-detail-item">
-              <span className="fazenda-detail-value">{fcrMedio > 0 ? fcrMedio.toFixed(2) : '-'}</span>
+              <span className="fazenda-detail-value">{dashboard.totais.fcrMedio > 0 ? dashboard.totais.fcrMedio.toFixed(2) : '-'}</span>
               <span className="fazenda-detail-label">FCR Médio</span>
             </div>
           </div>
         </div>
+
+        {/* Indicadores de status */}
+        <div className="fazenda-status-grid">
+          <div className="fazenda-status-card complete">
+            <span className="fazenda-status-value">{dashboard.totais.viveirosAlimentados}</span>
+            <span className="fazenda-status-label">Alimentação Completa</span>
+          </div>
+          <div className="fazenda-status-card partial">
+            <span className="fazenda-status-value">{dashboard.totais.viveirosParciais}</span>
+            <span className="fazenda-status-label">Alimentação Parcial</span>
+          </div>
+          <div className="fazenda-status-card pending">
+            <span className="fazenda-status-value">{dashboard.totais.viveirosPendentes}</span>
+            <span className="fazenda-status-label">Alimentação Pendente</span>
+          </div>
+        </div>
       </div>
 
+      {/* Cards dos viveiros */}
       <div className="card">
-        <h3 className="card-title">Status de Alimentação por Viveiro</h3>
+        <h3 className="card-title">Controle Rápido por Viveiro</h3>
         <div className="fazenda-viveiros-grid">
-          {resumos.map((resumo) => (
-            <div key={resumo.viveiro.id} className="fazenda-viveiro-card" onClick={() => navigate(`/racao/${resumo.viveiro.id}`)}>
+          {dashboard.viveiros.map((viveiro) => (
+            <div key={viveiro.viveiro.id} className="fazenda-viveiro-card">
               <div className="fazenda-viveiro-header">
-                <h4>{resumo.viveiro.nome}</h4>
-                <span className="fazenda-viveiro-doc">DOC {resumo.doc}</span>
+                <h4>{viveiro.viveiro.nome}</h4>
+                <span className="fazenda-viveiro-doc">DOC {viveiro.doc}</span>
               </div>
               
               <div className="fazenda-viveiro-status">
-                <div className={`fazenda-feed-status ${resumo.alimentouManha && resumo.alimentouTarde ? 'complete' : resumo.alimentouManha ? 'partial' : 'pending'}`}>
-                  {resumo.alimentouManha && resumo.alimentouTarde ? '✅ Completo' : resumo.alimentouManha ? '🌅 Manhã' : '⏳ Pendente'}
+                <div className={`fazenda-feed-status ${viveiro.alimentouManha && viveiro.alimentouTarde ? 'complete' : viveiro.alimentouManha ? 'partial' : 'pending'}`}>
+                  {viveiro.alimentouManha && viveiro.alimentouTarde ? '✅ Completo' : viveiro.alimentouManha ? '🌅 Parcial' : '⏳ Pendente'}
                 </div>
                 <div className="fazenda-feed-amount">
-                  {resumo.racaoHojeTotal.toFixed(1)} / {resumo.recomendadoTotal.toFixed(1)} kg
+                  {viveiro.racaoHojeTotal.toFixed(1)} / {viveiro.recomendadoTotal.toFixed(1)} kg
                 </div>
               </div>
 
               <div className="fazenda-viveiro-details">
                 <div className="fazenda-detail">
                   <span className="fazenda-detail-label">Fase:</span>
-                  <span className="fazenda-detail-value">{resumo.fase}</span>
+                  <span className="fazenda-detail-value">{viveiro.fase}</span>
                 </div>
                 <div className="fazenda-detail">
                   <span className="fazenda-detail-label">Biomassa:</span>
-                  <span className="fazenda-detail-value">{resumo.biomassa.toFixed(0)} kg</span>
+                  <span className="fazenda-detail-value">{viveiro.biomassa.toFixed(0)} kg</span>
                 </div>
                 <div className="fazenda-detail">
                   <span className="fazenda-detail-label">FCR:</span>
-                  <span className="fazenda-detail-value">{resumo.fcrAtual > 0 ? resumo.fcrAtual.toFixed(2) : '-'}</span>
+                  <span className="fazenda-detail-value">{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</span>
                 </div>
+              </div>
+
+              {/* Botões de ação rápida */}
+              <div className="fazenda-viveiro-actions">
+                <button 
+                  className="fazenda-action-btn manha"
+                  onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'manha')}
+                  disabled={viveiro.alimentouManha}
+                >
+                  🌅 Alimentar Manhã
+                </button>
+                <button 
+                  className="fazenda-action-btn tarde"
+                  onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'tarde')}
+                  disabled={viveiro.alimentouTarde}
+                >
+                  🌆 Alimentar Tarde
+                </button>
+                <button 
+                  className="fazenda-action-btn details"
+                  onClick={() => navigate(`/racao/${viveiro.viveiro.id}`)}
+                >
+                  📋 Ver Detalhes
+                </button>
               </div>
             </div>
           ))}
         </div>
       </div>
 
+      {/* Tabela resumo */}
       <div className="card">
-        <h3 className="card-title">Resumo por Viveiro</h3>
+        <h3 className="card-title">Resumo Detalhado</h3>
         <div className="table-wrapper">
           <table className="table">
             <thead>
@@ -277,29 +319,50 @@ function FazendaRacao() {
                 <th className="text-right">Biomassa</th>
                 <th className="text-right">FCR</th>
                 <th>Status</th>
+                <th className="text-center">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {resumos.map((resumo) => (
-                <tr key={resumo.viveiro.id}>
+              {dashboard.viveiros.map((viveiro) => (
+                <tr key={viveiro.viveiro.id}>
                   <td>
                     <button 
                       className="btn-link" 
-                      onClick={() => navigate(`/racao/${resumo.viveiro.id}`)}
+                      onClick={() => navigate(`/racao/${viveiro.viveiro.id}`)}
                     >
-                      {resumo.viveiro.nome}
+                      {viveiro.viveiro.nome}
                     </button>
                   </td>
-                  <td>{resumo.doc}</td>
-                  <td>{resumo.fase}</td>
-                  <td className="text-right">{resumo.racaoHojeTotal.toFixed(1)} kg</td>
-                  <td className="text-right">{resumo.recomendadoTotal.toFixed(1)} kg</td>
-                  <td className="text-right">{resumo.biomassa.toFixed(0)} kg</td>
-                  <td className="text-right">{resumo.fcrAtual > 0 ? resumo.fcrAtual.toFixed(2) : '-'}</td>
+                  <td>{viveiro.doc}</td>
+                  <td>{viveiro.fase}</td>
+                  <td className="text-right">{viveiro.racaoHojeTotal.toFixed(1)} kg</td>
+                  <td className="text-right">{viveiro.recomendadoTotal.toFixed(1)} kg</td>
+                  <td className="text-right">{viveiro.biomassa.toFixed(0)} kg</td>
+                  <td className="text-right">{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</td>
                   <td>
-                    <span className={`status-badge ${resumo.alimentouManha && resumo.alimentouTarde ? 'complete' : resumo.alimentouManha ? 'partial' : 'pending'}`}>
-                      {resumo.alimentouManha && resumo.alimentouTarde ? 'Completo' : resumo.alimentouManha ? 'Parcial' : 'Pendente'}
+                    <span className={`status-badge ${viveiro.alimentouManha && viveiro.alimentouTarde ? 'complete' : viveiro.alimentouManha ? 'partial' : 'pending'}`}>
+                      {viveiro.alimentouManha && viveiro.alimentouTarde ? 'Completo' : viveiro.alimentouManha ? 'Parcial' : 'Pendente'}
                     </span>
+                  </td>
+                  <td className="text-center">
+                    <div className="table-actions">
+                      <button 
+                        className="table-action-btn"
+                        onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'manha')}
+                        disabled={viveiro.alimentouManha}
+                        title="Alimentar Manhã"
+                      >
+                        🌅
+                      </button>
+                      <button 
+                        className="table-action-btn"
+                        onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'tarde')}
+                        disabled={viveiro.alimentouTarde}
+                        title="Alimentar Tarde"
+                      >
+                        🌆
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -307,42 +370,142 @@ function FazendaRacao() {
           </table>
         </div>
       </div>
+
+      {/* Rodapé com última atualização */}
+      <div className="card-footer">
+        <small className="text-muted">
+          Última atualização: {new Date(dashboard.atualizado).toLocaleString('pt-BR')}
+        </small>
+      </div>
     </div>
   )
 }
 
 export default FazendaRacao
 
-// Estilos para o botão de exportação
-const ExportButtonStyles = `
-.export-button {
-  background: var(--primary);
-  color: white;
+// Estilos para o dashboard da fazenda
+const FazendaDashboardStyles = `
+.fazenda-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.fazenda-status-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.fazenda-status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.fazenda-status-card.complete {
+  border-left: 4px solid var(--success);
+}
+
+.fazenda-status-card.partial {
+  border-left: 4px solid var(--warning);
+}
+
+.fazenda-status-card.pending {
+  border-left: 4px solid var(--danger);
+}
+
+.fazenda-status-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.fazenda-status-label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+.fazenda-viveiro-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.fazenda-action-btn {
+  flex: 1;
+  padding: 0.5rem;
   border: none;
   border-radius: var(--radius-sm);
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.75rem;
   cursor: pointer;
   transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.export-button:hover {
-  background: var(--primary-dark);
+.fazenda-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fazenda-action-btn.manha {
+  background: var(--warning);
+  color: white;
+}
+
+.fazenda-action-btn.tarde {
+  background: var(--info);
+  color: white;
+}
+
+.fazenda-action-btn.details {
+  background: var(--primary);
+  color: white;
+}
+
+.fazenda-action-btn:hover:not(:disabled) {
   transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
-.export-button:active {
-  transform: translateY(0);
+.table-actions {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.table-action-btn {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.table-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.card-footer {
+  text-align: center;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 `
 
 // Injetar estilos no documento
 if (typeof document !== 'undefined') {
   const styleSheet = document.createElement('style')
-  styleSheet.textContent = ExportButtonStyles
+  styleSheet.textContent = FazendaDashboardStyles
   document.head.appendChild(styleSheet)
 }

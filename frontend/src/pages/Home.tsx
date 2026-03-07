@@ -4,6 +4,7 @@ import Modal from '../components/Modal'
 import FieldError from '../components/FieldError'
 import { calcularDOC } from '../models/types'
 import { backendApi, Viveiro } from '../services/backendApi'
+import { useToastGlobal } from '../hooks/useToastGlobal'
 
 function getStatusColor(doc: number): string {
   if (doc === 0) return 'var(--text-light)'
@@ -29,6 +30,9 @@ function Home() {
   const [modalOpen, setModalOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [viveiroToDelete, setViveiroToDelete] = useState<{id: number, nome: string} | null>(null)
+  const toast = useToastGlobal()
 
   // Loading inicial de 5 segundos
   useEffect(() => {
@@ -42,7 +46,7 @@ function Home() {
     nome: '',
     densidade: '',
     area: '',
-    data_inicio_ciclo: '',
+    data_inicio_ciclo: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Um dia antes
     status: 'ativo'
   })
 
@@ -83,25 +87,82 @@ function Home() {
         data_inicio_ciclo: form.data_inicio_ciclo,
         status: form.status
       })
+
+      // Recarregar lista
+      const updatedViveiros = await backendApi.getViveiros()
+      setViveiros(updatedViveiros)
+
+      setModalOpen(false)
+      setSubmitted(false)
+      setForm({ nome: '', densidade: '', area: '', data_inicio_ciclo: '', status: 'ativo' })
+
+      // Navegar para o novo viveiro
+      navigate(`/viveiro/${newViveiro.id}`)
+    } catch (err: any) {
+      console.log('🔍 Debug - Erro capturado:', err)
+      console.log('🔍 Debug - Toast disponível:', toast)
+      
+      // 1. Erro específico do backend (response.data.error)
+      if (err.response?.data?.error) {
+        console.log('🔍 Debug - Erro do backend:', err.response.data.error)
+        toast.error('Erro ao criar', err.response.data.error)
+      }
+      // 2. Erros de validação (response.data.details[])
+      else if (err.response?.data?.details) {
+        const errors = err.response.data.details;
+        if (Array.isArray(errors) && errors.length > 0) {
+          console.log('🔍 Debug - Erro de validação:', errors[0].message)
+          toast.error('Erro ao criar', errors[0].message)
+        } else {
+          toast.error('Erro ao criar', 'Dados inválidos')
+        }
+      }
+      // 3. Erro genérico
+      else {
+        console.log('🔍 Debug - Erro genérico')
+        toast.error('Erro ao criar', 'Tente novamente')
+      }
+    }
+
+
+  }
+
+  const visualizarViveiro = (viveiro: Viveiro) => {
+    navigate(`/viveiro/${viveiro.id}`)
+  }
+
+  const handleDeleteViveiro = async (id: number, nome: string) => {
+    setViveiroToDelete({ id, nome })
+    setDeleteModalOpen(true)
+  }
+
+  const confirmDeleteViveiro = async () => {
+    if (!viveiroToDelete) return
+
+    try {
+      await backendApi.deleteViveiro(viveiroToDelete.id.toString())
       
       // Recarregar lista
       const updatedViveiros = await backendApi.getViveiros()
       setViveiros(updatedViveiros)
       
-      setModalOpen(false)
-      setSubmitted(false)
-      setForm({ nome: '', densidade: '', area: '', data_inicio_ciclo: '', status: 'ativo' })
+      toast.success('Viveiro deletado', `"${viveiroToDelete.nome}" foi removido com sucesso`)
+      setDeleteModalOpen(false)
+      setViveiroToDelete(null)
+    } catch (err: any) {
+      console.error('Erro ao deletar viveiro:', err)
       
-      // Navegar para o novo viveiro
-      navigate(`/viveiro/${newViveiro.id}`)
-    } catch (err) {
-      console.error('Erro ao criar viveiro:', err)
-      setError('Erro ao criar viveiro no backend')
+      if (err.response?.data?.error) {
+        toast.error('Erro ao deletar', err.response.data.error)
+      } else {
+        toast.error('Erro ao deletar', 'Não foi possível remover o viveiro')
+      }
     }
   }
 
-  const visualizarViveiro = (viveiro: Viveiro) => {
-    navigate(`/viveiro/${viveiro.id}`)
+  const cancelDelete = () => {
+    setDeleteModalOpen(false)
+    setViveiroToDelete(null)
   }
 
   // Loading inicial estiloso de 5 segundos
@@ -145,7 +206,7 @@ function Home() {
 
   return (
     <div className="container fade-in">
-      
+
       <div className="home-header">
         <h2 className="page-title">Meus Viveiros</h2>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -176,22 +237,45 @@ function Home() {
           const populacao = (v.densidade ?? 0) * 1000
 
           return (
-            <div key={v.id} className="viveiro-status-card" onClick={() => visualizarViveiro(v)}>
+            <div key={v.id} className="viveiro-status-card">
               <div className="viveiro-status-header">
-                <div className="viveiro-status-title">
+                <div className="viveiro-status-title" onClick={() => visualizarViveiro(v)}>
                   <span className="viveiro-status-dot" style={{ background: statusColor }} />
                   <h3>{v.nome}</h3>
                 </div>
-                <span className="viveiro-status-badge" style={{ background: statusColor }}>
-                  {statusLabel}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="viveiro-status-badge" style={{ background: statusColor }}>
+                    {statusLabel}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteViveiro(v.id, v.nome)
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--danger)',
+                      cursor: 'pointer',
+                      padding: '0.25rem',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.25rem'
+                    }}
+                    title="Deletar viveiro"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
 
-              <div className="viveiro-status-info">
+              <div className="viveiro-status-info" onClick={() => visualizarViveiro(v)}>
                 <span className="viveiro-owner">Status: {v.status} &mdash; {v.area} m²</span>
               </div>
 
-              <div className="viveiro-kpi-row">
+              <div className="viveiro-kpi-row" onClick={() => visualizarViveiro(v)}>
                 <div className="viveiro-kpi">
                   <span className="viveiro-kpi-value">{doc}</span>
                   <span className="viveiro-kpi-label">DOC</span>
@@ -293,6 +377,81 @@ function Home() {
           </select>
         </div>
       </Modal>
+
+      {/* Modal de Confirmação de Delete */}
+      {deleteModalOpen && viveiroToDelete && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}
+          onClick={cancelDelete}
+        >
+          <div 
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '2rem',
+              maxWidth: '400px',
+              width: '90%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🗑️</div>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#333' }}>Confirmar Exclusão</h3>
+              <p style={{ margin: '0 0 1rem 0', color: '#666', lineHeight: '1.5' }}>
+                Tem certeza que deseja deletar o viveiro <strong>"{viveiroToDelete.nome}"</strong>?
+              </p>
+              <p style={{ margin: '0 0 1.5rem 0', color: '#dc2626', fontSize: '0.875rem' }}>
+                ⚠️ Esta ação não pode ser desfeita e apagará todos os dados relacionados (ração, medições, mortalidade).
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button
+                onClick={cancelDelete}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: '500'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteViveiro}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: '500'
+                }}
+              >
+                Deletar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

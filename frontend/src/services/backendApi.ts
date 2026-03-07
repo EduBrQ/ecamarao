@@ -178,6 +178,18 @@ export const backendApi = {
     }
   },
 
+  // ===== DASHBOARD DA FAZENDA =====
+  
+  getDashboardFazenda: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/fazenda/dashboard`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar dashboard da fazenda:', error);
+      throw error;
+    }
+  },
+
   // ===== COLETAS DE RAÇÃO =====
   
   getColetasRacao: async (viveiroId: string) => {

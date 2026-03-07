@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { backendApi, Viveiro } from '../services/backendApi';
+import { useToastGlobal } from '../hooks/useToastGlobal';
 
 export function ViveirosListBackend() {
   const navigate = useNavigate();
+  const toast = useToastGlobal();
   const [viveiros, setViveiros] = useState<Viveiro[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +48,23 @@ export function ViveirosListBackend() {
       
       // Navegar para o novo viveiro
       navigate(`/viveiro/${newViveiro.id}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao criar viveiro:', err);
-      setError('Erro ao criar viveiro');
+      
+      // Extrair mensagem de erro específica
+      if (err.response?.data?.details) {
+        const errors = err.response.data.details;
+        if (Array.isArray(errors) && errors.length > 0) {
+          const firstError = errors[0];
+          toast.error('Erro ao criar viveiro', firstError.message);
+        } else {
+          toast.error('Erro ao criar viveiro', 'Dados inválidos');
+        }
+      } else if (err.response?.data?.error) {
+        toast.error('Erro ao criar viveiro', err.response.data.error);
+      } else {
+        toast.error('Erro ao criar viveiro', 'Tente novamente');
+      }
     }
   };
 

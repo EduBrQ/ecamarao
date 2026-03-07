@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { backendApi, Viveiro } from '../services/backendApi'
+import { useToastGlobal } from '../hooks/useToastGlobal'
 import Modal from '../components/Modal'
 import FieldError from '../components/FieldError'
 import {
@@ -7,7 +9,6 @@ import {
   calcularBiomassa, calcularFCR, calcularDOC,
   calcularRacaoDiariaAvancada, TABELA_RACAO,
 } from '../models/types'
-import { backendApi, Viveiro } from '../services/backendApi'
 
 function formatDate(d: Date | string): string {
   const date = typeof d === 'string' ? new Date(d + 'T00:00:00') : d
@@ -16,6 +17,7 @@ function formatDate(d: Date | string): string {
 
 function Racao() {
   const { id: viveiroId } = useParams<{ id: string }>()
+  const toast = useToastGlobal()
   const [racao, setRacao] = useState<ColetaRacao[]>([])
   const [viveiro, setViveiro] = useState<Viveiro | null>(null)
   const [mortalidade, setMortalidade] = useState<RegistroMortalidade[]>([])
@@ -46,8 +48,15 @@ function Racao() {
         setRacao(racaoData)
         setMortalidade(mortalidadeData)
 
-      } catch (err) {
+      } catch (err: any) {
         console.error('Erro ao carregar dados de ração:', err)
+        
+        if (err.response?.data?.error) {
+          toast.error('Erro ao carregar dados', err.response.data.error)
+        } else {
+          toast.error('Erro ao carregar dados', 'Não foi possível carregar os dados do viveiro')
+        }
+        
         setError('Erro ao carregar dados do viveiro')
       } finally {
         setLoading(false)
@@ -55,7 +64,7 @@ function Racao() {
     }
 
     loadData()
-  }, [viveiroId])
+  }, [viveiroId, toast])
 
   if (loading) {
     return (
@@ -150,8 +159,22 @@ function Racao() {
       setModalOpen(false)
       setSubmitted(false)
       setForm({ data: '', qntManha: '', qntTarde: '' })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao salvar coleta de ração:', err)
+      
+      if (err.response?.data?.error) {
+        toast.error('Erro ao salvar', err.response.data.error)
+      } else if (err.response?.data?.details) {
+        const errors = err.response.data.details;
+        if (Array.isArray(errors) && errors.length > 0) {
+          toast.error('Erro ao salvar', errors[0].message)
+        } else {
+          toast.error('Erro ao salvar', 'Dados inválidos')
+        }
+      } else {
+        toast.error('Erro ao salvar', 'Não foi possível salvar a coleta de ração')
+      }
+      
       setError('Erro ao salvar coleta de ração')
     }
   }
@@ -182,8 +205,15 @@ function Racao() {
       // Recarregar lista
       const updatedRacao = await backendApi.getColetasRacao(viveiroId!)
       setRacao(updatedRacao)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao deletar coleta de ração:', err)
+      
+      if (err.response?.data?.error) {
+        toast.error('Erro ao deletar', err.response.data.error)
+      } else {
+        toast.error('Erro ao deletar', 'Não foi possível deletar a coleta de ração')
+      }
+      
       setError('Erro ao deletar coleta de ração')
     }
   }

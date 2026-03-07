@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import Toast from './components/Toast'
+import { ToastProvider, useToastGlobal } from './hooks/useToastGlobal'
 import Home from './pages/Home'
 import Viveiro from './pages/Viveiro'
 import Dashboard from './pages/Dashboard'
@@ -11,8 +13,9 @@ import Aeradores from './pages/Aeradores'
 import FazendaRacao from './pages/FazendaRacao'
 import { ViveirosListBackend } from './pages/ViveirosListBackend'
 import Ciclo from './pages/Ciclo'
+import './styles/Toast.css'
 
-function App() {
+function AppContent() {
   return (
     <>
       <Header />
@@ -33,6 +36,20 @@ function App() {
       </main>
       <Footer />
     </>
+  )
+}
+
+function ToastRenderer() {
+  const toast = useToastGlobal()
+  return <Toast messages={toast.messages} onRemove={toast.removeMessage} />
+}
+
+function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+      <ToastRenderer />
+    </ToastProvider>
   )
 }
 
