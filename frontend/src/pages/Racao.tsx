@@ -22,6 +22,8 @@ function Racao() {
   const [viveiro, setViveiro] = useState<Viveiro | null>(null)
   const [mortalidade, setMortalidade] = useState<RegistroMortalidade[]>([])
   const [modalOpen, setModalOpen] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [form, setForm] = useState({ data: '', qntManha: '', qntTarde: '' })
   const [showTabela, setShowTabela] = useState(false)
@@ -114,10 +116,10 @@ function Racao() {
   const densidadeFormatada = viveiro?.densidade ? `${viveiro.densidade} larvas/m²` : 'Não informada';
   const cicloFormatado = viveiro?.data_inicio_ciclo ? new Date(viveiro.data_inicio_ciclo).toLocaleDateString('pt-BR') : 'Não iniciado';
 
-  const hoje = new Date().toISOString().split('T')[0]
+  const hoje = new Date().toISOString().split('T')[0].split('T')[0]
   const registroHoje = racao.find(r => {
-    const d = typeof r.data === 'string' ? r.data : new Date(r.data).toISOString().split('T')[0]
-    return d === hoje
+    const dataRegistro = new Date(r.data).toISOString().split('T')[0].split('T')[0];
+    return dataRegistro === hoje
   })
   const alimentouHojeManha = registroHoje ? registroHoje.qntManha > 0 : false
   const alimentouHojeTarde = registroHoje ? registroHoje.qntTarde > 0 : false
@@ -144,10 +146,13 @@ function Racao() {
   const handleSave = async () => {
     setSubmitted(true)
     if (!form.data || !form.qntManha || !form.qntTarde) return
+    const parsedDate = new Date(form.data)
+    parsedDate.setUTCHours(11, 0, 0, 0)
+    form.data = parsedDate.toISOString()
 
     try {
       await backendApi.createColetaRacao(viveiroId!, {
-        data: form.data,
+        data: new Date(form.data),
         qnt_manha: Number(form.qntManha),
         qnt_tarde: Number(form.qntTarde)
       })
@@ -199,23 +204,38 @@ function Racao() {
   }
 
   const removerColeta = async (itemId: number) => {
+    setItemToDelete(itemId)
+    setDeleteModalOpen(true)
+  }
+
+  const confirmarExclusao = async () => {
+    if (!itemToDelete || !viveiroId) return
+    
     try {
-      await backendApi.deleteColetaRacao(viveiroId!, itemId.toString())
+      await backendApi.deleteColetaRacao(viveiroId!, itemToDelete.toString())
 
       // Recarregar lista
       const updatedRacao = await backendApi.getColetasRacao(viveiroId!)
       setRacao(updatedRacao)
+
+      setDeleteModalOpen(false)
+      setItemToDelete(null)
+      
+      toast.success('Sucesso', 'Coleta de ração excluída com sucesso!')
     } catch (err: any) {
       console.error('Erro ao deletar coleta de ração:', err)
       
       if (err.response?.data?.error) {
         toast.error('Erro ao deletar', err.response.data.error)
       } else {
-        toast.error('Erro ao deletar', 'Não foi possível deletar a coleta de ração')
+        toast.error('Erro ao deletar', 'Não foi possível excluir a coleta de ração')
       }
-      
-      setError('Erro ao deletar coleta de ração')
     }
+  }
+
+  const cancelarExclusao = () => {
+    setDeleteModalOpen(false)
+    setItemToDelete(null)
   }
 
   return (
@@ -435,7 +455,7 @@ function Racao() {
               ) : (
                 racao.slice().reverse().map((r) => (
                   <tr key={r.id}>
-                    <td>{formatDate(r.data)}</td>
+                    <td>{formatDate(new Date(r.data))}</td>
                     <td className="text-right">{r.qntManha} kg</td>
                     <td className="text-right">{r.qntTarde} kg</td>
                     <td className="text-right"><strong>{(r.qntManha + r.qntTarde).toFixed(1)} kg</strong></td>
@@ -507,6 +527,33 @@ function Racao() {
           )}
           <FieldError show={submitted && !form.qntTarde} message="Insira a quantidade" />
         </div>
+      </Modal>
+
+      {/* Modal de Confirmação de Exclusão */}
+      <Modal
+        title="Confirmar Exclusão"
+        isOpen={deleteModalOpen}
+        onClose={cancelarExclusao}
+        onSave={confirmarExclusao}
+        saveButtonText="Excluir"
+        saveButtonClass="btn-danger"
+      >
+        <p>Tem certeza que deseja excluir esta coleta de ração?</p>
+        {itemToDelete && (
+          <div style={{ 
+            padding: '1rem', 
+            backgroundColor: 'var(--warning-light)', 
+            border: '1px solid var(--warning)', 
+            borderRadius: '6px',
+            marginBottom: '1rem', 
+            marginTop: '1rem' 
+          }}>
+            <strong>Coleta: #{itemToDelete}</strong><br />
+            Data: {formatDate(racao.find((r) => r.id === itemToDelete)?.data || new Date())}<br />
+            Quantidade: {racao.find((r) => r.id === itemToDelete)?.qntManha?.toFixed(1) || '0.0'} kg (Manhã)<br />
+            Quantidade: {racao.find((r) => r.id === itemToDelete)?.qntTarde?.toFixed(1) || '0.0'} kg (Tarde)<br />
+          </div>
+        )}
       </Modal>
     </div>
   )

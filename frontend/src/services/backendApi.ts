@@ -203,7 +203,7 @@ export const backendApi = {
   },
 
   createColetaRacao: async (viveiroId: string, racaoData: {
-    data: string;
+    data: Date;
     qnt_manha: number;
     qnt_tarde: number;
   }) => {

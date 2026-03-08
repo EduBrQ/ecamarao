@@ -327,6 +327,48 @@ app.get('/api/viveiros/:id', async (req, res) => {
   }
 });
 
+// Endpoint para deletar coleta de ração específica
+app.delete('/api/viveiros/:id/racao/:racaoId', async (req, res) => {
+  try {
+    const { id, racaoId } = req.params;
+    
+    // Verificar se viveiro existe
+    const viveiroResult = await pool.query(
+      'SELECT id FROM viveiros WHERE id = $1',
+      [id]
+    );
+    
+    if (viveiroResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Viveiro não encontrado' });
+    }
+    
+    // Verificar se o registro de ração existe
+    const racaoRecord = await pool.query(
+      'SELECT id FROM coletas_racao WHERE viveiro_id = $1 AND id = $2',
+      [id, racaoId]
+    );
+    
+    if (racaoRecord.rows.length === 0) {
+      return res.status(404).json({ error: 'Registro de ração não encontrado' });
+    }
+    
+    // Deletar o registro de ração
+    await pool.query(
+      'DELETE FROM coletas_racao WHERE viveiro_id = $1 AND id = $2',
+      [id, racaoId]
+    );
+    
+    res.status(200).json({
+      message: 'Coleta de ração deletada com sucesso',
+      id: parseInt(racaoId)
+    });
+    
+  } catch (error) {
+    console.error('Erro ao deletar coleta de ração:', error);
+    res.status(500).json({ error: 'Erro ao deletar coleta de ração' });
+  }
+});
+
 // Helper: calcular dias de cultivo (DOC)
 function calcularDOC(dataInicio) {
   if (!dataInicio) return 0;

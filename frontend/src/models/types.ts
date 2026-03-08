@@ -20,6 +20,7 @@ export interface ColetaRacao {
   data: Date | string;
   qntManha: number;
   qntTarde: number;
+  created_at?: Date | string;
 }
 
 export interface Medicao {

@@ -46,7 +46,7 @@ function Home() {
     nome: '',
     densidade: '',
     area: '',
-    data_inicio_ciclo: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Um dia antes
+    data_inicio_ciclo: new Date(Date.now()).toISOString().split('T')[0], // Data atual
     status: 'ativo'
   })
 

@@ -83,9 +83,9 @@ function Ciclo() {
   const vivos = populacaoInicial - mortTotal
 
   // Estimate harvest: typical cycle is 90-120 days for Vannamei
-  const diasParaDespesca = doc > 0 ? Math.max(0, 100 - doc) : 0
+  const diasParaDespesca = doc > 0 ? Math.max(0, 120 - doc) : 0
   const dataColheitaEstimada = viveiro.data_inicio_ciclo
-    ? new Date(new Date(viveiro.data_inicio_ciclo + 'T00:00:00').getTime() + 100 * 24 * 60 * 60 * 1000)
+    ? new Date(new Date(viveiro.data_inicio_ciclo + 'T00:00:00').getTime() + 120 * 24 * 60 * 60 * 1000)
     : null
 
   // Growth phase
