@@ -80,6 +80,202 @@ const normalizeDate = (date: string | Date): string => {
   return '';
 };
 
+// Função para prever alimentação usando IA
+const preverAlimentacao = (viveiro: any, dias: number = 1) => {
+  const biomassaAtual = viveiro.biomassa || 0;
+  const doc = viveiro.doc || 0;
+  const taxaCrescimentoDiaria = 0.025; // 2.5% ao dia
+  
+  // Prever biomassa futura
+  const biomassaFutura = biomassaAtual * Math.pow(1 + taxaCrescimentoDiaria, dias);
+  
+  // Calcular taxa de alimentação baseada na biomassa futura e fase
+  let taxaAlimentacao = 0.08; // Base 8%
+  
+  if (doc <= 30) taxaAlimentacao = 0.06; // Fase inicial
+  else if (doc <= 60) taxaAlimentacao = 0.08; // Crescimento
+  else if (doc <= 90) taxaAlimentacao = 0.10; // Engorda
+  else taxaAlimentacao = 0.08; // Final
+  
+  // Fator de temperatura (simulado)
+  const fatorTemperatura = 1.1; // +10% por temperatura ideal
+  
+  const racaoPrevista = biomassaFutura * taxaAlimentacao * fatorTemperatura;
+  
+  return {
+    racaoHoje: racaoPrevista,
+    biomassaFutura,
+    crescimentoPercentual: ((biomassaFutura - biomassaAtual) / biomassaAtual) * 100,
+    tendencia: racaoPrevista > viveiro.recomendadoTotal ? 'aumento' : 'estavel'
+  };
+};
+
+// Função para calcular score de saúde do viveiro
+const calcularScoreSaude = (viveiro: any): {
+  score: number;
+  status: 'excelente' | 'bom' | 'atencao' | 'critico';
+  cor: string;
+  fatores: {
+    fcr: number;
+    crescimento: number;
+    consistencia: number;
+    sobrevivencia: number;
+  };
+} => {
+  // Score FCR (0-30 pontos)
+  let scoreFCR = 0;
+  if (viveiro.fcrAtual > 0) {
+    if (viveiro.fcrAtual < 1.5) scoreFCR = 30;
+    else if (viveiro.fcrAtual < 1.8) scoreFCR = 25;
+    else if (viveiro.fcrAtual < 2.0) scoreFCR = 20;
+    else if (viveiro.fcrAtual < 2.5) scoreFCR = 10;
+    else scoreFCR = 0;
+  }
+  
+  // Score Crescimento (0-25 pontos)
+  const biomassaEsperada = viveiro.populacaoEstimada * 0.015; // 15g por camarão
+  const crescimentoReal = viveiro.biomassa / biomassaEsperada;
+  let scoreCrescimento = Math.min(25, crescimentoReal * 25);
+  
+  // Score Consistência (0-25 pontos)
+  let scoreConsistencia = 15; // Base
+  const diasUltimos7 = viveiro.racoes.slice(-7);
+  if (diasUltimos7.length >= 5) {
+    const mediaConsumo = diasUltimos7.reduce((sum: number, r: any) => sum + r.total, 0) / diasUltimos7.length;
+    const variacao = diasUltimos7.reduce((sum: number, r: any) => sum + Math.abs(r.total - mediaConsumo), 0) / diasUltimos7.length;
+    scoreConsistencia = Math.max(0, 25 - (variacao * 5));
+  }
+  
+  // Score Sobrevivência (0-20 pontos)
+  let scoreSobrevivencia = 15; // Base
+  if (viveiro.populacaoEstimada && viveiro.viveiro.densidade && viveiro.viveiro.area) {
+    const populacaoInicial = viveiro.viveiro.densidade * viveiro.viveiro.area;
+    const taxaSobrevivencia = viveiro.populacaoEstimada / populacaoInicial;
+    scoreSobrevivencia = Math.min(20, taxaSobrevivencia * 20);
+  }
+  
+  const scoreTotal = scoreFCR + scoreCrescimento + scoreConsistencia + scoreSobrevivencia;
+  
+  let status: 'excelente' | 'bom' | 'atencao' | 'critico';
+  let cor: string;
+  
+  if (scoreTotal >= 85) {
+    status = 'excelente';
+    cor = '#10b981';
+  } else if (scoreTotal >= 70) {
+    status = 'bom';
+    cor = '#22c55e';
+  } else if (scoreTotal >= 50) {
+    status = 'atencao';
+    cor = '#f59e0b';
+  } else {
+    status = 'critico';
+    cor = '#ef4444';
+  }
+  
+  return {
+    score: Math.round(scoreTotal),
+    status,
+    cor,
+    fatores: {
+      fcr: scoreFCR,
+      crescimento: scoreCrescimento,
+      consistencia: scoreConsistencia,
+      sobrevivencia: scoreSobrevivencia
+    }
+  };
+};
+
+// Função para detectar anomalias
+const detectarAnomalias = (viveiro: any): {
+  tipo: string;
+  severidade: 'baixa' | 'media' | 'alta';
+  mensagem: string;
+  recomendacao: string;
+}[] => {
+  const anomalias = [];
+  
+  // Detectar queda de consumo
+  const diasUltimos7 = viveiro.racoes.slice(-7);
+  if (diasUltimos7.length >= 3) {
+    const mediaRecente = diasUltimos7.slice(-3).reduce((sum: number, r: any) => sum + r.total, 0) / 3;
+    const mediaAnterior = diasUltimos7.slice(0, -3).reduce((sum: number, r: any) => sum + r.total, 0) / (diasUltimos7.length - 3);
+    
+    if (mediaRecente < mediaAnterior * 0.7) {
+      anomalias.push({
+        tipo: 'queda_consumo',
+        severidade: 'alta',
+        mensagem: `Consumo caiu ${((1 - mediaRecente/mediaAnterior) * 100).toFixed(0)}% nos últimos 3 dias`,
+        recomendacao: 'Verificar saúde dos camarões e qualidade da água'
+      });
+    }
+  }
+  
+  // Detectar FCR elevado
+  if (viveiro.fcrAtual > 2.5) {
+    anomalias.push({
+      tipo: 'fcr_elevado',
+      severidade: 'media',
+      mensagem: `FCR de ${viveiro.fcrAtual.toFixed(2)} está acima do ideal`,
+      recomendacao: 'Ajustar quantidade de ração e verificar desperdícios'
+    });
+  }
+  
+  // Detectar inconsistência na alimentação
+  const diasAlimentados = viveiro.racoes.filter((r: any) => r.total > 0).length;
+  const diasTotais = viveiro.racoes.length;
+  if (diasAlimentados < diasTotais * 0.8) {
+    anomalias.push({
+      tipo: 'inconsistencia_alimentacao',
+      severidade: 'media',
+      mensagem: `${((diasTotais - diasAlimentados) / diasTotais * 100).toFixed(0)}% dos dias sem alimentação registrada`,
+      recomendacao: 'Manter consistência nos registros diários'
+    });
+  }
+  
+  return anomalias;
+};
+
+// Função para gerar previsão de produção
+const preverProducao = (viveiro: any): {
+  pesoMedioEstimado: number;
+  producaoEstimada: number;
+  dataColheita: Date;
+  diasAteColheita: number;
+} => {
+  const doc = viveiro.doc || 0;
+  const biomassaAtual = viveiro.biomassa || 0;
+  const populacaoAtual = viveiro.populacaoEstimada || 0;
+  
+  // Peso médio estimado baseado em curva de crescimento
+  let pesoMedioEstimado = 0;
+  if (doc <= 30) pesoMedioEstimado = 0.02;
+  else if (doc <= 60) pesoMedioEstimado = 0.08;
+  else if (doc <= 90) pesoMedioEstimado = 0.15;
+  else if (doc <= 120) pesoMedioEstimado = 0.25;
+  else pesoMedioEstimado = 0.35;
+  
+  // Taxa de crescimento diária
+  const taxaCrescimentoDiaria = 0.018; // 1.8% ao dia
+  
+  // Dias até atingir peso de colheita (25g)
+  const diasAteColheita = Math.max(0, Math.ceil(Math.log(25 / pesoMedioEstimado) / Math.log(1 + taxaCrescimentoDiaria)));
+  
+  // Prever biomassa na colheita
+  const biomassaColheita = biomassaAtual * Math.pow(1 + taxaCrescimentoDiaria, diasAteColheita);
+  
+  // Data estimada de colheita
+  const dataColheita = new Date();
+  dataColheita.setDate(dataColheita.getDate() + diasAteColheita);
+  
+  return {
+    pesoMedioEstimado: parseFloat(pesoMedioEstimado.toFixed(2)),
+    producaoEstimada: parseFloat(biomassaColheita.toFixed(0)),
+    dataColheita,
+    diasAteColheita
+  };
+};
+
 function FazendaRacao() {
   const navigate = useNavigate()
   const toast = useToastGlobal()
@@ -87,6 +283,7 @@ function FazendaRacao() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<'todos' | 'pendentes' | 'alimentados' | 'parciais'>('todos')
+  const [visualMode, setVisualMode] = useState<'grid' | 'list'>('grid')
   
   // Estados para modais de quantidade
   const [quantidadeModal, setQuantidadeModal] = useState<{
@@ -1455,7 +1652,182 @@ function FazendaRacao() {
         </div>
       </div>
 
-      {/* Cards dos Viveiros com Filtro */}
+      {/* Modo Visual da Fazenda */}
+      <div className="fazenda-visual-mode">
+        <div className="fazenda-visual-header">
+          <h2 className="fazenda-visual-title">🗺️ Mapa Visual da Fazenda</h2>
+          <div className="fazenda-visual-controls">
+            <button 
+              className={`fazenda-visual-btn ${visualMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setVisualMode('grid')}
+            >
+              📦 Grade
+            </button>
+            <button 
+              className={`fazenda-visual-btn ${visualMode === 'list' ? 'active' : ''}`}
+              onClick={() => setVisualMode('list')}
+            >
+              📋 Lista
+            </button>
+          </div>
+        </div>
+        
+        {visualMode === 'grid' ? (
+          <div className="fazenda-viveiros-map">
+            {dashboard.viveiros
+              .filter(viveiro => {
+                if (activeFilter === 'todos') return true;
+                
+                const hoje = new Date().toISOString().split('T')[0];
+                const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
+                const alimentouManha = racaoHoje ? racaoHoje.qntManha > 0 : false;
+                const alimentouTarde = racaoHoje ? racaoHoje.qntTarde > 0 : false;
+                
+                switch (activeFilter) {
+                  case 'pendentes':
+                    return !alimentouManha && !alimentouTarde;
+                  case 'alimentados':
+                    return alimentouManha && alimentouTarde;
+                  case 'parciais':
+                    return (alimentouManha || alimentouTarde) && !(alimentouManha && alimentouTarde);
+                  default:
+                    return true;
+                }
+              })
+              .map((viveiro) => {
+                const hoje = new Date().toISOString().split('T')[0];
+                const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
+                const alimentouManha = racaoHoje ? racaoHoje.qntManha > 0 : false;
+                const alimentouTarde = racaoHoje ? racaoHoje.qntTarde > 0 : false;
+                const statusAlimentacao = alimentouManha && alimentouTarde ? 'complete' : alimentouManha || alimentouTarde ? 'partial' : 'pending';
+                const scoreSaude = calcularScoreSaude(viveiro);
+                
+                return (
+                  <div 
+                    key={viveiro.viveiro.id} 
+                    className={`fazenda-viveiro-map-item ${statusAlimentacao}`}
+                    onClick={() => navigate(`/viveiro/${viveiro.viveiro.id}/racao`)}
+                  >
+                    <div className="fazenda-viveiro-map-header">
+                      <span className="fazenda-viveiro-map-name">{viveiro.viveiro.nome}</span>
+                      <span className={`fazenda-viveiro-map-status ${statusAlimentacao}`}>
+                        {statusAlimentacao === 'complete' ? '🟢' : statusAlimentacao === 'partial' ? '🟡' : '🔴'}
+                      </span>
+                    </div>
+                    <div className="fazenda-viveiro-map-metrics">
+                      <div className="fazenda-map-metric">
+                        <span className="fazenda-map-label">Saúde</span>
+                        <span className="fazenda-map-value" style={{ color: scoreSaude.cor }}>
+                          {scoreSaude.score}/100
+                        </span>
+                      </div>
+                      <div className="fazenda-map-metric">
+                        <span className="fazenda-map-label">Biomassa</span>
+                        <span className="fazenda-map-value">{viveiro.biomassa.toFixed(0)}kg</span>
+                      </div>
+                      <div className="fazenda-map-metric">
+                        <span className="fazenda-map-label">FCR</span>
+                        <span className="fazenda-map-value">
+                          {viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="fazenda-viveiro-map-actions">
+                      <button 
+                        className="fazenda-map-action-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAlimentacaoRapida(viveiro.viveiro.id, new Date().getHours() < 12 ? 'manha' : 'tarde');
+                        }}
+                      >
+                        ⚡ Alimentar
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        ) : (
+          <div className="fazenda-viveiros-list">
+            {dashboard.viveiros
+              .filter(viveiro => {
+                if (activeFilter === 'todos') return true;
+                
+                const hoje = new Date().toISOString().split('T')[0];
+                const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
+                const alimentouManha = racaoHoje ? racaoHoje.qntManha > 0 : false;
+                const alimentouTarde = racaoHoje ? racaoHoje.qntTarde > 0 : false;
+                
+                switch (activeFilter) {
+                  case 'pendentes':
+                    return !alimentouManha && !alimentouTarde;
+                  case 'alimentados':
+                    return alimentouManha && alimentouTarde;
+                  case 'parciais':
+                    return (alimentouManha || alimentouTarde) && !(alimentouManha && alimentouTarde);
+                  default:
+                    return true;
+                }
+              })
+              .map((viveiro) => {
+                const hoje = new Date().toISOString().split('T')[0];
+                const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
+                const alimentouManha = racaoHoje ? racaoHoje.qntManha > 0 : false;
+                const alimentouTarde = racaoHoje ? racaoHoje.qntTarde > 0 : false;
+                const statusAlimentacao = alimentouManha && alimentouTarde ? 'complete' : alimentouManha || alimentouTarde ? 'partial' : 'pending';
+                const scoreSaude = calcularScoreSaude(viveiro);
+                
+                return (
+                  <div 
+                    key={viveiro.viveiro.id} 
+                    className={`fazenda-viveiro-list-item ${statusAlimentacao}`}
+                  >
+                    <div className="fazenda-viveiro-list-content">
+                      <div className="fazenda-viveiro-list-header">
+                        <h3 className="fazenda-viveiro-list-name">{viveiro.viveiro.nome}</h3>
+                        <span className={`fazenda-viveiro-list-status ${statusAlimentacao}`}>
+                          {statusAlimentacao === 'complete' ? '✅ Completo' : statusAlimentacao === 'partial' ? '🌅 Parcial' : '⏳ Pendente'}
+                        </span>
+                      </div>
+                      <div className="fazenda-viveiro-list-metrics">
+                        <div className="fazenda-list-metric">
+                          <span className="fazenda-list-label">Saúde</span>
+                          <span className="fazenda-list-value" style={{ color: scoreSaude.cor }}>
+                            {scoreSaude.score}/100
+                          </span>
+                        </div>
+                        <div className="fazenda-list-metric">
+                          <span className="fazenda-list-label">Biomassa</span>
+                          <span className="fazenda-list-value">{viveiro.biomassa.toFixed(0)}kg</span>
+                        </div>
+                        <div className="fazenda-list-metric">
+                          <span className="fazenda-list-label">FCR</span>
+                          <span className="fazenda-list-value">
+                            {viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="fazenda-viveiro-list-actions">
+                      <button 
+                        className="fazenda-list-action-btn"
+                        onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, new Date().getHours() < 12 ? 'manha' : 'tarde')}
+                      >
+                        ⚡ Alimentar
+                      </button>
+                      <button 
+                        className="fazenda-list-action-btn secondary"
+                        onClick={() => navigate(`/viveiro/${viveiro.viveiro.id}/racao`)}
+                      >
+                        📋 Detalhes
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
       <div className="fazenda-viveiros-section">
         <div className="fazenda-section-header">
           <h2 className="fazenda-section-title">🏠 Viveiros {activeFilter !== 'todos' && `- ${activeFilter}`}</h2>
@@ -1511,11 +1883,46 @@ function FazendaRacao() {
             const precisaAtencao = !alimentouManha && !alimentouTarde;
             const percentualRecomendado = viveiro.recomendadoTotal > 0 ? ((racaoHoje?.total || 0) / viveiro.recomendadoTotal) * 100 : 0;
             
+            // Calcular previsão de alimentação
+            const previsaoAmanha = preverAlimentacao(viveiro, 1);
+            const previsao3dias = preverAlimentacao(viveiro, 3);
+            const previsao7dias = preverAlimentacao(viveiro, 7);
+            
+            // Calcular score de saúde
+            const scoreSaude = calcularScoreSaude(viveiro);
+            
+            // Detectar anomalias
+            const anomalias = detectarAnomalias(viveiro);
+            
+            // Prever produção
+            const previsaoProducao = preverProducao(viveiro);
+            
             return (
               <div 
                 key={viveiro.viveiro.id} 
                 className={`fazenda-viveiro-card ${precisaAtencao ? 'needs-attention' : ''} ${statusAlimentacao}`}
               >
+                {/* Score de Saúde do Viveiro */}
+                <div className="fazenda-viveiro-health-score">
+                  <div className="fazenda-health-header">
+                    <span className="fazenda-health-label">Saúde do Viveiro</span>
+                    <div 
+                      className="fazenda-health-score-value"
+                      style={{ backgroundColor: scoreSaude.cor }}
+                    >
+                      <span className="fazenda-health-score-number">{scoreSaude.score}</span>
+                      <span className="fazenda-health-score-max">/100</span>
+                    </div>
+                  </div>
+                  <div className="fazenda-health-status">
+                    <span className={`fazenda-health-indicator ${scoreSaude.status}`}>
+                      {scoreSaude.status === 'excelente' ? '🟢 Excelente' : 
+                       scoreSaude.status === 'bom' ? '🟢 Bom' : 
+                       scoreSaude.status === 'atencao' ? '🟡 Atenção' : '🔴 Crítico'}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="fazenda-viveiro-header">
                   <div className="fazenda-viveiro-title-row">
                     <h3 className="fazenda-viveiro-name">{viveiro.viveiro.nome}</h3>
@@ -1530,6 +1937,108 @@ function FazendaRacao() {
                     <div className="fazenda-feed-amount">
                       <strong>{(racaoHoje?.total || 0).toFixed(1)} kg</strong>
                       <span>/ {viveiro.recomendadoTotal.toFixed(1)} kg</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Previsão Inteligente de Alimentação */}
+                <div className="fazenda-viveiro-previsao">
+                  <div className="fazenda-previsao-header">
+                    <span className="fazenda-previsao-title">🧠 Previsão Inteligente</span>
+                    <span className={`fazenda-previsao-tendencia ${previsaoAmanha.tendencia}`}>
+                      {previsaoAmanha.tendencia === 'aumento' ? '↑' : '→'} {previsaoAmanha.tendencia === 'aumento' ? 'aumento previsto' : 'estável'}
+                    </span>
+                  </div>
+                  <div className="fazenda-previsao-grid">
+                    <div className="fazenda-previsao-item">
+                      <span className="fazenda-previsao-label">Amanhã</span>
+                      <span className="fazenda-previsao-value">{previsaoAmanha.racaoHoje.toFixed(1)} kg</span>
+                    </div>
+                    <div className="fazenda-previsao-item">
+                      <span className="fazenda-previsao-label">+3 dias</span>
+                      <span className="fazenda-previsao-value">{previsao3dias.racaoHoje.toFixed(1)} kg</span>
+                    </div>
+                    <div className="fazenda-previsao-item">
+                      <span className="fazenda-previsao-label">+7 dias</span>
+                      <span className="fazenda-previsao-value">{previsao7dias.racaoHoje.toFixed(1)} kg</span>
+                    </div>
+                  </div>
+                  <div className="fazenda-previsao-motivo">
+                    <span className="fazenda-previsao-motivo-text">
+                      Motivo: Biomassa em crescimento + temperatura ideal
+                    </span>
+                  </div>
+                </div>
+
+                {/* Timeline de Consumo */}
+                <div className="fazenda-viveiro-timeline">
+                  <div className="fazenda-timeline-header">
+                    <span className="fazenda-timeline-title">📈 Consumo Últimos 7 Dias</span>
+                  </div>
+                  <div className="fazenda-timeline-chart">
+                    {viveiro.racoes.slice(-7).map((racao, index) => {
+                      const maxConsumo = Math.max(...viveiro.racoes.slice(-7).map(r => r.total));
+                      const percentual = maxConsumo > 0 ? (racao.total / maxConsumo) * 100 : 0;
+                      return (
+                        <div key={racao.id} className="fazenda-timeline-bar">
+                          <div className="fazenda-timeline-date">
+                            {new Date(racao.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                          </div>
+                          <div className="fazenda-timeline-visual">
+                            <div 
+                              className="fazenda-timeline-fill"
+                              style={{ width: `${percentual}%` }}
+                            />
+                          </div>
+                          <div className="fazenda-timeline-value">
+                            {racao.total.toFixed(1)}kg
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Alertas Automáticos */}
+                {anomalias.length > 0 && (
+                  <div className="fazenda-viveiro-alerts">
+                    <div className="fazenda-alerts-header">
+                      <span className="fazenda-alerts-title">⚠️ Alertas Automáticos</span>
+                    </div>
+                    {anomalias.map((anomalia, index) => (
+                      <div key={index} className={`fazenda-alert-item ${anomalia.severidade}`}>
+                        <div className="fazenda-alert-icon">
+                          {anomalia.severidade === 'alta' ? '🔴' : '🟡'}
+                        </div>
+                        <div className="fazenda-alert-content">
+                          <div className="fazenda-alert-message">{anomalia.mensagem}</div>
+                          <div className="fazenda-alert-recommendation">{anomalia.recomendacao}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Previsão de Produção */}
+                <div className="fazenda-viveiro-producao">
+                  <div className="fazenda-producao-header">
+                    <span className="fazenda-producao-title">🎯 Previsão de Produção</span>
+                  </div>
+                  <div className="fazenda-producao-grid">
+                    <div className="fazenda-producao-item">
+                      <span className="fazenda-producao-label">Peso Médio</span>
+                      <span className="fazenda-producao-value">{previsaoProducao.pesoMedioEstimado}g</span>
+                    </div>
+                    <div className="fazenda-producao-item">
+                      <span className="fazenda-producao-label">Produção Estimada</span>
+                      <span className="fazenda-producao-value">{(previsaoProducao.producaoEstimada / 1000).toFixed(1)}t</span>
+                    </div>
+                    <div className="fazenda-producao-item">
+                      <span className="fazenda-producao-label">Colheita Prevista</span>
+                      <span className="fazenda-producao-value">
+                        {previsaoProducao.dataColheita.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                        <span className="fazenda-producao-dias">({previsaoProducao.diasAteColheita} dias)</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1685,7 +2194,7 @@ function FazendaRacao() {
               <th className="desktop-only">Biomassa</th>
               <th className="desktop-only">FCR</th>
               <th className="desktop-only">Histórico Ração</th>
-              <th>Status</th>
+              {/* <th>Status</th> */}
               <th>Ações</th>
             </tr>
           </thead>
@@ -1720,7 +2229,7 @@ function FazendaRacao() {
                     )}
                   </div>
                 </td>
-                <td>
+                {/* <td>
                   {(() => {
                     const hoje = new Date().toISOString().split('T')[0];
                     const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
@@ -1735,7 +2244,7 @@ function FazendaRacao() {
                       </span>
                     );
                   })()}
-                </td>
+                </td> */}
                 <td>
                   <div className="fazenda-table-actions">
                     {verificarDiasEmFalta(viveiro.viveiro.id) ? (
@@ -1756,12 +2265,12 @@ function FazendaRacao() {
                         ✅ Registro Completo
                       </button>
                     )}
-                    <button 
+                    {/* <button 
                       className="fazenda-table-btn primary"
                       onClick={() => navigate(`/viveiro/${viveiro.viveiro.id}/racao`)}
                     >
                       Ver Detalhes
-                    </button>
+                    </button> */}
                   </div>
                 </td>
               </tr>
