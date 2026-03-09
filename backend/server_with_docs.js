@@ -323,7 +323,12 @@ app.get('/api/viveiros/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Erro ao buscar viveiro:', error);
-    res.status(500).json({ error: 'Erro ao buscar viveiro' });
+    res.status(500).json({ 
+      error: 'Erro ao buscar viveiro',
+      details: error.message,
+      timestamp: new Date().toISOString(),
+      path: req.path
+    });
   }
 });
 
@@ -365,7 +370,12 @@ app.delete('/api/viveiros/:id/racao/:racaoId', async (req, res) => {
     
   } catch (error) {
     console.error('Erro ao deletar coleta de ração:', error);
-    res.status(500).json({ error: 'Erro ao deletar coleta de ração' });
+    res.status(500).json({ 
+      error: 'Erro ao deletar coleta de ração', 
+      details: error.message,
+      timestamp: new Date().toISOString(),
+      path: req.path
+    });
   }
 });
 
@@ -489,9 +499,6 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
           [viveiro.id]
         );
         
-        // Debug: log dos dados de ração
-        console.log(`Viveiro ${viveiro.id} - Ração encontrada:`, racaoResult.rows);
-        
         // Buscar dados de mortalidade
         const mortalidadeResult = await pool.query(
           'SELECT id, data, quantidade, causa FROM registros_mortalidade WHERE viveiro_id = $1 ORDER BY data DESC',
@@ -510,16 +517,12 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
         
         // Verificar alimentação hoje
         const hoje = new Date().toISOString().split('T')[0];
-        console.log(`Buscando registro para hoje (${hoje}) no viveiro ${viveiro.id}`);
         const registroHoje = racaoResult.rows.find(r => r.data === hoje);
-        console.log(`Registro hoje encontrado:`, registroHoje);
         
         // Calcular totais do dia
         const racaoHojeManha = registroHoje ? (parseFloat(registroHoje.qntManha) || 0) : 0;
         const racaoHojeTarde = registroHoje ? (parseFloat(registroHoje.qntTarde) || 0) : 0;
         const racaoHojeTotal = racaoHojeManha + racaoHojeTarde;
-        
-        console.log(`Viveiro ${viveiro.id} - Ração hoje: Manha=${racaoHojeManha}, Tarde=${racaoHojeTarde}, Total=${racaoHojeTotal}`);
         
         // Calcular recomendação
         const calculoAvancado = calcularRacaoDiariaAvancada(
@@ -588,7 +591,12 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
     
   } catch (error) {
     console.error('Erro ao buscar dashboard da fazenda:', error);
-    res.status(500).json({ error: 'Erro ao buscar dashboard da fazenda' });
+    res.status(500).json({ 
+      error: 'Erro ao buscar dashboard da fazenda',
+      details: error.message,
+      timestamp: new Date().toISOString(),
+      path: req.path
+    });
   }
 });
 
@@ -644,7 +652,12 @@ app.get('/api/viveiros/:id/racao', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar dados de ração:', error);
-    res.status(500).json({ error: 'Erro ao buscar dados de ração' });
+    res.status(500).json({ 
+      error: 'Erro ao buscar dados de ração',
+      details: error.message,
+      timestamp: new Date().toISOString(),
+      path: req.path
+    });
   }
 });
 
@@ -728,7 +741,96 @@ app.post('/api/viveiros/:id/racao', async (req, res) => {
     console.error('Erro ao criar coleta de ração:', error);
     res.status(500).json({ 
       error: 'Erro ao criar coleta de ração', 
-      details: error.message 
+      details: error.message,
+      timestamp: new Date().toISOString(),
+      path: req.path
+    });
+  }
+});
+
+// Endpoint para atualizar coleta de ração
+app.put('/api/viveiros/:viveiroId/racao/:id', async (req, res) => {
+  try {
+    const { viveiroId, id } = req.params;
+    
+    // Validar IDs
+    if (!viveiroId || isNaN(parseInt(viveiroId)) || !id || isNaN(parseInt(id))) {
+      return res.status(400).json({ 
+        error: 'IDs inválidos', 
+        timestamp: new Date().toISOString(),
+        path: req.path
+      });
+    }
+
+    const { data, qnt_manha, qnt_tarde } = req.body;
+
+    // Validar dados básicos
+    if (!data || qnt_manha === undefined || qnt_tarde === undefined) {
+      return res.status(400).json({ 
+        error: 'Dados inválidos', 
+        details: 'Campos data, qnt_manha e qnt_tarde são obrigatórios',
+        timestamp: new Date().toISOString(),
+        path: req.path
+      });
+    }
+
+    // Verificar se viveiro existe
+    const viveiroResult = await pool.query(
+      'SELECT id FROM viveiros WHERE id = $1',
+      [viveiroId]
+    );
+    
+    if (viveiroResult.rows.length === 0) {
+      return res.status(404).json({ 
+        error: 'Viveiro não encontrado',
+        timestamp: new Date().toISOString(),
+        path: req.path
+      });
+    }
+
+    // Verificar se registro existe
+    const existsResult = await pool.query(
+      'SELECT id FROM coletas_racao WHERE id = $1 AND viveiro_id = $2', 
+      [id, viveiroId]
+    );
+    if (existsResult.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Coleta de ração não encontrada',
+        timestamp: new Date().toISOString(),
+        path: req.path
+      });
+    }
+
+    // Atualizar
+    const result = await pool.query(
+      `UPDATE coletas_racao 
+       SET data = $1, qnt_manha = $2, qnt_tarde = $3
+       WHERE id = $4 AND viveiro_id = $5
+       RETURNING id, viveiro_id, data, qnt_manha, qnt_tarde, created_at`,
+      [data, qnt_manha, qnt_tarde, id, viveiroId]
+    );
+
+    const row = result.rows[0];
+    
+    // Formatar resposta
+    const formattedRecord = {
+      id: row.id,
+      viveiro_id: row.viveiro_id,
+      data: new Date(row.data).toISOString().split('T')[0],
+      qntManha: parseFloat(row.qnt_manha) || 0,
+      qntTarde: parseFloat(row.qnt_tarde) || 0,
+      created_at: row.created_at
+    };
+
+    res.json(formattedRecord);
+    
+  } catch (error) {
+    console.error('Erro ao atualizar coleta de ração:', error);
+    res.status(500).json({ 
+      error: 'Erro ao atualizar coleta de ração', 
+      details: error.message,
+      timestamp: new Date().toISOString(),
+      path: req.path
     });
   }
 });

@@ -57,6 +57,17 @@ interface DashboardResponse {
   atualizado: string
 }
 
+// Função utilitária para normalizar datas
+const normalizeDate = (date: string | Date): string => {
+  if (date instanceof Date) {
+    return date.toISOString().split('T')[0];
+  }
+  if (typeof date === 'string') {
+    return date.split('T')[0];
+  }
+  return '';
+};
+
 function FazendaRacao() {
   const navigate = useNavigate()
   const toast = useToastGlobal()
@@ -169,14 +180,6 @@ function FazendaRacao() {
       ? viveiro.recomendadoManha 
       : viveiro.recomendadoTarde
     
-    console.log('Valores recomendados do backend:', {
-      viveiro: viveiro.viveiro.nome,
-      periodo,
-      recomendadoManha: viveiro.recomendadoManha,
-      recomendadoTarde: viveiro.recomendadoTarde,
-      quantidadeUsada: quantidadeRecomendada
-    });
-    
     setQuantidadeModal({
       isOpen: true,
       viveiroId,
@@ -205,10 +208,9 @@ function FazendaRacao() {
           
           if (registroManha && registroManha.qntManha) {
             quantidadeManha = registroManha.qntManha
-            console.log('Valor da manhã encontrado:', quantidadeManha)
           }
-        } catch (error) {
-          console.log('Erro ao buscar ração da manhã:', error)
+        } catch {
+          // Silently continue if morning record not found
         }
       }
       
@@ -251,7 +253,7 @@ function FazendaRacao() {
     
     const hoje = new Date().toISOString().split('T')[0];
     const viveirosFiltrados = dashboard.viveiros.filter((viveiro: any) => {
-      const racaoHoje = viveiro.racoes.find((r: any) => r.data.split('T')[0] === hoje);
+      const racaoHoje = viveiro.racoes.find((r: any) => normalizeDate(r.data) === hoje);
       
       if (!racaoHoje) {
         return tipo === 'pendente';
@@ -321,7 +323,7 @@ function FazendaRacao() {
   let viveirosComFCR = 0;
 
   dashboard.viveiros.forEach(viveiro => {
-    const racaoHoje = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
+    const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
     
     // Calcular ração hoje
     if (racaoHoje) {
@@ -448,7 +450,7 @@ function FazendaRacao() {
               <div className="fazenda-viveiro-status">
                 {(() => {
                   const hoje = new Date().toISOString().split('T')[0];
-                  const racaoHoje = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
+                  const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
                   const alimentouManha = racaoHoje ? racaoHoje.qntManha > 0 : false;
                   const alimentouTarde = racaoHoje ? racaoHoje.qntTarde > 0 : false;
                   const racaoHojeTotal = racaoHoje ? racaoHoje.total : 0;
@@ -485,7 +487,7 @@ function FazendaRacao() {
             <div className="fazenda-viveiro-actions">
               {(() => {
                 const hoje = new Date().toISOString().split('T')[0];
-                const racaoHoje = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
+                const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
                 const alimentouManha = racaoHoje ? racaoHoje.qntManha > 0 : false;
                 const alimentouTarde = racaoHoje ? racaoHoje.qntTarde > 0 : false;
                 
@@ -549,7 +551,7 @@ function FazendaRacao() {
                 <td>
                   {(() => {
                     const hoje = new Date().toISOString().split('T')[0];
-                    const racaoHoje = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
+                    const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
                     return racaoHoje ? `${racaoHoje.total.toFixed(1)} kg` : '0.0 kg';
                   })()}
                 </td>
@@ -574,7 +576,7 @@ function FazendaRacao() {
                 <td>
                   {(() => {
                     const hoje = new Date().toISOString().split('T')[0];
-                    const racaoHoje = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
+                    const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
                     if (!racaoHoje) {
                       return <span className="fazenda-feed-status pending">Pendente</span>;
                     }
@@ -823,7 +825,7 @@ function FazendaRacao() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {statusModal.viveiros.map((viveiro) => {
                     const hoje = new Date().toISOString().split('T')[0];
-                    const racaoHoje = viveiro.racoes.find((r: { data: string }) => r.data.split('T')[0] === hoje);
+                    const racaoHoje = viveiro.racoes.find((r: { data: string | Date }) => normalizeDate(r.data) === hoje);
                     
                     return (
                       <div 

@@ -203,7 +203,7 @@ export const backendApi = {
   },
 
   createColetaRacao: async (viveiroId: string, racaoData: {
-    data: Date;
+    data: string;
     qnt_manha: number;
     qnt_tarde: number;
   }) => {
@@ -239,7 +239,6 @@ export const backendApi = {
         }
       } catch {
         // Não encontrou registro, continua para criar novo
-        console.log('Criando novo registro de ração...');
       }
       
       // Não existe registro, criar novo com apenas o período específico

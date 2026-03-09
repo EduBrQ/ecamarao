@@ -146,13 +146,10 @@ function Racao() {
   const handleSave = async () => {
     setSubmitted(true)
     if (!form.data || !form.qntManha || !form.qntTarde) return
-    const parsedDate = new Date(form.data)
-    parsedDate.setUTCHours(11, 0, 0, 0)
-    form.data = parsedDate.toISOString()
 
     try {
       await backendApi.createColetaRacao(viveiroId!, {
-        data: new Date(form.data),
+        data: form.data,
         qnt_manha: Number(form.qntManha),
         qnt_tarde: Number(form.qntTarde)
       })
