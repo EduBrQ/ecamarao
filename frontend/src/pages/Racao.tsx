@@ -455,7 +455,7 @@ function Racao() {
               ) : (
                 racao.slice().reverse().map((r) => (
                   <tr key={r.id}>
-                    <td>{formatDate(new Date(r.data))}</td>
+                    <td>{formatDate(new Date(new Date(r.data).setUTCHours(14, 0, 0, 0)))}</td>
                     <td className="text-right">{r.qntManha} kg</td>
                     <td className="text-right">{r.qntTarde} kg</td>
                     <td className="text-right"><strong>{(r.qntManha + r.qntTarde).toFixed(1)} kg</strong></td>

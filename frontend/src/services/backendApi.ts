@@ -216,12 +216,36 @@ export const backendApi = {
     }
   },
 
-  registrarAlimentacao: async (viveiroId: number, periodo: 'manha' | 'tarde', quantidade: number) => {
+  registrarAlimentacao: async (viveiroId: number, periodo: 'manha' | 'tarde', quantidade: number, quantidadeManha?: number) => {
     try {
       const hoje = new Date().toISOString().split('T')[0];
+      
+      // Primeiro, buscar se já existe registro para hoje
+      try {
+        const getResponse = await axios.get(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao?data=${hoje}`);
+        const registroExistente = getResponse.data;
+        
+        if (registroExistente && registroExistente.length > 0) {
+          // Já existe registro, atualizar apenas o período específico
+          const registro = registroExistente[0];
+          const racaoData = {
+            data: hoje,
+            qnt_manha: periodo === 'manha' ? quantidade : (quantidadeManha || registro.qntManha || 0),
+            qnt_tarde: periodo === 'tarde' ? quantidade : registro.qntTarde || 0
+          };
+          
+          const response = await axios.put(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao/${registro.id}`, racaoData);
+          return response.data;
+        }
+      } catch {
+        // Não encontrou registro, continua para criar novo
+        console.log('Criando novo registro de ração...');
+      }
+      
+      // Não existe registro, criar novo com apenas o período específico
       const racaoData = {
         data: hoje,
-        qnt_manha: periodo === 'manha' ? quantidade : 0,
+        qnt_manha: periodo === 'manha' ? quantidade : (quantidadeManha || 0),
         qnt_tarde: periodo === 'tarde' ? quantidade : 0
       };
       

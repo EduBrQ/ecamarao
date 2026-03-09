@@ -5,7 +5,7 @@
   "main": "server_final.js",
   "scripts": {
     "start": "node start.js",
-    "dev": "node server.js",
+    "dev": "node server_with_docs.js",
     "test": "jest"
   },
   "keywords": ["ecamarao", "shrimp", "aquaculture", "backend"],

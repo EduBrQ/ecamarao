@@ -554,7 +554,15 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
           pesoEstimadoG: calculoAvancado.pesoEstimadoG,
           populacaoEstimada: calculoAvancado.populacaoEstimada,
           biomassaEstimadaKg: calculoAvancado.biomassaEstimadaKg,
-          usandoPesoReal: false
+          usandoPesoReal: false,
+          // Adicionar dados detalhados de ração
+          racoes: racaoResult.rows.map(r => ({
+            id: r.id,
+            data: r.data,
+            qntManha: parseFloat(r.qntManha) || 0,
+            qntTarde: parseFloat(r.qntTarde) || 0,
+            total: (parseFloat(r.qntManha) || 0) + (parseFloat(r.qntTarde) || 0)
+          }))
         };
       })
     );
@@ -700,7 +708,14 @@ app.post('/api/viveiros/:id/racao', async (req, res) => {
       data: new Date(record.data).toISOString().split('T')[0] // Formatar data como YYYY-MM-DD
     };
     
-    // Atualizar quantidade de ração no viveiro (opcional)
+    // Criar colunas se não existirem
+    await pool.query(`
+      ALTER TABLE viveiros 
+      ADD COLUMN IF NOT EXISTS quantidade_racao DECIMAL(10,2) DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS data_ultima_alimentacao DATE
+    `);
+    
+    // Atualizar quantidade de ração no viveiro
     const totalRacao = qnt_manha + qnt_tarde;
     await pool.query(
       'UPDATE viveiros SET quantidade_racao = $1, data_ultima_alimentacao = $2 WHERE id = $3',
