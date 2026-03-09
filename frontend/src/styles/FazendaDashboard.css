@@ -75,6 +75,513 @@
   transform: translateY(-2px);
 }
 
+/* 📋 Ações do Dia - Novo Bloco Principal */
+.fazenda-daily-actions {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  color: white;
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+}
+
+.fazenda-daily-actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fazenda-daily-actions-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fazenda-daily-actions-title h2 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  color: white;
+}
+
+.fazenda-daily-actions-title p {
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0 0;
+  opacity: 0.8;
+}
+
+.fazenda-daily-icon {
+  font-size: 2.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.fazenda-time-indicator {
+  text-align: right;
+}
+
+.fazenda-time-label {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.25rem;
+}
+
+.fazenda-time-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.fazenda-daily-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.fazenda-action-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.fazenda-action-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.fazenda-action-card.urgent {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.fazenda-action-card.success {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.fazenda-action-card.info {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.fazenda-action-card.primary {
+  border-color: rgba(168, 85, 247, 0.5);
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.fazenda-action-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.fazenda-action-icon {
+  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.fazenda-action-icon.alert {
+  background: rgba(239, 68, 68, 0.2);
+  animation: pulse 2s infinite;
+}
+
+.fazenda-action-icon.success {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.fazenda-action-icon.info {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.fazenda-action-icon.primary {
+  background: rgba(168, 85, 247, 0.2);
+}
+
+.fazenda-action-content {
+  flex: 1;
+}
+
+.fazenda-action-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.fazenda-action-value {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0.25rem 0;
+  line-height: 1;
+}
+
+.fazenda-action-subtitle {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.fazenda-primary-action-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1rem;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.fazenda-primary-action-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.fazenda-progress-indicator {
+  margin-top: 1rem;
+}
+
+.fazenda-progress-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 🎯 Filtros e KPIs Contextuais */
+.fazenda-filters-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.fazenda-filters-header {
+  margin-bottom: 1.5rem;
+}
+
+.fazenda-filters-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.fazenda-filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fazenda-filter-tab {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fazenda-filter-tab:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.fazenda-filter-tab.active {
+  background: #667eea;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.fazenda-contextual-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.fazenda-contextual-kpi {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.fazenda-contextual-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.fazenda-kpi-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.fazenda-kpi-trend.positive {
+  color: #16a34a;
+}
+
+.fazenda-kpi-trend.neutral {
+  color: #d97706;
+}
+
+.fazenda-kpi-trend.negative {
+  color: #dc2626;
+}
+
+/* 🏠 Cards de Viveiros - Novo Design com Progress */
+.fazenda-viveiro-progress {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.fazenda-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.fazenda-progress-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fazenda-progress-percent {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.fazenda-progress-fill.complete {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.fazenda-progress-fill.partial {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.fazenda-progress-fill.pending {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.fazenda-metric-value.excellent {
+  color: #16a34a;
+}
+
+.fazenda-metric-value.good {
+  color: #d97706;
+}
+
+.fazenda-metric-value.warning {
+  color: #dc2626;
+}
+
+.fazenda-fcr-indicator {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.fazenda-viveiro-card.complete {
+  border-left: 4px solid #10b981;
+}
+
+.fazenda-viveiro-card.partial {
+  border-left: 4px solid #f59e0b;
+}
+
+.fazenda-viveiro-card.pending {
+  border-left: 4px solid #ef4444;
+}
+.fazenda-critical-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.fazenda-critical-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.fazenda-critical-card.feeding {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.fazenda-critical-card.pending {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.fazenda-critical-card.next-action {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+}
+
+.fazenda-critical-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.fazenda-critical-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.fazenda-critical-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.fazenda-critical-icon.alert {
+  background: #fee2e2;
+  color: #dc2626;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.fazenda-critical-content {
+  flex: 1;
+}
+
+.fazenda-critical-title {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.fazenda-critical-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin: 0.25rem 0;
+  line-height: 1;
+}
+
+.fazenda-critical-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.fazenda-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.fazenda-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.fazenda-quick-action-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.fazenda-quick-action-btn:hover {
+  background: #5a67d8;
+  transform: translateY(-1px);
+}
+
+.fazenda-quick-action-btn.primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.fazenda-quick-action-btn.primary:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
 /* 🎯 KPI Cards */
 .fazenda-kpi-grid {
   display: grid;
@@ -226,21 +733,84 @@
   color: #1f2937;
 }
 
-/* 🏠 Viveiro Cards */
+/* 🏠 Seção de Viveiros */
+.fazenda-viveiros-section {
+  margin-bottom: 2rem;
+}
+
+.fazenda-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.fazenda-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fazenda-section-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.fazenda-bulk-action-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.fazenda-bulk-action-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+/* 🏠 Viveiro Cards - Novo Design */
 .fazenda-viveiros-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .fazenda-viveiro-card {
   background: white;
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 2px solid #e5e7eb;
   overflow: hidden;
   transition: all 0.3s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.fazenda-viveiro-card.needs-attention {
+  border-color: #f59e0b;
+  box-shadow: 0 6px 25px rgba(245, 158, 11, 0.15);
+}
+
+.fazenda-viveiro-card.needs-attention::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  animation: pulse 2s infinite;
 }
 
 .fazenda-viveiro-card:hover {
@@ -258,7 +828,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .fazenda-viveiro-name {
@@ -285,49 +855,49 @@
 }
 
 .fazenda-feed-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
-  text-align: center;
   flex: 1;
 }
 
-.fazenda-feed-status.complete {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.fazenda-feed-status.partial {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.fazenda-feed-status.pending {
-  background: #fee2e2;
-  color: #dc2626;
+.fazenda-feed-status span {
+  font-size: 0.8rem;
 }
 
 .fazenda-feed-amount {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 600;
   text-align: right;
-  min-width: 100px;
+  min-width: 120px;
 }
 
-.fazenda-viveiro-details {
+.fazenda-feed-amount strong {
+  display: block;
+  font-size: 1.125rem;
+  color: #1f2937;
+}
+
+.fazenda-feed-amount span {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.fazenda-viveiro-metrics {
   padding: 1.5rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.fazenda-detail {
+.fazenda-metric-item {
   text-align: center;
 }
 
-.fazenda-detail-label {
+.fazenda-metric-label {
   display: block;
   font-size: 0.75rem;
   color: #6b7280;
@@ -336,7 +906,7 @@
   margin-bottom: 0.25rem;
 }
 
-.fazenda-detail-value {
+.fazenda-metric-value {
   display: block;
   font-size: 1rem;
   font-weight: 700;
@@ -346,7 +916,6 @@
 .fazenda-viveiro-actions {
   padding: 1rem 1.5rem;
   background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
   display: flex;
   gap: 0.75rem;
 }
@@ -363,12 +932,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
-.fazenda-action-btn:disabled {
+.fazenda-action-btn:disabled,
+.fazenda-action-btn.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none !important;
 }
 
 .fazenda-action-btn.manha {
@@ -376,7 +947,7 @@
   color: #78350f;
 }
 
-.fazenda-action-btn.manha:hover:not(:disabled) {
+.fazenda-action-btn.manha:hover:not(:disabled):not(.disabled) {
   background: #f59e0b;
   transform: translateY(-1px);
 }
@@ -386,7 +957,7 @@
   color: white;
 }
 
-.fazenda-action-btn.tarde:hover:not(:disabled) {
+.fazenda-action-btn.tarde:hover:not(:disabled):not(.disabled) {
   background: #7c3aed;
   transform: translateY(-1px);
 }
@@ -481,7 +1052,7 @@
   background: #5a67d8;
 }
 
-/* 📱 Responsivo */
+/* 📱 Responsivo - Melhorias */
 @media (max-width: 768px) {
   .fazenda-dashboard-container {
     padding: 0.5rem;
@@ -490,6 +1061,25 @@
   .fazenda-header-content {
     flex-direction: column;
     align-items: flex-start;
+  }
+  
+  .fazenda-critical-kpis {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .fazenda-critical-header {
+    gap: 0.75rem;
+  }
+  
+  .fazenda-critical-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 2rem;
+  }
+  
+  .fazenda-critical-value {
+    font-size: 2rem;
   }
   
   .fazenda-kpi-grid {
@@ -504,13 +1094,33 @@
     grid-template-columns: 1fr;
   }
   
-  .fazenda-viveiro-details {
+  .fazenda-viveiro-metrics {
     grid-template-columns: 1fr;
     text-align: left;
+    gap: 0.75rem;
+  }
+  
+  .fazenda-metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .fazenda-metric-item:last-child {
+    border-bottom: none;
   }
   
   .fazenda-viveiro-actions {
     flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .fazenda-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
   
   .fazenda-summary-table {
