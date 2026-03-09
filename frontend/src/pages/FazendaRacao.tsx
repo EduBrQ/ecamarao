@@ -135,7 +135,7 @@ const calcularScoreSaude = (viveiro: any): {
   // Score Crescimento (0-25 pontos)
   const biomassaEsperada = viveiro.populacaoEstimada * 0.015; // 15g por camarão
   const crescimentoReal = viveiro.biomassa / biomassaEsperada;
-  let scoreCrescimento = Math.min(25, crescimentoReal * 25);
+  const scoreCrescimento = Math.min(25, crescimentoReal * 25);
   
   // Score Consistência (0-25 pontos)
   let scoreConsistencia = 15; // Base
@@ -193,7 +193,12 @@ const detectarAnomalias = (viveiro: any): {
   mensagem: string;
   recomendacao: string;
 }[] => {
-  const anomalias = [];
+  const anomalias: {
+    tipo: string;
+    severidade: 'baixa' | 'media' | 'alta';
+    mensagem: string;
+    recomendacao: string;
+  }[] = [];
   
   // Detectar queda de consumo
   const diasUltimos7 = viveiro.racoes.slice(-7);
@@ -245,7 +250,6 @@ const preverProducao = (viveiro: any): {
 } => {
   const doc = viveiro.doc || 0;
   const biomassaAtual = viveiro.biomassa || 0;
-  const populacaoAtual = viveiro.populacaoEstimada || 0;
   
   // Peso médio estimado baseado em curva de crescimento
   let pesoMedioEstimado = 0;
@@ -1976,7 +1980,7 @@ function FazendaRacao() {
                     <span className="fazenda-timeline-title">📈 Consumo Últimos 7 Dias</span>
                   </div>
                   <div className="fazenda-timeline-chart">
-                    {viveiro.racoes.slice(-7).map((racao, index) => {
+                    {viveiro.racoes.slice(-7).map((racao) => {
                       const maxConsumo = Math.max(...viveiro.racoes.slice(-7).map(r => r.total));
                       const percentual = maxConsumo > 0 ? (racao.total / maxConsumo) * 100 : 0;
                       return (
