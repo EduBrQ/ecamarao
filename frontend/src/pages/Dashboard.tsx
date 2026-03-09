@@ -86,11 +86,44 @@ function Dashboard() {
   const doc = calcularDOC(viveiro.data_inicio_ciclo)
   console.log('DOC calculado:', doc);
   
-  const densidade = viveiro.densidade ?? 0
+  // Usar área e densidade corretamente
+  const densidadePorM2 = parseFloat(viveiro.densidade?.toString() || '0') || 0
+  const area = parseFloat(viveiro.area?.toString() || '0') || 0
+  
+  // Calcular população inicial: densidade (larvas/m²) × área (m²)
+  const populacaoInicial = densidadePorM2 * area
+  
+  // Converter para milhar de larvas para as funções existentes
+  const densidadeMilLarvas = populacaoInicial / 1000
+  
+  console.log('Cálculo de população:', {
+    densidadePorM2,
+    area,
+    populacaoInicial,
+    densidadeMilLarvas,
+    explicacao: `${densidadePorM2} larvas/m² × ${area} m² = ${populacaoInicial} camarões`
+  });
+  
   const mortalidadeTotal = mortalidade.reduce((acc, m) => acc + m.quantidade, 0)
-  const sobrevivencia = calcularSobrevivencia(densidade, mortalidadeTotal)
-  const pesoMedio = 0 // Peso médio não está disponível no backend ainda
-  const biomassa = calcularBiomassa(densidade, mortalidadeTotal, pesoMedio)
+  const sobrevivencia = calcularSobrevivencia(densidadeMilLarvas, mortalidadeTotal)
+  
+  // Estimar peso baseado no DOC
+  let pesoMedio = 0;
+  if (doc <= 0) {
+    pesoMedio = 0.015; // PL padrão
+  } else if (doc <= 30) {
+    pesoMedio = 0.015 + (doc * 0.35); // ~0.35g/dia
+  } else if (doc <= 60) {
+    pesoMedio = 10.5 + ((doc - 30) * 0.5); // ~0.5g/dia
+  } else if (doc <= 90) {
+    pesoMedio = 25.5 + ((doc - 60) * 0.35); // ~0.35g/dia
+  } else {
+    pesoMedio = 36 + ((doc - 90) * 0.2); // ~0.2g/dia
+  }
+  
+  console.log('Peso estimado:', pesoMedio, 'g para DOC', doc);
+  
+  const biomassa = calcularBiomassa(densidadeMilLarvas, mortalidadeTotal, pesoMedio)
   const racaoTotal = racao.reduce((acc, r) => acc + r.qntManha + r.qntTarde, 0)
   const fcr = calcularFCR(racaoTotal, biomassa)
   const custoRacao = racaoTotal * 3 // Preço fixo por enquanto
@@ -126,6 +159,12 @@ function Dashboard() {
       label: 'Dias de Cultivo',
       value: doc.toString(),
       unit: 'DOC',
+      status: 'good' as const,
+    },
+    {
+      label: 'Camarões Vivos',
+      value: (populacaoInicial - mortalidadeTotal).toLocaleString('pt-BR'),
+      unit: 'animais',
       status: 'good' as const,
     },
     {

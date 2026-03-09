@@ -389,8 +389,9 @@ function calcularDOC(dataInicio) {
 }
 
 // Helper: calcular biomassa (kg)
-function calcularBiomassa(densidadeMilLarvas, mortalidadeTotal, pesoMedioG) {
-  const vivos = (densidadeMilLarvas * 1000) - mortalidadeTotal;
+function calcularBiomassa(densidadePorM2, area, mortalidadeTotal, pesoMedioG) {
+  const populacaoInicial = densidadePorM2 * area;
+  const vivos = populacaoInicial - mortalidadeTotal;
   return Math.max(0, (vivos * pesoMedioG) / 1000);
 }
 
@@ -400,64 +401,215 @@ function calcularFCR(racaoTotalKg, biomassaKg) {
   return racaoTotalKg / biomassaKg;
 }
 
-// Helper: calcular ração diária avançada
-function calcularRacaoDiariaAvancada(densidade, doc, mortalidade, pesoMedio) {
-  // Calcular população atual
-  const mortTotal = mortalidade.reduce((acc, m) => acc + m.quantidade, 0);
-  const populacaoAtual = (densidade * 1000) - mortTotal;
+// Funções auxiliares para cálculo de ração (mesmas do frontend)
+
+// Tabela de ração com faixas por DOC
+const TABELA_RACAO = [
+  { docMin: 1, docMax: 15, fase: 'Berçário I', pesoMedioMin: 0.015, pesoMedioMax: 2, taxaAlimentacao: 12, tipoRacao: 'PL/F1', proteina: 45 },
+  { docMin: 16, docMax: 30, fase: 'Berçário II', pesoMedioMin: 2, pesoMedioMax: 5, taxaAlimentacao: 10, tipoRacao: 'F1', proteina: 40 },
+  { docMin: 31, docMax: 45, fase: 'Engorda I', pesoMedioMin: 5, pesoMedioMax: 10, taxaAlimentacao: 8, tipoRacao: 'F2', proteina: 35 },
+  { docMin: 46, docMax: 60, fase: 'Engorda I', pesoMedioMin: 10, pesoMedioMax: 15, taxaAlimentacao: 7, tipoRacao: 'F2', proteina: 35 },
+  { docMin: 61, docMax: 75, fase: 'Engorda II', pesoMedioMin: 15, pesoMedioMax: 20, taxaAlimentacao: 6, tipoRacao: 'F3', proteina: 32 },
+  { docMin: 76, docMax: 90, fase: 'Engorda II', pesoMedioMin: 20, pesoMedioMax: 25, taxaAlimentacao: 5, tipoRacao: 'F3', proteina: 32 },
+  { docMin: 91, docMax: 105, fase: 'Engorda III', pesoMedioMin: 25, pesoMedioMax: 30, taxaAlimentacao: 4, tipoRacao: 'F4', proteina: 30 },
+  { docMin: 106, docMax: 120, fase: 'Engorda III', pesoMedioMin: 30, pesoMedioMax: 35, taxaAlimentacao: 3.5, tipoRacao: 'F4', proteina: 30 }
+];
+
+function getFaixaRacao(doc) {
+  return TABELA_RACAO.find(faixa => doc >= faixa.docMin && doc <= faixa.docMax) || null;
+}
+
+// Dados de PL por tamanho
+const PL_DATA = {
+  'PL5': { pl: 'PL5', pesoMedioMg: 0.005, fonte: 'Laboratório' },
+  'PL8': { pl: 'PL8', pesoMedioMg: 0.008, fonte: 'Laboratório' },
+  'PL10': { pl: 'PL10', pesoMedioMg: 0.010, fonte: 'Laboratório' },
+  'PL12': { pl: 'PL12', pesoMedioMg: 0.012, fonte: 'Laboratório' },
+  'PL15': { pl: 'PL15', pesoMedioMg: 0.015, fonte: 'Laboratório' }
+};
+
+function getPLData(pl) {
+  return PL_DATA[pl] || null;
+}
+
+// Prever peso atual baseado no DOC (curva de crescimento padrão)
+function preverPesoAtual(doc) {
+  if (doc <= 0) return 0.015; // PL padrão
   
-  // Estimativa de peso baseada no DOC (simplificada)
-  let pesoEstimado = pesoMedio || 0.015; // 15g padrão
+  // Curva de crescimento não-linear baseada em dados acadêmicos
+  if (doc <= 30) {
+    // Berçário: crescimento mais lento inicial
+    return 0.015 + (doc * 0.35); // ~0.35g/dia
+  } else if (doc <= 60) {
+    // Engorda I: crescimento acelerado
+    return 10.5 + ((doc - 30) * 0.5); // ~0.5g/dia
+  } else if (doc <= 90) {
+    // Engorda II: crescimento moderado
+    return 25.5 + ((doc - 60) * 0.35); // ~0.35g/dia
+  } else {
+    // Engorda III: crescimento desacelerando
+    return 36 + ((doc - 90) * 0.2); // ~0.2g/dia
+  }
+}
+
+// Prever peso atual usando dados de PL
+function preverPesoAtualComPL(doc, plInicial) {
+  const plData = getPLData(plInicial);
+  if (!plData) return preverPesoAtual(doc);
   
-  if (doc > 0) {
-    // Crescimento estimado: 0.015g (PL) até 30g em 120 dias
-    const crescimentoDiario = (30 - 0.015) / 120;
-    pesoEstimado = Math.min(0.015 + (crescimentoDiario * doc), 30);
+  const pesoInicialG = plData.pesoMedioMg;
+  
+  // Ajustar curva de crescimento baseado no peso inicial
+  if (doc <= 30) {
+    return pesoInicialG + (doc * 0.35);
+  } else if (doc <= 60) {
+    const pesoDia30 = pesoInicialG + (30 * 0.35);
+    return pesoDia30 + ((doc - 30) * 0.5);
+  } else if (doc <= 90) {
+    const pesoDia30 = pesoInicialG + (30 * 0.35);
+    const pesoDia60 = pesoDia30 + (30 * 0.5);
+    return pesoDia60 + ((doc - 60) * 0.35);
+  } else {
+    const pesoDia30 = pesoInicialG + (30 * 0.35);
+    const pesoDia60 = pesoDia30 + (30 * 0.5);
+    const pesoDia90 = pesoDia60 + (30 * 0.35);
+    return pesoDia90 + ((doc - 90) * 0.2);
+  }
+}
+
+// Estimar população atual considerando mortalidade
+function estimarPopulacaoAtual(densidadeMilLarvas, doc, registrosMortalidade) {
+  // População inicial
+  const populacaoInicial = densidadeMilLarvas * 1000;
+  
+  // Calcular mortalidade total
+  const mortalidadeTotal = registrosMortalidade.reduce((acc, m) => acc + m.quantidade, 0);
+  
+  // População estimada atual
+  const populacaoAtual = populacaoInicial - mortalidadeTotal;
+  
+  return Math.max(0, populacaoAtual);
+}
+
+// Helper: calcular ração diária avançada (mesma fórmula do frontend)
+function calcularRacaoDiariaAvancada(densidadeMilLarvas, doc, registrosMortalidade, pesoRegistradoG, plInicial, densidadeApiRacao) {
+  console.log('calcularRacaoDiariaAvancada - Entrada:', {
+    densidadeMilLarvas,
+    doc,
+    registrosMortalidade: registrosMortalidade.length,
+    pesoRegistradoG,
+    plInicial,
+    densidadeApiRacao
+  });
+
+  // Validate inputs
+  if (!densidadeMilLarvas || densidadeMilLarvas <= 0) {
+    console.warn('calcularRacaoDiariaAvancada - Densidade inválida:', densidadeMilLarvas);
+    return { 
+      totalKg: 0, 
+      manhaKg: 0, 
+      tardeKg: 0, 
+      pesoEstimadoG: 0,
+      populacaoEstimada: 0,
+      biomassaEstimadaKg: 0,
+      faixa: null 
+    };
+  }
+
+  const faixa = getFaixaRacao(doc);
+  console.log('calcularRacaoDiariaAvancada - Faixa encontrada:', faixa);
+  
+  if (!faixa) { 
+    console.log('calcularRacaoDiariaAvancada - Sem faixa para DOC:', doc);
+    return { 
+      totalKg: 0, 
+      manhaKg: 0, 
+      tardeKg: 0, 
+      pesoEstimadoG: 0,
+      populacaoEstimada: 0,
+      biomassaEstimadaKg: 0,
+      faixa: null 
+    };
   }
   
-  // Calcular biomassa estimada
-  const biomassaEstimada = (populacaoAtual * pesoEstimado) / 1000;
+  // Get PL data if available
+  const plData = plInicial ? getPLData(plInicial) : undefined;
   
-  // Determinar fase e taxa de alimentação
-  let fase = 'Berçário';
-  let taxaAlimentacao = 10; // % da biomassa
-  
-  if (doc >= 1 && doc <= 30) {
-    fase = 'Berçário';
-    taxaAlimentacao = 10;
-  } else if (doc >= 31 && doc <= 60) {
-    fase = 'Engorda I';
-    taxaAlimentacao = 8;
-  } else if (doc >= 61 && doc <= 90) {
-    fase = 'Engorda II';
-    taxaAlimentacao = 6;
-  } else if (doc > 90) {
-    fase = 'Engorda III';
-    taxaAlimentacao = 4;
+  // Predict current weight - use PL data if available, then registered weight, then fallback
+  let pesoEstimadoG;
+  if (pesoRegistradoG && pesoRegistradoG > 0) {
+    pesoEstimadoG = pesoRegistradoG;
+  } else if (plData) {
+    pesoEstimadoG = preverPesoAtualComPL(doc, plInicial);
+  } else {
+    pesoEstimadoG = preverPesoAtual(doc);
   }
   
-  // Calcular ração diária
-  const racaoDiariaKg = (biomassaEstimada * taxaAlimentacao) / 100;
+  console.log('calcularRacaoDiariaAvancada - Peso estimado:', pesoEstimadoG, 'PL:', plData?.pl);
   
-  // Dividir entre manhã e tarde (40% manhã, 60% tarde)
-  const manhaKg = racaoDiariaKg * 0.4;
-  const tardeKg = racaoDiariaKg * 0.6;
+  // Estimate current population - usar densidade da API de ração se disponível
+  let populacaoEstimada;
+  if (densidadeApiRacao && densidadeApiRacao > 0) {
+    // Usar densidade da API de ração diretamente (já é o número total de camarões)
+    populacaoEstimada = densidadeApiRacao * 1000;
+    console.log('calcularRacaoDiariaAvancada - População estimada:', populacaoEstimada, '(usando densidade da API ração)');
+  } 
   
-  return {
-    fase,
-    taxaAlimentacao,
-    pesoEstimadoG: pesoEstimado,
-    populacaoEstimada: populacaoAtual,
-    biomassaEstimadaKg: biomassaEstimada,
-    totalKg: racaoDiariaKg,
+  // Validate population
+  if (populacaoEstimada <= 0) {
+    console.warn('calcularRacaoDiariaAvancada - População estimada inválida:', populacaoEstimada);
+    return { 
+      totalKg: 0, 
+      manhaKg: 0, 
+      tardeKg: 0, 
+      pesoEstimadoG,
+      populacaoEstimada: 0,
+      biomassaEstimadaKg: 0,
+      faixa,
+      plData
+    };
+  }
+  
+  // Calculate estimated biomass
+  const biomassaEstimadaKg = (populacaoEstimada * pesoEstimadoG) / 1000;
+  console.log('calcularRacaoDiariaAvancada - Biomassa calculada:', biomassaEstimadaKg);
+  
+  // Validate biomass
+  if (biomassaEstimadaKg <= 0) {
+    console.warn('calcularRacaoDiariaAvancada - Biomassa estimada inválida:', biomassaEstimadaKg);
+    return { 
+      totalKg: 0, 
+      manhaKg: 0, 
+      tardeKg: 0, 
+      pesoEstimadoG,
+      populacaoEstimada,
+      biomassaEstimadaKg: 0,
+      faixa,
+      plData
+    };
+  }
+  
+  // Calculate feed based on estimated biomass
+  const totalKg = (biomassaEstimadaKg * faixa.taxaAlimentacao) / 100;
+  const manhaKg = totalKg * 0.4;
+  const tardeKg = totalKg * 0.6;
+  
+  console.log('calcularRacaoDiariaAvancada - Resultado:', {
+    totalKg,
     manhaKg,
     tardeKg,
-    faixa: {
-      fase,
-      taxaAlimentacao,
-      docMin: 0,
-      docMax: 120
-    }
+    taxaAlimentacao: faixa.taxaAlimentacao
+  });
+
+  return { 
+    totalKg: Math.round(totalKg * 100) / 100, 
+    manhaKg: Math.round(manhaKg * 100) / 100, 
+    tardeKg: Math.round(tardeKg * 100) / 100,
+    pesoEstimadoG,
+    populacaoEstimada,
+    biomassaEstimadaKg: Math.round(biomassaEstimadaKg * 100) / 100,
+    faixa,
+    plData: plData ?? undefined
   };
 }
 
@@ -507,12 +659,22 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
         
         // Calcular métricas
         const doc = calcularDOC(viveiro.data_inicio_ciclo);
-        const densidade = viveiro.densidade || 0;
+        const densidade = parseFloat(viveiro.densidade) || 0;
+        const area = parseFloat(viveiro.area) || 0;
         const pesoMedio = 0.015; // 15g estimado
+        
+        console.log('Dashboard - Dados do Viveiro:', {
+          id: viveiro.id,
+          nome: viveiro.nome,
+          densidade: densidade,
+          area: area,
+          doc: doc,
+          dataInicio: viveiro.data_inicio_ciclo
+        });
         
         const mortTotal = mortalidadeResult.rows.reduce((acc, m) => acc + m.quantidade, 0);
         const racaoAcumulada = racaoResult.rows.reduce((acc, r) => acc + (parseFloat(r.qntManha) || 0) + (parseFloat(r.qntTarde) || 0), 0);
-        const biomassa = calcularBiomassa(densidade, mortTotal, pesoMedio);
+        const biomassa = calcularBiomassa(densidade, area, mortTotal, pesoMedio);
         const fcr = calcularFCR(racaoAcumulada, biomassa);
         
         // Verificar alimentação hoje
@@ -525,11 +687,35 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
         const racaoHojeTotal = racaoHojeManha + racaoHojeTarde;
         
         // Calcular recomendação
+        const densidadeMilLarvas = (densidade * area) / 1000; // converter para milhar de larvas
+        console.log('Dashboard - Cálculo de densidade:', {
+          densidadePorM2: densidade,
+          area: area,
+          densidadeMilLarvas,
+          explicacao: `${densidade} larvas/m² × ${area} m² ÷ 1000 = ${densidadeMilLarvas} milhar larvas`
+        });
+        
+        // Buscar dados da API de ração para obter densidade
+        let densidadeApiRacao = 0;
+        try {
+          const racaoApi = await pool.query(
+            'SELECT densidade FROM viveiros WHERE id = $1',
+            [viveiro.id]
+          );
+          if (racaoApi.rows.length > 0) {
+            densidadeApiRacao = parseFloat(racaoApi.rows[0].densidade) || 0;
+          }
+        } catch (error) {
+          console.warn('Erro ao buscar densidade da API de ração:', error);
+        }
+        
         const calculoAvancado = calcularRacaoDiariaAvancada(
-          densidade,
+          densidadeMilLarvas,
           doc,
           mortalidadeResult.rows,
-          pesoMedio
+          undefined, // pesoMedio não disponível no backend ainda
+          undefined,  // plInicial não disponível no backend ainda
+          densidadeApiRacao // densidade da API de ração
         );
         
         return {
@@ -558,6 +744,11 @@ app.get('/api/fazenda/dashboard', async (req, res) => {
           populacaoEstimada: calculoAvancado.populacaoEstimada,
           biomassaEstimadaKg: calculoAvancado.biomassaEstimadaKg,
           usandoPesoReal: false,
+          // Campos da nova calculadora
+          usandoNovaCalculadora: true,
+          faixaPeso: `${calculoAvancado.faixa?.docMin || 0}-${calculoAvancado.faixa?.docMax || 0} dias`,
+          faseCultivo: calculoAvancado.faixa?.fase || 'Não determinada',
+          taxaAlimentacaoDecimal: (calculoAvancado.faixa?.taxaAlimentacao || 0) / 100,
           // Adicionar dados detalhados de ração
           racoes: racaoResult.rows.map(r => ({
             id: r.id,
@@ -644,11 +835,13 @@ app.get('/api/viveiros/:id/racao', async (req, res) => {
     // Adicionar dados simulados para cálculo de FCR (implementação real: criar tabela de pesagens)
     const pesoMedioEstimado = 0.015; // 15g em média (valor estimado)
     const diasCultivo = calcularDOC(viveiroResult.rows[0].data_inicio_ciclo);
+    const densidade = parseFloat(viveiroResult.rows[0].densidade) || 0;
     
     res.json({
       racoes: racaoData,
       peso_medio: pesoMedioEstimado,
-      dias_cultivo: diasCultivo
+      dias_cultivo: diasCultivo,
+      densidade: densidade
     });
   } catch (error) {
     console.error('Erro ao buscar dados de ração:', error);

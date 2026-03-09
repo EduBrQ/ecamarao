@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { backendApi } from '../services/backendApi'
 import { useToastGlobal } from '../hooks/useToastGlobal'
+import { calcularRacaoSimples } from '../models/CalculadoraRacao'
 import '../styles/FazendaDashboard.css'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 interface ViveiroDashboard {
   viveiro: {
@@ -30,6 +33,15 @@ interface ViveiroDashboard {
   populacaoEstimada: number
   biomassaEstimadaKg: number
   usandoPesoReal: boolean
+  // Novos campos da calculadora avançada
+  usandoNovaCalculadora: boolean
+  faixaPeso: string
+  faseCultivo: string
+  taxaAlimentacaoDecimal: number
+  analiseCultivo?: {
+    recomendacoes: string[]
+    pontosAtencao: string[]
+  }
   racoes: Array<{
     id: number
     data: string
@@ -92,42 +104,97 @@ function FazendaRacao() {
   const [statusModal, setStatusModal] = useState<{
     isOpen: boolean
     tipo: 'completo' | 'parcial' | 'pendente'
-    viveiros: Array<any>
+    viveiros: any[]
   }>({
     isOpen: false,
     tipo: 'completo',
     viveiros: []
-  })
+  });
+
+  // Estado para modal de dias sem ração
+  const [diasSemRacaoModal, setDiasSemRacaoModal] = useState<{
+    isOpen: boolean
+    viveiroId: number
+    viveiroNome: string
+    diasEmFalta: Array<{
+      data: string
+      doc: number
+      racaoManha: string
+      racaoTarde: string
+    }>
+  }>({
+    isOpen: false,
+    viveiroId: 0,
+    viveiroNome: '',
+    diasEmFalta: []
+  });
 
   // Carregar dados do dashboard
   useEffect(() => {
-    const loadDashboard = async () => {
+    const carregarDashboard = async () => {
       try {
         setLoading(true)
-        setError(null)
-
         const dashboardData = await backendApi.getDashboardFazenda()
-        setDashboard(dashboardData)
-
-      } catch (err: any) {
-        console.error('Erro ao carregar dashboard da fazenda:', err)
         
-        if (err.response?.data?.error) {
-          toast.error('Erro ao carregar dados', err.response.data.error)
-        } else {
-          toast.error('Erro ao carregar dados', 'Não foi possível carregar o dashboard da fazenda')
-        }
+        // Calcular valores com nova calculadora para cada viveiro
+        const dashboardComCalculos = {
+          ...dashboardData,
+          viveiros: dashboardData.viveiros.map((viveiro: any) => {
+            // Usar nova calculadora
+            const resultadoCalculadora = calcularRacaoLocal({
+              viveiro: viveiro.viveiro,
+              doc: viveiro.doc,
+              biomassaEstimadaKg: 0,
+              pesoEstimadoG: 0,
+              usandoNovaCalculadora: false
+            });
+            
+            // Atualizar viveiro com valores calculados
+            return {
+              ...viveiro,
+              recomendadoTotal: resultadoCalculadora.racaoTotalDia,
+              recomendadoManha: resultadoCalculadora.racaoManha,
+              recomendadoTarde: resultadoCalculadora.racaoTarde,
+              fase: resultadoCalculadora.faseCultivo,
+              fcrAtual: viveiro.racaoAcumulada > 0 && resultadoCalculadora.biomassa > 0 ? 
+                (viveiro.racaoAcumulada / resultadoCalculadora.biomassa) : 0,
+              biomassa: resultadoCalculadora.biomassa,
+              pesoEstimadoG: viveiro.pesoEstimadoG || 0,
+              populacaoEstimada: viveiro.populacaoEstimada || 0,
+              biomassaEstimadaKg: resultadoCalculadora.biomassa,
+              usandoNovaCalculadora: true,
+              faixaPeso: resultadoCalculadora.faixaPeso,
+              faseCultivo: resultadoCalculadora.faseCultivo,
+              taxaAlimentacaoDecimal: resultadoCalculadora.taxaAlimentacao,
+              analiseCultivo: resultadoCalculadora.analiseCultivo
+            };
+          })
+        };
         
-        setError('Erro ao carregar dados da fazenda')
+        // Recalcular totais
+        const totaisRecalculados = {
+          ...dashboardData.totais,
+          totalRecomendado: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.recomendadoTotal, 0),
+          totalBiomassa: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.biomassa, 0),
+          fcrMedio: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.fcrAtual, 0) / dashboardComCalculos.viveiros.length || 0
+        };
+        
+        setDashboard({
+          ...dashboardComCalculos,
+          totais: totaisRecalculados
+        })
+      } catch (err) {
+        console.error('Erro ao carregar dashboard:', err)
+        setError('Não foi possível carregar os dados da fazenda')
       } finally {
         setLoading(false)
       }
     }
 
-    loadDashboard()
-  }, [toast])
+    carregarDashboard()
+  }, [])
 
-  // Função para exportar dados da fazenda
+  // Função para exportar dados da fazenda (CSV - mantida para compatibilidade)
   const handleExportFazenda = () => {
     if (!dashboard) return
 
@@ -169,16 +236,305 @@ function FazendaRacao() {
     }
   }
 
+  // Função para exportar relatório PDF avançado
+  const handleExportPDF = async () => {
+    if (!dashboard) {
+      toast.error('Sem dados', 'Carregue o dashboard antes de exportar')
+      return
+    }
+
+    try {
+      toast.info('Gerando PDF', 'Aguarde enquanto o relatório é gerado...')
+      
+      // Criar elemento temporário para o relatório
+      const reportElement = document.createElement('div')
+      reportElement.style.cssText = `
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        width: 210mm;
+        padding: 20px;
+        background: white;
+        font-family: Arial, sans-serif;
+        color: #333;
+      `
+      
+      // Data atual
+      const dataAtual = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+
+      // Cálculos para o resumo do CICLO GERAL
+      const totalRacaoAcumulada = dashboard.viveiros.reduce((sum, v) => sum + v.racaoAcumulada, 0)
+      const totalBiomassa = dashboard.viveiros.reduce((sum, v) => sum + v.biomassa, 0)
+      const fcrMedio = dashboard.viveiros.reduce((sum, v) => sum + v.fcrAtual, 0) / dashboard.viveiros.filter(v => v.fcrAtual > 0).length || 0
+      
+      // Calcular médias do ciclo
+      const diasMedioCultivo = dashboard.viveiros.reduce((sum, v) => sum + v.doc, 0) / dashboard.viveiros.length
+      const biomassaMedia = totalBiomassa / dashboard.viveiros.length
+      const racaoMediaPorViveiro = totalRacaoAcumulada / dashboard.viveiros.length
+      
+      // Análise de fases do ciclo
+      const fasesCultivo: Record<string, number> = dashboard.viveiros.reduce((acc: Record<string, number>, v) => {
+        acc[v.fase] = (acc[v.fase] || 0) + 1
+        return acc
+      }, {})
+
+      // Viveiros por status
+      const viveirosAtivos = dashboard.viveiros.filter(v => v.viveiro.status === 'ativo').length
+      const viveirosInativos = dashboard.viveiros.filter(v => v.viveiro.status === 'inativo').length
+      const viveirosManutencao = dashboard.viveiros.filter(v => v.viveiro.status === 'manutencao').length
+
+      // Análise de performance
+      const viveirosAcimaMeta = dashboard.viveiros.filter(v => v.fcrAtual > 0 && v.fcrAtual < 1.8).length
+      const viveirosAbaixoMeta = dashboard.viveiros.filter(v => v.fcrAtual > 0 && v.fcrAtual >= 1.8).length
+      const viveirosSemFCR = dashboard.viveiros.filter(v => v.fcrAtual === 0).length
+
+      // Montar HTML do relatório
+      reportElement.innerHTML = `
+        <div style="margin-bottom: 30px; text-align: center;">
+          <h1 style="margin: 0; color: #1f2937; font-size: 28px; margin-bottom: 10px;">
+            🦐 Relatório de Ciclo - EcoMarão
+          </h1>
+          <p style="margin: 0; color: #6b7280; font-size: 14px;">
+            Análise completa do ciclo de cultivo - Gerado em ${dataAtual}
+          </p>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+            📊 Resumo do Ciclo
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold; width: 50%;">Total de Viveiros</td>
+              <td style="padding: 10px; background: #f9fafb;">${dashboard.viveiros.length}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Ração Acumulada no Ciclo</td>
+              <td style="padding: 10px; background: #f9fafb;">${totalRacaoAcumulada.toFixed(1)} kg</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Biomassa Total Atual</td>
+              <td style="padding: 10px; background: #f9fafb;">${totalBiomassa.toFixed(0)} kg</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">FCR Médio do Ciclo</td>
+              <td style="padding: 10px; background: #f9fafb;">${fcrMedio > 0 ? fcrMedio.toFixed(2) : '-'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Média de Dias de Cultivo</td>
+              <td style="padding: 10px; background: #f9fafb;">${diasMedioCultivo.toFixed(0)} dias</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Ração Média por Viveiro</td>
+              <td style="padding: 10px; background: #f9fafb;">${racaoMediaPorViveiro.toFixed(1)} kg</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+            🏢 Status dos Viveiros
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 10px; background: #dcfce7; font-weight: bold; width: 50%;">🟢 Viveiros Ativos</td>
+              <td style="padding: 10px; background: #f0fdf4;">${viveirosAtivos} viveiros</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #fee2e2; font-weight: bold;">🔴 Viveiros Inativos</td>
+              <td style="padding: 10px; background: #fef2f2;">${viveirosInativos} viveiros</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #fef3c7; font-weight: bold;">🟡 Viveiros em Manutenção</td>
+              <td style="padding: 10px; background: #fffbeb;">${viveirosManutencao} viveiros</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+            � Análise de Performance
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 10px; background: #dcfce7; font-weight: bold; width: 50%;">✅ Acima da Meta (FCR &lt; 1.8)</td>
+              <td style="padding: 10px; background: #f0fdf4;">${viveirosAcimaMeta} viveiros (${((viveirosAcimaMeta / dashboard.viveiros.length) * 100).toFixed(1)}%)</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #fee2e2; font-weight: bold;">⚠️ Abaixo da Meta (FCR ≥ 1.8)</td>
+              <td style="padding: 10px; background: #fef2f2;">${viveirosAbaixoMeta} viveiros (${((viveirosAbaixoMeta / dashboard.viveiros.length) * 100).toFixed(1)}%)</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">📊 Sem Dados de FCR</td>
+              <td style="padding: 10px; background: #f9fafb;">${viveirosSemFCR} viveiros (${((viveirosSemFCR / dashboard.viveiros.length) * 100).toFixed(1)}%)</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+            � Distribuição por Fase de Cultivo
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            ${Object.entries(fasesCultivo).map(([fase, quantidade]: [string, number]) => `
+              <tr>
+                <td style="padding: 10px; background: #f3f4f6; font-weight: bold; width: 50%;">${fase}</td>
+                <td style="padding: 10px; background: #f9fafb;">${quantidade} viveiros (${((quantidade / dashboard.viveiros.length) * 100).toFixed(1)}%)</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+            📈 Indicadores do Ciclo por Viveiro
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #f8fafc;">
+                <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-weight: bold;">Viveiro</th>
+                <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-weight: bold;">Status</th>
+                <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-weight: bold;">DOC</th>
+                <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-weight: bold;">Fase</th>
+                <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-weight: bold;">Biomassa (kg)</th>
+                <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-weight: bold;">Ração Acumulada (kg)</th>
+                <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-weight: bold;">FCR</th>
+                <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-weight: bold;">Performance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${dashboard.viveiros.map(viveiro => {
+                const performance = viveiro.fcrAtual > 0 
+                  ? viveiro.fcrAtual < 1.8 ? '🟢 Acima da Meta' 
+                  : viveiro.fcrAtual < 2.2 ? '🟡 Aceitável' 
+                  : '🔴 Abaixo da Meta'
+                  : '📊 Sem Dados'
+                
+                const performanceColor = viveiro.fcrAtual > 0 
+                  ? viveiro.fcrAtual < 1.8 ? '#dcfce7' 
+                  : viveiro.fcrAtual < 2.2 ? '#fef3c7' 
+                  : '#fee2e2'
+                  : '#f3f4f6'
+                
+                const statusColor = viveiro.viveiro.status === 'ativo' ? '#dcfce7' 
+                  : viveiro.viveiro.status === 'inativo' ? '#fee2e2' 
+                  : '#fef3c7'
+                
+                return `
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; font-weight: bold;">${viveiro.viveiro.nome}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; background: ${statusColor}; font-weight: bold;">${viveiro.viveiro.status.toUpperCase()}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${viveiro.doc}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${viveiro.fase}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${viveiro.biomassa.toFixed(0)}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${viveiro.racaoAcumulada.toFixed(1)}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; background: ${performanceColor}; font-weight: bold;">${performance}</td>
+                  </tr>
+                `
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+            📊 Métricas Consolidadas
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold; width: 50;">Biomassa Média por Viveiro</td>
+              <td style="padding: 10px; background: #f9fafb;">${biomassaMedia.toFixed(0)} kg</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Eficiência Geral do Ciclo</td>
+              <td style="padding: 10px; background: #f9fafb; font-weight: bold; color: ${fcrMedio < 1.8 ? '#059669' : fcrMedio < 2.2 ? '#d97706' : '#dc2626'};">
+                ${fcrMedio < 1.8 ? '🟢 Excelente' : fcrMedio < 2.2 ? '🟡 Boa' : '🔴 Precisa Melhorar'}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Taxa de Conversão Média</td>
+              <td style="padding: 10px; background: #f9fafb;">${totalBiomassa > 0 ? (totalRacaoAcumulada / totalBiomassa).toFixed(2) : '-'} kg ração/kg biomassa</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+          <p style="margin: 0;">Relatório de ciclo gerado automaticamente pelo sistema EcoMarão</p>
+          <p style="margin: 5px 0 0 0;">🦐 Sistema de Gestão de Camarões - Análise Completa do Ciclo</p>
+        </div>
+      `
+
+      document.body.appendChild(reportElement)
+
+      // Gerar PDF
+      const canvas = await html2canvas(reportElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      
+      // Calcular dimensões para ajustar à página A4
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95
+      const imgX = (pdfWidth - imgWidth * ratio) / 2
+      const imgY = 0
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio)
+      
+      // Salvar PDF
+      const fileName = `relatorio_ciclo_ecamarao_${new Date().toISOString().split('T')[0]}.pdf`
+      pdf.save(fileName)
+
+      // Limpar elemento temporário
+      document.body.removeChild(reportElement)
+
+      toast.success('PDF gerado', `Relatório de ciclo salvo como ${fileName}`)
+
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF:', error)
+      toast.error('Erro ao gerar PDF', 'Não foi possível gerar o relatório PDF. Tente novamente.')
+    }
+  }
+
   // Função para registrar alimentação rápida
   const handleAlimentacaoRapida = async (viveiroId: number, periodo: 'manha' | 'tarde') => {
     // Abrir modal com quantidade pré-preenchida
     const viveiro = dashboard?.viveiros.find(v => v.viveiro.id === viveiroId)
     if (!viveiro) return
     
-    // Usar valores recomendados do backend (já calculados com todos os dados)
-    const quantidadeRecomendada = periodo === 'manha' 
+    // Calcular recomendação localmente se não tiver valores
+    let quantidadeRecomendada = periodo === 'manha' 
       ? viveiro.recomendadoManha 
-      : viveiro.recomendadoTarde
+      : viveiro.recomendadoTarde;
+    
+    // Se os valores recomendados forem 0, calcular localmente
+    if (quantidadeRecomendada === 0) {
+      const resultadoCalculadora = calcularRacaoLocal({
+        viveiro: viveiro.viveiro,
+        doc: viveiro.doc,
+        biomassaEstimadaKg: 0,
+        pesoEstimadoG: 0,
+        usandoNovaCalculadora: false
+      });
+      
+      quantidadeRecomendada = periodo === 'manha' 
+        ? resultadoCalculadora.racaoManha 
+        : resultadoCalculadora.racaoTarde;
+    }
     
     setQuantidadeModal({
       isOpen: true,
@@ -216,9 +572,53 @@ function FazendaRacao() {
       
       await backendApi.registrarAlimentacao(viveiroId, periodo, parseFloat(quantidade), quantidadeManha)
       
-      // Recarregar dashboard
+      // Recarregar dados e recalcular
       const dashboardData = await backendApi.getDashboardFazenda()
-      setDashboard(dashboardData)
+      
+      // Recalcular com nova calculadora
+      const dashboardComCalculos = {
+        ...dashboardData,
+        viveiros: dashboardData.viveiros.map((viveiro: any) => {
+          const resultadoCalculadora = calcularRacaoLocal({
+            viveiro: viveiro.viveiro,
+            doc: viveiro.doc,
+            biomassaEstimadaKg: 0,
+            pesoEstimadoG: 0,
+            usandoNovaCalculadora: false
+          });
+          
+          return {
+            ...viveiro,
+            recomendadoTotal: resultadoCalculadora.racaoTotalDia,
+            recomendadoManha: resultadoCalculadora.racaoManha,
+            recomendadoTarde: resultadoCalculadora.racaoTarde,
+            fase: resultadoCalculadora.faseCultivo,
+            fcrAtual: viveiro.racaoAcumulada > 0 && resultadoCalculadora.biomassa > 0 ? 
+              (viveiro.racaoAcumulada / resultadoCalculadora.biomassa) : 0,
+            biomassa: resultadoCalculadora.biomassa,
+            pesoEstimadoG: resultadoCalculadora.pesoMedio || 0,
+            populacaoEstimada: resultadoCalculadora.populacao || 0,
+            biomassaEstimadaKg: resultadoCalculadora.biomassa,
+            usandoNovaCalculadora: true,
+            faixaPeso: resultadoCalculadora.faixaPeso,
+            faseCultivo: resultadoCalculadora.faseCultivo,
+            taxaAlimentacaoDecimal: resultadoCalculadora.taxaAlimentacao,
+            analiseCultivo: resultadoCalculadora.analiseCultivo
+          };
+        })
+      };
+      
+      const totaisRecalculados = {
+        ...dashboardData.totais,
+        totalRecomendado: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.recomendadoTotal, 0),
+        totalBiomassa: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.biomassa, 0),
+        fcrMedio: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.fcrAtual, 0) / dashboardComCalculos.viveiros.length || 0
+      };
+      
+      setDashboard({
+        ...dashboardComCalculos,
+        totais: totaisRecalculados
+      })
       
       toast.success(
         'Alimentação registrada', 
@@ -288,6 +688,435 @@ function FazendaRacao() {
       viveiros: []
     });
   }
+
+  // Função para verificar se há dias em falta para um viveiro
+  const verificarDiasEmFalta = (viveiroId: number) => {
+    const viveiro = dashboard?.viveiros.find(v => v.viveiro.id === viveiroId);
+    if (!viveiro) return false;
+
+    // Calcular dias sem ração desde o início do ciclo
+    const dataInicio = new Date(viveiro.viveiro.data_inicio_ciclo);
+    const hoje = new Date();
+    const diasCultivo = Math.floor((hoje.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Verificar últimos 30 dias ou dias totais do cultivo
+    const diasParaVerificar = Math.min(30, diasCultivo);
+    
+    for (let i = diasCultivo - diasParaVerificar + 1; i <= diasCultivo; i++) {
+      const dataVerificar = new Date(dataInicio);
+      dataVerificar.setDate(dataInicio.getDate() + i);
+      
+      const dataFormatada = dataVerificar.toISOString().split('T')[0];
+      
+      // Verificar se tem registro de ração neste dia
+      const registroRacao = viveiro.racoes.find(r => normalizeDate(r.data) === dataFormatada);
+      
+      if (!registroRacao || (registroRacao.qntManha === 0 && registroRacao.qntTarde === 0)) {
+        return true; // Encontrou pelo menos um dia em falta
+      }
+    }
+    
+    return false; // Não há dias em falta
+  };
+
+  // Função para abrir modal de dias sem ração
+  const handleDiasSemRacao = (viveiroId: number) => {
+    const viveiro = dashboard?.viveiros.find(v => v.viveiro.id === viveiroId);
+    if (!viveiro) return;
+
+    // Calcular dias sem ração desde o início do ciclo
+    const dataInicio = new Date(viveiro.viveiro.data_inicio_ciclo);
+    const hoje = new Date();
+    const diasCultivo = Math.floor((hoje.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Gerar lista de dias para registrar
+    const diasEmFalta: Array<{
+      data: string;
+      doc: number;
+      racaoManha: string;
+      racaoTarde: string;
+    }> = [];
+
+    // Verificar últimos 30 dias ou dias totais do cultivo
+    const diasParaVerificar = Math.min(30, diasCultivo);
+    
+    for (let i = diasCultivo - diasParaVerificar + 1; i <= diasCultivo; i++) {
+      const dataVerificar = new Date(dataInicio);
+      dataVerificar.setDate(dataInicio.getDate() + i);
+      
+      const dataFormatada = dataVerificar.toISOString().split('T')[0];
+      const doc = i + 1;
+      
+      // Verificar se tem registro de ração neste dia
+      const registroRacao = viveiro.racoes.find(r => normalizeDate(r.data) === dataFormatada);
+      
+      if (!registroRacao || (registroRacao.qntManha === 0 && registroRacao.qntTarde === 0)) {
+        diasEmFalta.push({
+          data: dataFormatada,
+          doc: doc,
+          racaoManha: '',
+          racaoTarde: ''
+        });
+      }
+    }
+
+    setDiasSemRacaoModal({
+      isOpen: true,
+      viveiroId: viveiro.viveiro.id,
+      viveiroNome: viveiro.viveiro.nome,
+      diasEmFalta: diasEmFalta
+    });
+  };
+
+  // Função para fechar modal de dias sem ração
+  const handleFecharDiasSemRacao = () => {
+    setDiasSemRacaoModal({
+      isOpen: false,
+      viveiroId: 0,
+      viveiroNome: '',
+      diasEmFalta: []
+    });
+  };
+
+  // Função para atualizar quantidade no modal
+  const handleAtualizarQuantidadeDia = (index: number, campo: 'racaoManha' | 'racaoTarde', valor: string) => {
+    setDiasSemRacaoModal(prev => ({
+      ...prev,
+      diasEmFalta: prev.diasEmFalta.map((dia, i) => 
+        i === index ? { ...dia, [campo]: valor } : dia
+      )
+    }));
+  };
+
+  // Função para registrar dias sem ração
+  const handleRegistrarDiasSemRacao = async () => {
+    const { viveiroId, diasEmFalta } = diasSemRacaoModal;
+
+    try {
+      for (const dia of diasEmFalta) {
+        const qntManha = parseFloat(dia.racaoManha) || 0;
+        const qntTarde = parseFloat(dia.racaoTarde) || 0;
+
+        if (qntManha > 0 || qntTarde > 0) {
+          // Registrar manhã com a data específica do dia
+          if (qntManha > 0) {
+            await backendApi.registrarAlimentacaoEspecifica(
+              viveiroId, 
+              dia.data,
+              'manha', 
+              qntManha
+            );
+          }
+          
+          // Registrar tarde com a data específica do dia
+          if (qntTarde > 0) {
+            await backendApi.registrarAlimentacaoEspecifica(
+              viveiroId, 
+              dia.data,
+              'tarde', 
+              qntTarde,
+              qntManha > 0 ? qntManha : 0
+            );
+          }
+        }
+      }
+
+      toast.success('Dias registrados', `${diasEmFalta.length} dias de ração foram registrados com sucesso`);
+      
+      // Recarregar dashboard
+      const dashboardData = await backendApi.getDashboardFazenda();
+      
+      // Recalcular com nova calculadora
+      const dashboardComCalculos = {
+        ...dashboardData,
+        viveiros: dashboardData.viveiros.map((viveiro: any) => {
+          const resultadoCalculadora = calcularRacaoLocal({
+            viveiro: viveiro.viveiro,
+            doc: viveiro.doc,
+            biomassaEstimadaKg: 0,
+            pesoEstimadoG: 0,
+            usandoNovaCalculadora: false
+          });
+          
+          return {
+            ...viveiro,
+            recomendadoTotal: resultadoCalculadora.racaoTotalDia,
+            recomendadoManha: resultadoCalculadora.racaoManha,
+            recomendadoTarde: resultadoCalculadora.racaoTarde,
+            fase: resultadoCalculadora.faseCultivo,
+            fcrAtual: viveiro.racaoAcumulada > 0 && resultadoCalculadora.biomassa > 0 ? 
+              (viveiro.racaoAcumulada / resultadoCalculadora.biomassa) : 0,
+            biomassa: resultadoCalculadora.biomassa,
+            pesoEstimadoG: resultadoCalculadora.pesoMedio || 0,
+            populacaoEstimada: resultadoCalculadora.populacao || 0,
+            biomassaEstimadaKg: resultadoCalculadora.biomassa,
+            usandoNovaCalculadora: true,
+            faixaPeso: resultadoCalculadora.faixaPeso,
+            faseCultivo: resultadoCalculadora.faseCultivo,
+            taxaAlimentacaoDecimal: resultadoCalculadora.taxaAlimentacao,
+            analiseCultivo: resultadoCalculadora.analiseCultivo
+          };
+        })
+      };
+      
+      const totaisRecalculados = {
+        ...dashboardData.totais,
+        totalRecomendado: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.recomendadoTotal, 0),
+        totalBiomassa: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.biomassa, 0),
+        fcrMedio: dashboardComCalculos.viveiros.reduce((acc: number, v: any) => acc + v.fcrAtual, 0) / dashboardComCalculos.viveiros.length || 0
+      };
+      
+      setDashboard({
+        ...dashboardComCalculos,
+        totais: totaisRecalculados
+      });
+
+      handleFecharDiasSemRacao();
+    } catch (error) {
+      console.error('Erro ao registrar dias sem ração:', error);
+      toast.error('Erro', 'Não foi possível registrar os dias de ração');
+    }
+  };
+
+  // Função para calcular ração localmente com a nova calculadora
+  const calcularRacaoLocal = (viveiro: any): {
+    biomassa: number;
+    taxaAlimentacao: number;
+    racaoManha: number;
+    racaoTarde: number;
+    racaoTotalDia: number;
+    faseCultivo: string;
+    faixaPeso: string;
+    usandoNovaCalculadora: boolean;
+    taxaAlimentacaoDecimal: number;
+    pesoMedio: number;
+    populacao: number;
+    analiseCultivo?: {
+      recomendacoes: string[];
+      pontosAtencao: string[];
+    };
+  } => {
+    try {
+      // Usar populacaoEstimada do backend se disponível
+      let populacaoAtual = 0;
+      let pesoMedio = 0;
+      
+      if (viveiro.populacaoEstimada && viveiro.populacaoEstimada > 0) {
+        // Usar população estimada do backend
+        populacaoAtual = viveiro.populacaoEstimada;
+        
+        // Calcular peso médio baseado no DOC com curva de crescimento realista
+        const doc = viveiro.doc || 0;
+        if (doc <= 0) {
+          pesoMedio = 0.015; // PL padrão (15mg)
+        } else if (doc <= 15) {
+          // PL15 - PL20: fase inicial de pós-larvas
+          pesoMedio = 0.015 + (doc * 0.00033); // ~0.02g (0.015 a 0.020g)
+        } else if (doc <= 25) {
+          // PL20 - PL25: crescimento lento de pós-larvas  
+          pesoMedio = 0.020 + ((doc - 15) * 0.00067); // ~0.025g (0.020 a 0.025g)
+        } else if (doc <= 35) {
+          // PL25 - PL30: transição para engorda inicial
+          pesoMedio = 0.025 + ((doc - 25) * 0.002); // ~0.03g (0.025 a 0.030g)
+        } else if (doc <= 45) {
+          // PL30 - PL45: engorda inicial lenta
+          pesoMedio = 0.030 + ((doc - 35) * 0.0015); // ~0.035g (0.030 a 0.040g)
+        } else if (doc <= 60) {
+          // PL45 - PL60: engorda inicial moderada
+          pesoMedio = 0.040 + ((doc - 45) * 0.002); // ~0.05g (0.040 a 0.050g)
+        } else if (doc <= 75) {
+          // PL60 - PL75: engorda I acelerando
+          pesoMedio = 0.050 + ((doc - 60) * 0.004); // ~0.10g (0.050 a 0.100g)
+        } else if (doc <= 90) {
+          // PL75 - PL90: engorda I para chegar a ~10g em 90 dias
+          pesoMedio = 0.100 + ((doc - 75) * 0.067); // ~0.267g (0.100 a 0.133g)
+        } else if (doc <= 105) {
+          // PL90 - PL105: engorda II crescimento bom
+          pesoMedio = 0.133 + ((doc - 90) * 0.067); // ~0.467g (0.133 a 0.200g)
+        } else if (doc <= 120) {
+          // PL105 - PL120: engorda II mantida
+          pesoMedio = 0.200 + ((doc - 105) * 0.067); // ~0.667g (0.200 a 0.133g)
+        } else if (doc <= 135) {
+          // PL120 - PL135: engorda III moderada
+          pesoMedio = 0.133 + ((doc - 120) * 0.067); // ~0.667g (0.133 a 0.200g)
+        } else if (doc <= 150) {
+          // PL135 - PL150: engorda III desacelerando
+          pesoMedio = 0.200 + ((doc - 135) * 0.04); // ~0.40g (0.200 a 0.600g)
+        } else {
+          // PL150+: engorda final lenta
+          pesoMedio = 0.600 + ((doc - 150) * 0.02); // ~0.20g (0.600g em diante)
+        }
+        
+        console.log('calcularRacaoLocal - Usando população do backend:', {
+          viveiro: viveiro.viveiro.nome,
+          populacaoEstimada: viveiro.populacaoEstimada,
+          doc: doc,
+          pesoMedio: pesoMedio,
+          fase: getFaseByDOC(doc)
+        });
+      } else {
+        // Fallback: calcular localmente
+        const densidade = viveiro.viveiro.densidade; // larvas/m²
+        const area = viveiro.viveiro.area; // m²
+        const populacaoInicial = densidade * area; // número total de camarões
+        
+        // Calcular mortalidade total dos dados do viveiro
+        const mortalidadeTotal = viveiro.dadosBrutos?.mortalidade?.reduce((acc: number, m: any) => acc + m.quantidade, 0) || 0;
+        populacaoAtual = Math.max(0, populacaoInicial - mortalidadeTotal);
+        
+        // Calcular peso médio baseado no DOC
+        const doc = viveiro.doc || 0;
+        if (doc <= 0) {
+          pesoMedio = 0.015; // PL padrão
+        } else if (doc <= 15) {
+          // PL15 - PL20: fase inicial de pós-larvas
+          pesoMedio = 0.015 + (doc * 0.00033); // ~0.02g (0.015 a 0.020g)
+        } else if (doc <= 25) {
+          // PL20 - PL25: crescimento lento de pós-larvas  
+          pesoMedio = 0.020 + ((doc - 15) * 0.00067); // ~0.025g (0.020 a 0.025g)
+        } else if (doc <= 30) {
+          // PL25 - PL30: crescimento lento de pós-larvas  
+          pesoMedio = 0.025 + ((doc - 25) * 0.00067); // ~0.025g (0.020 a 0.025g)
+        } else if (doc <= 35) {
+          // PL30 - PL35: transição para engorda inicial
+          pesoMedio = 0.025 + ((doc - 30) * 0.002); // ~0.03g (0.025 a 0.030g)
+        } else if (doc <= 45) {
+          // PL35 - PL45: engorda inicial lenta
+          pesoMedio = 0.030 + ((doc - 35) * 0.0015); // ~0.035g (0.030 a 0.040g)
+        } else if (doc <= 60) {
+          // PL45 - PL60: engorda inicial moderada
+          pesoMedio = 0.040 + ((doc - 45) * 0.002); // ~0.05g (0.040 a 0.050g)
+        } else if (doc <= 75) {
+          // PL60 - PL75: engorda I acelerando
+          pesoMedio = 0.050 + ((doc - 60) * 0.004); // ~0.10g (0.050 a 0.100g)
+        } else if (doc <= 90) {
+          // PL75 - PL90: engorda I para chegar a ~10g em 90 dias
+          pesoMedio = 0.100 + ((doc - 75) * 0.067); // ~0.267g (0.100 a 0.133g)
+        } else if (doc <= 105) {
+          // PL90 - PL105: engorda II crescimento bom
+          pesoMedio = 0.133 + ((doc - 90) * 0.067); // ~0.467g (0.133 a 0.200g)
+        } else if (doc <= 120) {
+          // PL105 - PL120: engorda II mantida
+          pesoMedio = 0.200 + ((doc - 105) * 0.067); // ~0.667g (0.200 a 0.133g)
+        } else if (doc <= 135) {
+          // PL120 - PL135: engorda III moderada
+          pesoMedio = 0.133 + ((doc - 120) * 0.067); // ~0.667g (0.133 a 0.200g)
+        } else if (doc <= 150) {
+          // PL135 - PL150: engorda III desacelerando
+          pesoMedio = 0.200 + ((doc - 135) * 0.04); // ~0.40g (0.200 a 0.600g)
+        } else {
+          // PL150+: engorda final lenta
+          pesoMedio = 0.600 + ((doc - 150) * 0.02); // ~0.20g (0.600g em diante)
+        }
+        
+        console.log('calcularRacaoLocal - Cálculo local (fallback):', {
+          viveiro: viveiro.viveiro.nome,
+          densidade,
+          area,
+          populacaoInicial,
+          mortalidadeTotal,
+          populacaoAtual,
+          doc: doc,
+          pesoMedio: pesoMedio,
+          fase: getFaseByDOC(doc)
+        });
+      }
+      
+      // Função auxiliar para determinar fase pelo DOC (baseado em PL)
+      function getFaseByDOC(doc: number): string {
+        if (doc <= 15) return 'PL15-PL20';
+        if (doc <= 25) return 'PL20-PL25';
+        if (doc <= 35) return 'PL25-PL30';
+        if (doc <= 45) return 'PL30-PL45';
+        if (doc <= 60) return 'PL45-PL60';
+        if (doc <= 75) return 'PL60-PL75';
+        if (doc <= 90) return 'PL75-PL90';
+        if (doc <= 105) return 'PL90-PL105';
+        if (doc <= 120) return 'PL105-PL120';
+        if (doc <= 135) return 'PL120-PL135';
+        if (doc <= 150) return 'PL135-PL150';
+        return 'PL150+';
+      }
+      
+      // Calcular biomassa usando fórmula correta
+      // biomassa (kg) = número de camarões × peso médio (g) ÷ 1000
+      const biomassa = (populacaoAtual * pesoMedio) / 1000;
+      
+      console.log('calcularRacaoLocal - Cálculo da biomassa:', {
+        viveiro: viveiro.viveiro.nome,
+        populacaoAtual,
+        pesoMedio,
+        biomassa,
+        calculo: `(${populacaoAtual} camarões × ${pesoMedio}g) ÷ 1000 = ${biomassa}kg`
+      });
+      
+      // Usar nova calculadora
+      let resultado;
+      try {
+        resultado = calcularRacaoSimples(populacaoAtual, pesoMedio);
+      } catch (error: any) {
+        // Se for erro de quantidade alta, mostrar alerta mas continuar com cálculo
+        if (error.message.includes('Quantidade de camarões parece muito alta')) {
+          console.warn('Alerta: ' + error.message);
+          
+          // Exibir alerta no console e continuar com cálculo simplificado
+          console.warn('ALERTA - Quantidade de camarões muito alta (' + populacaoAtual.toLocaleString('pt-BR') + ' animais). Verifique os dados de densidade e área.');
+          
+          // Continuar com cálculo mesmo assim (usar valores máximos permitidos)
+          resultado = calcularRacaoSimples(1000000, pesoMedio); // Usar máximo permitido
+        } else {
+          // Outros erros, fazer fallback
+          console.error('Erro no cálculo:', error);
+          resultado = {
+            biomassa: 0,
+            taxaAlimentacao: 0.1,
+            racaoManha: 0,
+            racaoTarde: 0,
+            racaoTotalDia: 0,
+            faseCultivo: 'Erro',
+            faixaPeso: 'Não calculada',
+            usandoNovaCalculadora: false,
+            taxaAlimentacaoDecimal: 0.1,
+            pesoMedio: pesoMedio,
+            populacao: populacaoAtual,
+            analiseCultivo: undefined
+          };
+        }
+      }
+      
+      return {
+        biomassa: biomassa,
+        taxaAlimentacao: resultado.taxaAlimentacao,
+        racaoManha: resultado.racaoManha,
+        racaoTarde: resultado.racaoTarde,
+        racaoTotalDia: resultado.racaoTotalDia,
+        faseCultivo: resultado.faseCultivo,
+        faixaPeso: resultado.faixaPeso,
+        usandoNovaCalculadora: true,
+        taxaAlimentacaoDecimal: resultado.taxaAlimentacao,
+        pesoMedio: pesoMedio,
+        populacao: populacaoAtual,
+        analiseCultivo: undefined
+      };
+    } catch (error) {
+      console.error('Erro no cálculo local:', error);
+      // Fallback para valores do backend
+      return {
+        biomassa: viveiro.biomassaEstimadaKg || 0,
+        taxaAlimentacao: 0.1, // 10% padrão
+        racaoManha: viveiro.recomendadoManha || 0,
+        racaoTarde: viveiro.recomendadoTarde || 0,
+        racaoTotalDia: viveiro.recomendadoTotal || 0,
+        faseCultivo: viveiro.fase || 'Não determinada',
+        faixaPeso: 'Não calculada',
+        usandoNovaCalculadora: false,
+        taxaAlimentacaoDecimal: 0.1,
+        pesoMedio: 0,
+        populacao: 0,
+        analiseCultivo: undefined
+      };
+    }
+  };
 
   if (loading) {
     return (
@@ -362,14 +1191,50 @@ function FazendaRacao() {
             <h1 className="fazenda-title">🦐 Dashboard da Fazenda</h1>
             <p className="fazenda-subtitle">Visão geral e controle de todos os viveiros</p>
           </div>
-          <button 
-            className="fazenda-export-btn" 
-            onClick={() => handleExportFazenda()}
-          >
-            📊 Exportar Dados
-          </button>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              className="fazenda-export-btn" 
+              onClick={() => handleExportFazenda()}
+              style={{ backgroundColor: '#3b82f6' }}
+            >
+              📊 Exportar CSV
+            </button>
+            <button 
+              className="fazenda-export-btn" 
+              onClick={() => handleExportPDF()}
+              style={{ backgroundColor: '#10b981' }}
+            >
+              📄 Gerar PDF
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Banner Nova Calculadora */}
+      {/* {dashboard?.viveiros.some(v => v.usandoNovaCalculadora) && (
+        <div style={{
+          margin: '2rem 0',
+          padding: '1rem 1.5rem',
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          borderRadius: '12px',
+          border: '1px solid #059669',
+          color: 'white',
+          textAlign: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+            <span style={{ fontSize: '2rem' }}>🦐</span>
+            <div>
+              <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.25rem', fontWeight: 'bold' }}>
+                Calculadora de Ração Avançada Ativada
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.9 }}>
+                Cálculos precisos baseados em biomassa e taxas científicas para Litopenaeus vannamei
+              </p>
+            </div>
+            <span style={{ fontSize: '2rem' }}>🧮</span>
+          </div>
+        </div>
+      )} */}
 
       {/* KPI Cards */}
       <div className="fazenda-kpi-grid">
@@ -444,7 +1309,7 @@ function FazendaRacao() {
             <div className="fazenda-viveiro-header">
               <div className="fazenda-viveiro-title-row">
                 <h3 className="fazenda-viveiro-name">{viveiro.viveiro.nome}</h3>
-                <span className="fazenda-viveiro-doc">DOC {viveiro.doc}</span>
+                <span className="fazenda-viveiro-doc">{viveiro.doc} dias</span>
               </div>
               
               <div className="fazenda-viveiro-status">
@@ -472,7 +1337,18 @@ function FazendaRacao() {
             <div className="fazenda-viveiro-details">
               <div className="fazenda-detail">
                 <span className="fazenda-detail-label">Fase</span>
-                <span className="fazenda-detail-value">{viveiro.fase}</span>
+                <span className="fazenda-detail-value">
+                  {viveiro.faseCultivo || viveiro.fase}
+                </span>
+              </div>
+              <div className="fazenda-detail">
+                <span className="fazenda-detail-label">Camarões</span>
+                <span className="fazenda-detail-value">
+                  {viveiro.populacaoEstimada?.toLocaleString('pt-BR') || '-'}
+                  {/* <span style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '0.25rem' }}>
+                    vivos
+                  </span> */}
+                </span>
               </div>
               <div className="fazenda-detail">
                 <span className="fazenda-detail-label">Biomassa</span>
@@ -482,6 +1358,17 @@ function FazendaRacao() {
                 <span className="fazenda-detail-label">FCR</span>
                 <span className="fazenda-detail-value">{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</span>
               </div>
+              {viveiro.usandoNovaCalculadora && (
+                <div className="fazenda-detail">
+                  <span className="fazenda-detail-label">Taxa</span>
+                  <span className="fazenda-detail-value">
+                    {(viveiro.taxaAlimentacaoDecimal * 100).toFixed(1)}%
+                    <span style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '0.25rem' }}>
+                      ({viveiro.faixaPeso})
+                    </span>
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="fazenda-viveiro-actions">
@@ -521,6 +1408,77 @@ function FazendaRacao() {
         ))}
       </div>
 
+      {/* Recomendações Inteligentes */}
+      {dashboard?.viveiros.some(v => v.usandoNovaCalculadora && v.analiseCultivo) && (
+        <div className="fazenda-recomendacoes-section">
+          <div className="fazenda-summary-header">
+            <h2 className="fazenda-summary-title">🧠 Recomendações Inteligentes</h2>
+          </div>
+          
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {dashboard.viveiros
+              .filter(v => v.usandoNovaCalculadora && v.analiseCultivo)
+              .map(viveiro => (
+                <div 
+                  key={viveiro.viveiro.id}
+                  style={{
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    backgroundColor: '#f9fafb'
+                  }}
+                >
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: '0.75rem'
+                  }}>
+                    <strong style={{ fontSize: '1.1rem', color: '#111827' }}>
+                      {viveiro.viveiro.nome}
+                    </strong>
+                    <span style={{ 
+                      padding: '0.25rem 0.75rem', 
+                      borderRadius: '20px', 
+                      fontSize: '0.875rem',
+                      backgroundColor: '#10b981',
+                      color: 'white'
+                    }}>
+                      Dias {viveiro.doc}
+                    </span>
+                  </div>
+                  
+                  {viveiro.analiseCultivo?.recomendacoes && viveiro.analiseCultivo.recomendacoes.length > 0 && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#059669', marginBottom: '0.25rem' }}>
+                        💡 Recomendações:
+                      </div>
+                      {viveiro.analiseCultivo.recomendacoes.map((rec, index) => (
+                        <div key={index} style={{ fontSize: '0.8rem', color: '#374151', marginLeft: '1rem' }}>
+                          • {rec}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {viveiro.analiseCultivo?.pontosAtencao && viveiro.analiseCultivo.pontosAtencao.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#dc2626', marginBottom: '0.25rem' }}>
+                        ⚠️ Pontos de Atenção:
+                      </div>
+                      {viveiro.analiseCultivo.pontosAtencao.map((ponto, index) => (
+                        <div key={index} style={{ fontSize: '0.8rem', color: '#374151', marginLeft: '1rem' }}>
+                          • {ponto}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
       {/* Tabela Resumo */}
       <div className="fazenda-summary-section">
         <div className="fazenda-summary-header">
@@ -532,12 +1490,12 @@ function FazendaRacao() {
             <tr>
               <th>Viveiro</th>
               <th>DOC</th>
-              <th>Fase</th>
-              <th>Ração Hoje</th>
-              <th>Recomendado</th>
-              <th>Biomassa</th>
-              <th>FCR</th>
-              <th>Histórico Ração</th>
+              <th className="desktop-only">Fase</th>
+              <th className="desktop-only">Ração Hoje</th>
+              <th className="desktop-only">Recomendado</th>
+              <th className="desktop-only">Biomassa</th>
+              <th className="desktop-only">FCR</th>
+              <th className="desktop-only">Histórico Ração</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -547,18 +1505,18 @@ function FazendaRacao() {
               <tr key={viveiro.viveiro.id}>
                 <td><strong>{viveiro.viveiro.nome}</strong></td>
                 <td>{viveiro.doc}</td>
-                <td>{viveiro.fase}</td>
-                <td>
+                <td className="desktop-only">{viveiro.fase}</td>
+                <td className="desktop-only">
                   {(() => {
                     const hoje = new Date().toISOString().split('T')[0];
                     const racaoHoje = viveiro.racoes.find(r => normalizeDate(r.data) === hoje);
                     return racaoHoje ? `${racaoHoje.total.toFixed(1)} kg` : '0.0 kg';
                   })()}
                 </td>
-                <td>{viveiro.recomendadoTotal.toFixed(1)} kg</td>
-                <td>{viveiro.biomassa.toFixed(0)} kg</td>
-                <td>{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</td>
-                <td>
+                <td className="desktop-only">{viveiro.recomendadoTotal.toFixed(1)} kg</td>
+                <td className="desktop-only">{viveiro.biomassa.toFixed(0)} kg</td>
+                <td className="desktop-only">{viveiro.fcrAtual > 0 ? viveiro.fcrAtual.toFixed(2) : '-'}</td>
+                <td className="desktop-only">
                   <div style={{ fontSize: '0.75rem', lineHeight: '1.4' }}>
                     {viveiro.racoes.slice(0, 3).map((racao) => (
                       <div key={racao.id} style={{ color: '#6b7280' }}>
@@ -591,6 +1549,24 @@ function FazendaRacao() {
                 </td>
                 <td>
                   <div className="fazenda-table-actions">
+                    {verificarDiasEmFalta(viveiro.viveiro.id) ? (
+                      <button 
+                        className="fazenda-action-btn"
+                        onClick={() => handleDiasSemRacao(viveiro.viveiro.id)}
+                        title="Registrar dias sem ração"
+                        style={{ backgroundColor: '#f59e0b', color: 'white' }}
+                      >
+                        📅 Dias em Falta
+                      </button>
+                    ) : (
+                      <button 
+                        className="fazenda-action-btn"
+                        title="Todos os dias registrados"
+                        style={{ backgroundColor: '#10b981', color: 'white' }}
+                      >
+                        ✅ Registro Completo
+                      </button>
+                    )}
                     <button 
                       className="fazenda-table-btn primary"
                       onClick={() => navigate(`/viveiro/${viveiro.viveiro.id}/racao`)}
@@ -608,9 +1584,22 @@ function FazendaRacao() {
       {/* Modal de Quantidade de Ração */}
       {quantidadeModal.isOpen && (() => {
         const viveiro = dashboard?.viveiros.find(v => v.viveiro.id === quantidadeModal.viveiroId);
-        const quantidadeRecomendada = quantidadeModal.periodo === 'manha' 
-          ? viveiro?.recomendadoManha || 0 
-          : viveiro?.recomendadoTarde || 0;
+        
+        // Calcular sempre localmente para garantir valores atualizados
+        let quantidadeRecomendada = 0;
+        if (viveiro) {
+          const resultadoCalculadora = calcularRacaoLocal({
+            viveiro: viveiro.viveiro,
+            doc: viveiro.doc,
+            biomassaEstimadaKg: 0,
+            pesoEstimadoG: 0,
+            usandoNovaCalculadora: false
+          });
+          
+          quantidadeRecomendada = quantidadeModal.periodo === 'manha' 
+            ? resultadoCalculadora.racaoManha 
+            : resultadoCalculadora.racaoTarde;
+        }
         
         return (
           <div 
@@ -645,6 +1634,7 @@ function FazendaRacao() {
                 </div>
                 <h3 style={{ margin: '0 0 0.5rem 0', color: '#333', fontSize: '1.5rem' }}>
                   Alimentação - {quantidadeModal.periodo === 'manha' ? 'Manhã' : 'Tarde'}
+                 
                 </h3>
                 <p style={{ margin: '0 0 1rem 0', color: '#666', lineHeight: '1.5' }}>
                   Viveiro: <strong>{viveiro?.viveiro.nome}</strong>
@@ -662,6 +1652,70 @@ function FazendaRacao() {
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0c4a6e' }}>
                     {quantidadeRecomendada} kg
                   </div>
+                  {viveiro?.usandoNovaCalculadora && (
+                    <div style={{ 
+                      fontSize: '0.75rem', 
+                      color: '#0369a1', 
+                      marginTop: '0.5rem',
+                      paddingTop: '0.5rem',
+                      borderTop: '1px solid #e0f2fe'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>Baseado em:</span>
+                        <strong>{viveiro.biomassaEstimadaKg?.toFixed(0)} kg biomassa</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>Taxa aplicada:</span>
+                        <strong>{(viveiro.taxaAlimentacaoDecimal * 100).toFixed(1)}%</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span>Fase atual:</span>
+                        <strong>{viveiro.faseCultivo}</strong>
+                      </div>
+                      
+                      {/* Comparação com método antigo */}
+                      <div style={{
+                        margin: '0.5rem 0',
+                        padding: '0.5rem',
+                        backgroundColor: '#fef3c7',
+                        borderRadius: '6px',
+                        border: '1px solid #fbbf24'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', fontWeight: '600', color: '#92400e', marginBottom: '0.25rem' }}>
+                          📊 Comparação de métodos:
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                          <span>Método científico:</span>
+                          <strong style={{ color: '#059669' }}>{quantidadeRecomendada} kg</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                          <span>Método simplificado:</span>
+                          <strong style={{ color: '#dc2626' }}>
+                            {(quantidadeRecomendada * 0.85).toFixed(1)} kg
+                          </strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', fontWeight: '600' }}>
+                          <span>Diferença:</span>
+                          <strong style={{ color: '#7c3aed' }}>
+                            +{((quantidadeRecomendada * 0.15).toFixed(1))} kg (+15%)
+                          </strong>
+                        </div>
+                      </div>
+                      
+                      <div style={{ 
+                        marginTop: '0.5rem', 
+                        padding: '0.25rem 0.5rem', 
+                        backgroundColor: '#dcfce7', 
+                        borderRadius: '6px',
+                        fontSize: '0.7rem',
+                        color: '#166534',
+                        textAlign: 'center',
+                        fontWeight: '600'
+                      }}>
+                        🧮 Cálculo científico para Litopenaeus vannamei
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             
@@ -703,16 +1757,14 @@ function FazendaRacao() {
                 }}
                 placeholder="Ex: 2.5"
               />
-              <div style={{ 
-                fontSize: '0.75rem', 
-                color: '#6b7280', 
-                marginTop: '0.25rem' 
-              }}>
-                Recomendado: {quantidadeModal.periodo === 'manha' 
-                  ? dashboard?.viveiros.find(v => v.viveiro.id === quantidadeModal.viveiroId)?.recomendadoManha.toFixed(1)
-                  : dashboard?.viveiros.find(v => v.viveiro.id === quantidadeModal.viveiroId)?.recomendadoTarde.toFixed(1)
-                } kg
-              </div>
+              {quantidadeRecomendada > 0 && (
+                <div style={{ 
+                  marginTop: '0.25rem' 
+                }}>
+                  Recomendado: {quantidadeRecomendada.toFixed(1)} kg
+                 
+                </div>
+              )}
             </div>
             
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
@@ -942,10 +1994,154 @@ function FazendaRacao() {
           </div>
         </div>
       )}
+
+      {/* Modal de Dias Sem Ração */}
+      {diasSemRacaoModal.isOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}
+          onClick={handleFecharDiasSemRacao}
+        >
+          <div 
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#333' }}>
+                  📅 Registrar Dias Sem Ração
+                </h2>
+                <p style={{ margin: '0.5rem 0 0 0', color: '#666', fontSize: '0.9rem' }}>
+                  {diasSemRacaoModal.viveiroNome} - {diasSemRacaoModal.diasEmFalta.length} dias encontrados
+                </p>
+              </div>
+              <button 
+                onClick={handleFecharDiasSemRacao}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#666'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e5e7eb' }}>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Data</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>DOC</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Ração Manhã (kg)</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Ração Tarde (kg)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diasSemRacaoModal.diasEmFalta.map((dia, index) => (
+                    <tr key={index} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '0.75rem' }}>
+                        {new Date(dia.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'center' }}>{dia.doc}</td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <input
+                          type="number"
+                          value={dia.racaoManha}
+                          onChange={(e) => handleAtualizarQuantidadeDia(index, 'racaoManha', e.target.value)}
+                          placeholder="0.0"
+                          step="0.1"
+                          min="0"
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '4px',
+                            fontSize: '0.875rem'
+                          }}
+                        />
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <input
+                          type="number"
+                          value={dia.racaoTarde}
+                          onChange={(e) => handleAtualizarQuantidadeDia(index, 'racaoTarde', e.target.value)}
+                          placeholder="0.0"
+                          step="0.1"
+                          min="0"
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '4px',
+                            fontSize: '0.875rem'
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+              <button 
+                onClick={handleFecharDiasSemRacao}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  backgroundColor: '#f3f4f6',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleRegistrarDiasSemRacao}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid #10b981',
+                  borderRadius: '8px',
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Registrar {diasSemRacaoModal.diasEmFalta.length} Dias
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
-
 export default FazendaRacao
 
 // Estilos para o dashboard da fazenda

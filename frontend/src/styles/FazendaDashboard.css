@@ -1,5 +1,21 @@
 /* 🎨 Dashboard da Fazenda - Estilos Melhorados */
 
+/* Responsive - Mobile First */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .fazenda-summary-table {
+    font-size: 0.875rem;
+  }
+  
+  .fazenda-summary-table th,
+  .fazenda-summary-table td {
+    padding: 0.5rem;
+  }
+}
+
 /* Container principal */
 .fazenda-dashboard-container {
   padding: 1rem;
