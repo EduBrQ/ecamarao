@@ -5,6 +5,8 @@ import FieldError from '../components/FieldError'
 import { calcularDOC } from '../models/types'
 import { backendApi, Viveiro } from '../services/backendApi'
 import { useToastGlobal } from '../hooks/useToastGlobal'
+import '../styles/Home.css'
+import '../styles/FazendaDashboardUX.css'
 
 function getStatusColor(doc: number): string {
   if (doc === 0) return 'var(--text-light)'
@@ -205,7 +207,31 @@ function Home() {
   }
 
   return (
-    <div className="container fade-in">
+    <div className="home-container">
+      {/* Header Principal */}
+      <div className="dashboard-header">
+        <div className="dashboard-header-content">
+          <div>
+            <h1 className="dashboard-title">🦐 Gestão de Viveiros</h1>
+            <p className="dashboard-subtitle">Controle completo da fazenda de camarões</p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              className="primary-action-btn"
+              onClick={() => setModalOpen(true)}
+              style={{ backgroundColor: '#10b981' }}
+            >
+              🏠 Novo Viveiro
+            </button>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => navigate('/fazenda/racao')}
+            >
+              📊 Dashboard Fazenda
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="home-header">
         <h2 className="page-title">Meus Viveiros</h2>

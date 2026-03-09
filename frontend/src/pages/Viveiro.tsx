@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { calcularDOC } from '../models/types'
 import { backendApi, type Viveiro } from '../services/backendApi'
+import '../styles/Viveiro.css'
+import '../styles/FazendaDashboardUX.css'
 
 function Viveiro() {
   const { id } = useParams<{ id: string }>()
@@ -214,7 +216,52 @@ function Viveiro() {
   ]
 
   return (
-    <div className="container fade-in">
+    <div className="viveiro-container">
+      {/* Header Principal */}
+      <div className="dashboard-header">
+        <div className="dashboard-header-content">
+          <div>
+            <h1 className="dashboard-title">🏠 Detalhes do Viveiro</h1>
+            <p className="dashboard-subtitle">Informações completas de gestão</p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => navigate('/viveiro/' + viveiro.id + '/racao')}
+              style={{ backgroundColor: '#10b981' }}
+            >
+              🍤 Gestão de Ração
+            </button>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => navigate('/viveiro/' + viveiro.id + '/agua')}
+              style={{ backgroundColor: '#3b82f6' }}
+            >
+              💧 Qualidade da Água
+            </button>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => navigate('/viveiro/' + viveiro.id + '/mortalidade')}
+              style={{ backgroundColor: '#ef4444' }}
+            >
+              💀 Mortalidade
+            </button>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => navigate('/viveiro/' + viveiro.id + '/ciclo')}
+              style={{ backgroundColor: '#f59e0b' }}
+            >
+              📅 Ciclo de Cultivo
+            </button>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => window.history.back()}
+            >
+              🏠 Voltar
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="viveiro-detail-header">
         <div className="viveiro-detail-title">
           <h2>{viveiro.nome}</h2>

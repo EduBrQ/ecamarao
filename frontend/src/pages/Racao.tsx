@@ -9,6 +9,8 @@ import {
   calcularBiomassa, calcularFCR, calcularDOC,
   calcularRacaoDiariaAvancada, TABELA_RACAO,
 } from '../models/types'
+import '../styles/Racao.css'
+import '../styles/FazendaDashboardUX.css'
 
 function formatDate(d: Date | string): string {
   const date = typeof d === 'string' ? new Date(d + 'T00:00:00') : d
@@ -236,7 +238,37 @@ function Racao() {
   }
 
   return (
-    <div className="container fade-in">
+    <div className="racao-container">
+      {/* Header Principal */}
+      <div className="dashboard-header">
+        <div className="dashboard-header-content">
+          <div>
+            <h1 className="dashboard-title">🍤 Gestão de Ração</h1>
+            <p className="dashboard-subtitle">Controle completo de alimentação - {viveiro.nome}</p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              className="primary-action-btn"
+              onClick={() => setModalOpen(true)}
+              style={{ backgroundColor: '#10b981' }}
+            >
+              📅 Registrar Alimentação
+            </button>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => setShowTabela(!showTabela)}
+            >
+              {showTabela ? '📉 Ocultar Histórico' : '📊 Ver Histórico'}
+            </button>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => window.history.back()}
+            >
+              🏠 Voltar
+            </button>
+          </div>
+        </div>
+      </div>
       {/* Verificação de dados essenciais */}
       {dadosIncompletos && (
         <div className="card" style={{ backgroundColor: 'var(--warning-light)', border: '1px solid var(--warning)', marginBottom: '1rem' }}>
@@ -352,37 +384,24 @@ function Racao() {
         )}
       </div>
 
-      {/* FCR Summary */}
-      <div className="card">
-        <div className="card-title">Indicadores de Racao</div>
-        <div className="fcr-summary">
-          <div className="fcr-main">
-            <span className="fcr-value" style={{ color: getFcrColor(fcr) }}>
-              {fcr > 0 ? fcr.toFixed(2) : '-'}
-            </span>
-            <span className="fcr-label">FCR</span>
-            {fcr > 0 && <span className="fcr-status" style={{ color: getFcrColor(fcr) }}>{getFcrStatus(fcr)}</span>}
+      {/* KPIs Principais */}
+      <div className="kpi-grid">
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Dias de Cultivo</span>
+            <span className="kpi-icon">📅</span>
           </div>
-          <div className="fcr-details">
-            <div className="fcr-detail-item">
-              <span className="fcr-detail-value">{racaoTotal.toFixed(1)} kg</span>
-              <span className="fcr-detail-label">Racao Total</span>
-            </div>
-            <div className="fcr-detail-item">
-              <span className="fcr-detail-value">{biomassa > 0 ? biomassa.toFixed(0) : '-'} kg</span>
-              <span className="fcr-detail-label">Biomassa Est.</span>
-            </div>
-            <div className="fcr-detail-item">
-              <span className="fcr-detail-value">R$ {gastoRacao.toFixed(2)}</span>
-              <span className="fcr-detail-label">Gasto Total</span>
-            </div>
-            <div className="fcr-detail-item">
-              <span className="fcr-detail-value">R$ {precoKg.toFixed(2)}/kg</span>
-              <span className="fcr-detail-label">Preco Racao</span>
-            </div>
+          <div className="kpi-value">{doc}</div>
+          <div className="kpi-trend positive">
+            <span className="trend-icon">📈</span>
+            <span className="trend-text">Ciclo ativo</span>
           </div>
         </div>
-      </div>
+        
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Densidade</span>
+            <span className="kpi-icon">🦐</span>
 
       {/* Feed Rate Reference Table */}
       <div className="card">

@@ -10,6 +10,8 @@ import {
   ParametroAgua,
 } from '../models/types'
 import { backendApi, Viveiro, ColetaRacao, Medicao, RegistroMortalidade } from '../services/backendApi'
+import '../styles/Dashboard.css'
+import '../styles/FazendaDashboardUX.css'
 
 function Dashboard() {
   const { id: viveiroId } = useParams<{ id: string }>()
@@ -154,66 +156,107 @@ function Dashboard() {
     return 'good'
   }
 
-  const kpis = [
-    {
-      label: 'Dias de Cultivo',
-      value: doc.toString(),
-      unit: 'DOC',
-      status: 'good' as const,
-    },
-    {
-      label: 'Camarões Vivos',
-      value: (populacaoInicial - mortalidadeTotal).toLocaleString('pt-BR'),
-      unit: 'animais',
-      status: 'good' as const,
-    },
-    {
-      label: 'Sobrevivencia',
-      value: sobrevivencia.toFixed(1),
-      unit: '%',
-      status: getKpiStatus('sobrevivencia', sobrevivencia),
-    },
-    {
-      label: 'FCR',
-      value: fcr > 0 ? fcr.toFixed(2) : '-',
-      unit: '',
-      status: getKpiStatus('fcr', fcr),
-    },
-    {
-      label: 'Biomassa Est.',
-      value: biomassa > 0 ? biomassa.toFixed(0) : '-',
-      unit: 'kg',
-      status: 'good' as const,
-    },
-    {
-      label: 'SGR',
-      value: sgr > 0 ? sgr.toFixed(2) : '-',
-      unit: '%/dia',
-      status: 'good' as const,
-    },
-    {
-      label: 'Custo/Kg',
-      value: custoKg > 0 ? `R$ ${custoKg.toFixed(2)}` : '-',
-      unit: '',
-      status: 'good' as const,
-    },
-  ]
-
   return (
-    <div className="container fade-in">
-      <div className="card">
-        <div className="card-header-accent">Dashboard - {viveiro.nome}</div>
+    <div className="dashboard-container">
+      {/* Header Principal */}
+      <div className="dashboard-header">
+        <div className="dashboard-header-content">
+          <div>
+            <h1 className="dashboard-title">🦐 Dashboard do Viveiro</h1>
+            <p className="dashboard-subtitle">Painel completo de controle e monitoramento</p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              className="primary-action-btn"
+              onClick={() => window.history.back()}
+              style={{ backgroundColor: '#6b7280' }}
+            >
+              🏠 Voltar para Viveiros
+            </button>
+            <button 
+              className="secondary-action-btn"
+              onClick={() => window.print()}
+            >
+              🖨️ Imprimir Relatório
+            </button>
+          </div>
+        </div>
+      </div>
 
-        <div className="kpi-grid">
-          {kpis.map((kpi) => (
-            <div key={kpi.label} className={`kpi-card kpi-${kpi.status}`}>
-              <div className="kpi-value">
-                {kpi.value}
-                {kpi.unit && <span className="kpi-unit"> {kpi.unit}</span>}
-              </div>
-              <div className="kpi-label">{kpi.label}</div>
-            </div>
-          ))}
+      {/* KPIs Principais com Contexto */}
+      <div className="kpi-grid">
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Dias de Cultivo</span>
+            <span className="kpi-icon">📅</span>
+          </div>
+          <div className="kpi-value">{doc}</div>
+          <div className="kpi-trend positive">
+            <span className="trend-icon">📈</span>
+            <span className="trend-text">Ciclo ativo</span>
+          </div>
+        </div>
+        
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Camarões Vivos</span>
+            <span className="kpi-icon">🦐</span>
+          </div>
+          <div className="kpi-value">{(populacaoInicial - mortalidadeTotal).toLocaleString('pt-BR')}</div>
+          <div className="kpi-trend good">
+            <span className="trend-icon">📊</span>
+            <span className="trend-text">População atual</span>
+          </div>
+        </div>
+        
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Biomassa Estimada</span>
+            <span className="kpi-icon">⚖️</span>
+          </div>
+          <div className="kpi-value">{biomassa.toFixed(0)} kg</div>
+          <div className="kpi-trend positive">
+            <span className="trend-icon">↑</span>
+            <span className="trend-text">Baseado no peso médio</span>
+          </div>
+        </div>
+        
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">FCR Atual</span>
+            <span className="kpi-icon">📈</span>
+          </div>
+          <div className="kpi-value">{fcr > 0 ? fcr.toFixed(2) : '-'}</div>
+          <div className={`kpi-trend ${
+            fcr <= 1.5 ? 'excellent' : 
+            fcr <= 2.0 ? 'good' : 'warning'
+          }`}>
+            <span className="trend-icon">
+              {fcr <= 1.5 ? '🟢' : fcr <= 2.0 ? '🟡' : '🔴'}
+            </span>
+            <span className="trend-text">
+              {fcr <= 1.5 ? 'Excelente' : fcr <= 2.0 ? 'Bom' : 'Atenção'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Sobrevivência</span>
+            <span className="kpi-icon">💧</span>
+          </div>
+          <div className="kpi-value">{sobrevivencia.toFixed(1)}%</div>
+          <div className={`kpi-trend ${
+            sobrevivencia >= 80 ? 'excellent' : 
+            sobrevivencia >= 60 ? 'good' : 'warning'
+          }`}>
+            <span className="trend-icon">
+              {sobrevivencia >= 80 ? '🟢' : sobrevivencia >= 60 ? '🟡' : '🔴'}
+            </span>
+            <span className="trend-text">
+              {sobrevivencia >= 80 ? 'Excelente' : sobrevivencia >= 60 ? 'Bom' : 'Atenção'}
+            </span>
+          </div>
         </div>
       </div>
 
