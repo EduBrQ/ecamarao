@@ -1442,7 +1442,7 @@ function FazendaRacao() {
                 </div>
               </div>
             </div>
-            {viveirosPendentes > 0 && (
+            {/* {viveirosPendentes > 0 && (
               <button 
                 className="fazenda-primary-action-btn"
                 onClick={() => {
@@ -1464,7 +1464,7 @@ function FazendaRacao() {
               >
                 ⚡ Registrar Alimentação
               </button>
-            )}
+            )} */}
           </div>
           
           <div className="fazenda-action-card success">
@@ -1738,11 +1738,13 @@ function FazendaRacao() {
                     </div>
                     <div className="fazenda-viveiro-map-actions">
                       <button 
-                        className="fazenda-map-action-btn"
+                        className={`fazenda-map-action-btn ${!verificarDiasEmFalta(viveiro.viveiro.id) ? 'disabled' : ''}`}
+                        disabled={!verificarDiasEmFalta(viveiro.viveiro.id)}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleAlimentacaoRapida(viveiro.viveiro.id, new Date().getHours() < 12 ? 'manha' : 'tarde');
+                          handleDiasSemRacao(viveiro.viveiro.id);
                         }}
+                        style={verificarDiasEmFalta(viveiro.viveiro.id) ? {} : { pointerEvents: 'none', opacity: '0.5' }}
                       >
                         ⚡ Alimentar
                       </button>
@@ -2082,7 +2084,7 @@ function FazendaRacao() {
                   </div>
                 </div>
 
-                <div className="fazenda-viveiro-actions">
+                {/* <div className="fazenda-viveiro-actions">
                   <button 
                     className={`fazenda-action-btn manha ${alimentouManha ? 'disabled' : ''}`}
                     onClick={() => handleAlimentacaoRapida(viveiro.viveiro.id, 'manha')}
@@ -2103,7 +2105,7 @@ function FazendaRacao() {
                   >
                     📋 Detalhes
                   </button>
-                </div>
+                </div> */}
               </div>
             );
           })}
