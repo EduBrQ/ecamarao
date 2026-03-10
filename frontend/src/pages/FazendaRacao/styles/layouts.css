@@ -1,0 +1,268 @@
+/* Layout principal do Dashboard */
+
+.fazenda-dashboard-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 1rem;
+}
+
+/* Header */
+.dashboard-header {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.dashboard-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.export-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.export-btn.primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.export-btn.secondary {
+  background-color: #10b981;
+  color: white;
+}
+
+.export-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Seções */
+.farm-map-section,
+.events-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.visual-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.visual-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: white;
+  color: #374151;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.visual-btn.active {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.visual-btn:hover:not(.active) {
+  background-color: #f3f4f6;
+}
+
+/* Mapa */
+.farm-map-content {
+  min-height: 400px;
+}
+
+.map-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.map-placeholder p {
+  margin: 0.5rem 0;
+}
+
+/* Eventos */
+.events-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.no-events {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.no-events-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.no-events-title {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.no-events-subtitle {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.event-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #10b981;
+}
+
+.event-item.alimentacao {
+  background-color: #f0fdf4;
+  border-left-color: #10b981;
+}
+
+.event-item.alerta {
+  background-color: #fef2f2;
+  border-left-color: #ef4444;
+}
+
+.event-item.completou {
+  background-color: #f0f9ff;
+  border-left-color: #3b82f6;
+}
+
+.event-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.event-content {
+  flex: 1;
+}
+
+.event-time {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.event-message {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.event-details {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Estados de carregamento e erro */
+.dashboard-loading,
+.dashboard-error,
+.dashboard-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+
+.dashboard-error {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .fazenda-dashboard-container {
+    padding: 0.5rem;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .visual-controls {
+    justify-content: center;
+  }
+  
+  .event-item {
+    flex-direction: column;
+    text-align: center;
+  }
+}
