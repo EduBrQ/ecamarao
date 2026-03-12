@@ -1,19 +1,17 @@
 import { useState, useEffect } from 'react';
-import { backendApi } from '../../../services/backendApi';
-import { DashboardResponse } from '../types/dashboard';
-import { CalculadoraRacao } from '../../../models/CalculadoraRacao';
+import { DashboardResponse } from '../types';
+import { backendApi } from '../../../shared/services/backendApi';
+import { calcularRacaoLocal } from '../../../shared/utils/calculations/racaoCalculator';
 
 interface UseDashboardDataReturn {
   dashboard: DashboardResponse | null;
   loading: boolean;
   error: string | null;
-  totalRacaoHoje: number;
   refetchData: () => Promise<void>;
 }
 
 /**
- * Hook customizado para gerenciar dados do dashboard
- * @returns Estado e funções para gerenciar dados do dashboard
+ * Hook principal para gerenciar dados do dashboard
  */
 export const useDashboardData = (): UseDashboardDataReturn => {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
@@ -31,13 +29,14 @@ export const useDashboardData = (): UseDashboardDataReturn => {
       const dashboardComCalculos = {
         ...dashboardData,
         viveiros: dashboardData.viveiros.map((viveiro: any) => {
-          // Usar nova calculadora
-          const resultadoCalculadora = CalculadoraRacao.calcularRacaoDiaria({
-            quantidadeCamaroes: viveiro.viveiro.densidade * 1000,
-            pesoMedioGramas: viveiro.pesoEstimadoG || 0.1
+          const resultadoCalculadora = calcularRacaoLocal({
+            viveiro: viveiro.viveiro,
+            doc: viveiro.doc,
+            biomassaEstimadaKg: 0,
+            pesoEstimadoG: 0,
+            usandoNovaCalculadora: false
           });
           
-          // Atualizar viveiro com valores calculados
           return {
             ...viveiro,
             recomendadoTotal: resultadoCalculadora.racaoTotalDia,
@@ -53,7 +52,7 @@ export const useDashboardData = (): UseDashboardDataReturn => {
             usandoNovaCalculadora: true,
             faixaPeso: resultadoCalculadora.faixaPeso,
             faseCultivo: resultadoCalculadora.faseCultivo,
-            taxaAlimentacaoDecimal: resultadoCalculadora.taxaAlimentacao / 100
+            taxaAlimentacaoDecimal: resultadoCalculadora.taxaAlimentacao
           };
         })
       };
@@ -71,18 +70,10 @@ export const useDashboardData = (): UseDashboardDataReturn => {
     carregarDashboard();
   }, []);
 
-  // Calcular total de ração hoje
-  const totalRacaoHoje = dashboard?.viveiros.reduce((total, viveiro) => {
-    const hoje = new Date().toISOString().split('T')[0];
-    const racaoHoje = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
-    return total + (racaoHoje?.total || 0);
-  }, 0) || 0;
-
   return {
     dashboard,
     loading,
     error,
-    totalRacaoHoje,
     refetchData: carregarDashboard
   };
 };

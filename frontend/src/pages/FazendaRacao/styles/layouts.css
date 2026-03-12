@@ -266,3 +266,160 @@
     text-align: center;
   }
 }
+
+/* Layout em três zonas: área principal (mapa) + painel lateral de viveiro */
+.farm-main {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.farm-map-area {
+  flex: 1 1 auto;
+  width: stretch;
+}
+
+.viveiro-panel {
+  width: 340px;
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 12px rgba(2,6,23,0.08);
+  border: 1px solid #eef2f7;
+  display: flex;
+  flex-direction: column;
+}
+
+.viveiro-panel.empty {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.close-panel {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px dashed #f8fafc;
+}
+
+.panel-value {
+  font-weight: 700;
+  color: #111827;
+}
+
+.sparkline {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  height: 36px;
+  margin-top: 6px;
+}
+
+.sparkline .bar {
+  width: 8px;
+  background: #3b82f6;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.viveiro-panel .primary {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Ajuste do mapa para acomodar painel lateral */
+.farm-map-content {
+  min-height: 360px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+.status-dot.completo { background: #10b981; }
+.status-dot.parcial { background: #f59e0b; }
+.status-dot.pendente { background: #ef4444; }
+
+.map-legend {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot.green { background: #10b981; }
+.dot.yellow { background: #f59e0b; }
+.dot.red { background: #ef4444; }
+
+.events-day-header {
+  font-weight: 700;
+  margin: 8px 0;
+  color: #374151;
+}
+
+.events-day-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+
+@media (max-width: 768px) {
+  .farm-main {
+    flex-direction: column;
+  }
+
+  .viveiro-panel {
+    width: 100%;
+    margin-top: 1rem;
+  }
+}

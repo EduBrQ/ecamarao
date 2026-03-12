@@ -675,6 +675,262 @@
   font-style: italic;
 }
 
+/* 🚨 Estilos para Novos Alertas Automáticos */
+.fazenda-alerts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.fazenda-alerts-count {
+  background: #dc2626;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.fazenda-alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.fazenda-alert-titulo {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  flex: 1;
+}
+
+.fazenda-alert-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.fazenda-alert-badge.critico {
+  background: #dc2626;
+  color: white;
+}
+
+.fazenda-alert-badge.atencao {
+  background: #f59e0b;
+  color: white;
+}
+
+.fazenda-alert-badge.importante {
+  background: #ea580c;
+  color: white;
+}
+
+.fazenda-alert-badge.info {
+  background: #3b82f6;
+  color: white;
+}
+
+.fazenda-alert-descricao {
+  font-size: 0.8rem;
+  color: #4b5563;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.fazenda-alert-acao {
+  font-size: 0.75rem;
+  color: #1f2937;
+  background: #f9fafb;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+.fazenda-alert-acao strong {
+  color: #1f2937;
+}
+
+/* Estilos específicos para tipos de alerta */
+.fazenda-alert-item.critico {
+  border-left: 4px solid #dc2626;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.fazenda-alert-item.atencao {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.fazenda-alert-item.importante {
+  border-left: 4px solid #ea580c;
+  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+}
+
+.fazenda-alert-item.info {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+/* 🚨 Painel de Alertas da Fazenda */
+.fazenda-alertas-painel {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.1);
+}
+
+.fazenda-alertas-painel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.fazenda-alertas-painel-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fazenda-alertas-painel-total {
+  background: #dc2626;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 16px;
+}
+
+.fazenda-alertas-resumo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.fazenda-alerta-resumo-item {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+.fazenda-alerta-resumo-item.critico {
+  border-color: #dc2626;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.fazenda-alerta-resumo-item.atencao {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.fazenda-alerta-resumo-item.total {
+  border-color: #6b7280;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.fazenda-alerta-resumo-numero {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.fazenda-alerta-resumo-item.critico .fazenda-alerta-resumo-numero {
+  color: #dc2626;
+}
+
+.fazenda-alerta-resumo-item.atencao .fazenda-alerta-resumo-numero {
+  color: #f59e0b;
+}
+
+.fazenda-alerta-resumo-texto {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.fazenda-alertas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fazenda-alerta-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid #e5e7eb;
+  align-items: flex-start;
+}
+
+.fazenda-alerta-item.critico {
+  border-left-color: #dc2626;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.fazenda-alerta-item.atencao {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.fazenda-alerta-viveiro {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  min-width: 80px;
+  padding: 4px 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.fazenda-alerta-conteudo {
+  flex: 1;
+}
+
+.fazenda-alerta-titulo {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.fazenda-alerta-descricao {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.fazenda-alertas-mais {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px dashed #d1d5db;
+}
+
 /* 🎯 Previsão de Produção */
 .fazenda-viveiro-producao {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);

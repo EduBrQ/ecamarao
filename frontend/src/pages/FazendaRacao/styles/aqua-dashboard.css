@@ -1,0 +1,1422 @@
+/* AquaFarm Dashboard - Modern Design System */
+
+/* ===== CORE DESIGN SYSTEM ===== */
+
+/* Color Palette - AquaFarm Identity */
+:root {
+  /* Primary AquaFarm Colors */
+  --aqua-primary: #0891b2;
+  --aqua-primary-dark: #0e7490;
+  --aqua-primary-light: #e0f7fa;
+  
+  /* Secondary Colors */
+  --aqua-secondary: #06b6d4;
+  --aqua-secondary-dark: #0891b2;
+  --aqua-secondary-light: #cffafe;
+  
+  /* Success - Alimentação Completa */
+  --success-green: #10b981;
+  --success-green-dark: #059669;
+  --success-green-light: #dcfce7;
+  
+  /* Warning - Alimentação Parcial */
+  --warning-amber: #f59e0b;
+  --warning-amber-dark: #d97706;
+  --warning-amber-light: #fef3c7;
+  
+  /* Danger - Pendente/Crítico */
+  --danger-red: #ef4444;
+  --danger-red-dark: #dc2626;
+  --danger-red-light: #fee2e2;
+  
+  /* Neutral Scale */
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1e293b;
+  --neutral-900: #0f172a;
+  
+  /* Background Colors */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  
+  /* Text Colors */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  
+  /* Border Colors */
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-dark: #94a3b8;
+  
+  /* Shadow System */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* Border Radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  
+  /* Spacing System */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  
+  /* Typography */
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-base: 16px;
+  --font-lg: 18px;
+  --font-xl: 20px;
+  --font-2xl: 24px;
+  --font-3xl: 30px;
+  --font-4xl: 36px;
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+}
+
+/* ===== MODERN DASHBOARD LAYOUT ===== */
+
+/* Main Container */
+.aqua-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: var(--space-6);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+}
+
+/* Dashboard Header */
+.aqua-header {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.aqua-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.aqua-title {
+  font-size: var(--font-3xl);
+  font-weight: 800;
+  color: var(--aqua-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.aqua-subtitle {
+  font-size: var(--font-base);
+  color: var(--text-muted);
+  margin: 0;
+  margin-top: var(--space-1);
+}
+
+/* Stats Overview */
+.aqua-stats-overview {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.aqua-stat-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  min-width: 120px;
+  transition: all var(--transition-base);
+}
+
+.aqua-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.aqua-stat-label {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-1);
+}
+
+.aqua-stat-value {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* ===== VIVEIRO CARDS ===== */
+
+/* Cards Container */
+.aqua-viveiros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin: var(--space-6) 0;
+}
+
+/* Modern Viveiro Card */
+.aqua-viveiro-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.aqua-viveiro-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--aqua-primary), var(--aqua-secondary));
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.aqua-viveiro-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.aqua-viveiro-card:hover::before {
+  opacity: 1;
+}
+
+.aqua-viveiro-card.selected {
+  border-color: var(--aqua-primary);
+  background: var(--aqua-primary-light);
+}
+
+/* Card Header */
+.aqua-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.aqua-viveiro-name {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.aqua-viveiro-doc {
+  background: var(--aqua-primary-light);
+  color: var(--aqua-primary);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Status Badge */
+.aqua-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xl);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-4);
+}
+
+.aqua-status-badge.completo {
+  background: var(--success-green-light);
+  color: var(--success-green-dark);
+}
+
+.aqua-status-badge.parcial {
+  background: var(--warning-amber-light);
+  color: var(--warning-amber-dark);
+}
+
+.aqua-status-badge.pendente {
+  background: var(--danger-red-light);
+  color: var(--danger-red-dark);
+}
+
+.aqua-status-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Main Feed Info */
+.aqua-feed-main {
+  margin-bottom: var(--space-4);
+}
+
+.aqua-feed-label {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: var(--space-2);
+}
+
+.aqua-feed-amount {
+  font-size: var(--font-4xl);
+  font-weight: 800;
+  color: var(--aqua-primary);
+  line-height: 1;
+  margin-bottom: var(--space-1);
+}
+
+.aqua-feed-recommended {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+/* Progress Bar */
+.aqua-progress-container {
+  margin: var(--space-4) 0;
+}
+
+.aqua-progress-bar {
+  height: 12px;
+  background: var(--neutral-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+}
+
+.aqua-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--success-green), var(--aqua-primary));
+  border-radius: var(--radius-md);
+  transition: width var(--transition-slow);
+  position: relative;
+}
+
+.aqua-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.aqua-progress-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-2);
+  font-size: var(--font-sm);
+}
+
+.aqua-progress-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.aqua-progress-percentage {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Secondary Info */
+.aqua-secondary-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border-light);
+  margin-top: var(--space-4);
+}
+
+.aqua-biomassa {
+  display: flex;
+  flex-direction: column;
+}
+
+.aqua-biomassa-label {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-1);
+}
+
+.aqua-biomassa-value {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.aqua-remaining {
+  text-align: right;
+}
+
+.aqua-remaining-label {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-1);
+}
+
+.aqua-remaining-value {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--warning-amber);
+}
+
+/* ===== ACTION BAR ===== */
+
+.aqua-panel-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+}
+
+.aqua-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+.aqua-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  transform: translate(-50%, -50%);
+  transition: width var(--transition-slow), height var(--transition-slow);
+}
+
+.aqua-button:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.aqua-button-primary {
+  background: linear-gradient(135deg, var(--aqua-primary), var(--aqua-secondary));
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.aqua-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, var(--aqua-primary-dark), var(--aqua-primary));
+}
+
+.aqua-button-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ===== ACTION BUTTONS ===== */
+
+.aqua-card-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.aqua-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.aqua-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transform: translate(-50%, -50%);
+  transition: width var(--transition-slow), height var(--transition-slow);
+}
+
+.aqua-btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.aqua-btn-primary {
+  background: linear-gradient(135deg, var(--aqua-primary), var(--aqua-secondary));
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.aqua-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.aqua-btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+
+.aqua-btn-secondary:hover {
+  background: var(--border-light);
+}
+
+.aqua-btn-success {
+  background: linear-gradient(135deg, var(--success-green), #059669);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.aqua-btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== MODERN MODAL ===== */
+
+.aqua-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+  animation: fadeIn var(--transition-base);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.aqua-modal {
+  min-width: max-content;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideUp var(--transition-slow);
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.aqua-modal-header {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.aqua-modal-title {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.aqua-modal-close {
+  background: none;
+  border: none;
+  font-size: var(--font-2xl);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
+}
+
+.aqua-modal-close:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.aqua-modal-body {
+  padding: var(--space-6);
+}
+
+.aqua-modal-footer {
+  padding: var(--space-6);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+/* Feed Modal Specific */
+.aqua-feed-section {
+  margin-bottom: var(--space-6);
+}
+
+.aqua-feed-section-title {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.aqua-feed-periods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.aqua-feed-period {
+  text-align: center;
+}
+
+.aqua-feed-period-label {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: var(--space-2);
+}
+
+.aqua-feed-input-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+}
+
+.aqua-feed-input {
+  width: 100px;
+  padding: var(--space-3);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: var(--font-xl);
+  font-weight: 700;
+  text-align: center;
+  color: var(--aqua-primary);
+  transition: all var(--transition-base);
+}
+
+.aqua-feed-input:focus {
+  outline: none;
+  border-color: var(--aqua-primary);
+  box-shadow: 0 0 0 3px var(--aqua-primary-light);
+}
+
+.aqua-feed-quick-add {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.aqua-quick-btn {
+  width: 50px;
+  height: 50px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.aqua-quick-btn:hover {
+  background: var(--aqua-primary-light);
+  border-color: var(--aqua-primary);
+  color: var(--aqua-primary);
+}
+
+/* Zero button - gray theme */
+.aqua-zero-btn {
+  width: 30px;
+  height: 30px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: var(--neutral-300) !important;
+  border-color: var(--neutral-600) !important;
+  color: var(--neutral-800) !important;
+  font-weight: 800 !important;
+  font-size: var(--font-sm) !important;
+}
+
+.aqua-zero-btn:hover {
+  background: var(--neutral-600) !important;
+  color: white !important;
+}
+
+/* Subtract buttons - red theme */
+.aqua-feed-quick-add:first-child .aqua-quick-btn {
+  background: var(--danger-red-light);
+  border-color: var(--danger-red);
+  color: var(--danger-red-dark);
+}
+
+.aqua-feed-quick-add:first-child .aqua-quick-btn:hover {
+  background: var(--danger-red);
+  color: white;
+}
+
+/* Add buttons - green theme */
+.aqua-feed-quick-add:last-child .aqua-quick-btn {
+  background: var(--success-green-light);
+  border-color: var(--success-green);
+  color: var(--success-green-dark);
+}
+
+.aqua-feed-quick-add:last-child .aqua-quick-btn:hover {
+  background: var(--success-green);
+  color: white;
+}
+
+.aqua-feed-total {
+  background: var(--aqua-primary-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  text-align: center;
+  margin-top: var(--space-4);
+}
+
+.aqua-feed-total-label {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.aqua-feed-total-value {
+  font-size: var(--font-3xl);
+  font-weight: 800;
+  color: var(--aqua-primary);
+}
+
+/* ===== SIDE PANEL ===== */
+
+.aqua-side-panel {
+  width: 380px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 120px);
+}
+
+.aqua-panel-header {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, var(--aqua-primary), var(--aqua-secondary));
+  color: white;
+}
+
+.aqua-panel-title {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  margin: 0;
+}
+
+.aqua-panel-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  font-size: var(--font-lg);
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
+}
+
+.aqua-panel-close:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.aqua-panel-body {
+  padding: var(--space-6);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.aqua-panel-section {
+  margin-bottom: var(--space-6);
+}
+
+.aqua-panel-section-title {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-3);
+}
+
+.aqua-panel-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.aqua-panel-metric:last-child {
+  border-bottom: none;
+}
+
+.aqua-panel-metric-label {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.aqua-panel-metric-value {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Sparkline Chart */
+.aqua-sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  height: 40px;
+  margin-top: var(--space-2);
+}
+
+.aqua-sparkline-bar {
+  flex: 1;
+  background: linear-gradient(to top, var(--aqua-primary), var(--aqua-secondary));
+  border-radius: var(--radius-xs);
+  min-height: 4px;
+  transition: all var(--transition-base);
+}
+
+.aqua-sparkline-bar:hover {
+  opacity: 0.8;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media (max-width: 1200px) {
+  .aqua-viveiros-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+
+@media (max-width: 768px) {
+  /* Otimizações de touch */
+  .aqua-viveiro-card {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  .aqua-btn {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 44px; /* Mínimo para touch */
+  }
+  
+  /* Layout principal mobile */
+  .farm-main {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  
+  .farm-map-area {
+    order: 1;
+  }
+  
+  .aqua-side-panel {
+    order: 2;
+    margin-top: var(--space-4);
+  }
+  
+  /* Seção header mobile */
+  .section-header {
+    flex-direction: column;
+    gap: var(--space-3);
+    text-align: center;
+  }
+  
+  .section-header h2 {
+    font-size: var(--font-xl);
+    margin-bottom: var(--space-2);
+  }
+  
+  .visual-controls {
+    justify-content: center;
+  }
+  
+  .visual-btn {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-sm);
+  }
+  
+  /* Cards mobile */
+  .aqua-dashboard {
+    padding: var(--space-3);
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  }
+  
+  .aqua-header {
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  
+  .aqua-header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-4);
+  }
+  
+  .aqua-title {
+    font-size: var(--font-2xl);
+    line-height: 1.2;
+  }
+  
+  .aqua-subtitle {
+    font-size: var(--font-sm);
+  }
+  
+  .aqua-stats-overview {
+    justify-content: center;
+    gap: var(--space-3);
+    width: 100%;
+  }
+  
+  .aqua-stat-card {
+    flex: 1;
+    min-width: 100px;
+    padding: var(--space-5) var(--space-5);
+  }
+  
+  .aqua-stat-value {
+    font-size: var(--font-xl);
+  }
+  
+  .aqua-viveiros-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .aqua-viveiro-card {
+    padding: var(--space-6);
+  }
+  
+  .aqua-viveiro-name {
+    font-size: var(--font-lg);
+  }
+  
+  .aqua-feed-amount {
+    font-size: var(--font-3xl);
+    line-height: 1.1;
+  }
+  
+  .aqua-progress-bar {
+    height: 10px;
+  }
+  
+  .aqua-side-panel {
+    width: 100%;
+    max-height: none;
+  }
+  
+  .aqua-panel-header {
+    padding: var(--space-4);
+  }
+  
+  .aqua-panel-body {
+    padding: var(--space-4);
+  }
+  
+  .aqua-feed-periods {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  
+  .aqua-feed-input {
+    width: 120px;
+    font-size: var(--font-2xl);
+  }
+  
+  .aqua-feed-quick-add {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+  
+  .aqua-quick-btn {
+    flex: 1;
+    min-width: 50px;
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .aqua-dashboard {
+    padding: var(--space-2);
+  }
+  
+  .aqua-header {
+    padding: var(--space-5);
+    margin-bottom: var(--space-3);
+  }
+  
+  .aqua-title {
+    font-size: var(--font-xl);
+  }
+  
+  .aqua-subtitle {
+    font-size: var(--font-xs);
+  }
+  
+  .aqua-stats-overview {
+    gap: var(--space-2);
+  }
+  
+  .aqua-stat-card {
+    padding: var(--space-5) var(--space-5);
+    min-width: 80px;
+  }
+  
+  .aqua-stat-label {
+    font-size: var(--font-xs);
+  }
+  
+  .aqua-stat-value {
+    font-size: var(--font-lg);
+  }
+  
+  .aqua-viveiro-card {
+    padding: var(--space-6);
+  }
+  
+  .aqua-viveiro-name {
+    font-size: var(--font-base);
+  }
+  
+  .aqua-viveiro-doc {
+    font-size: var(--font-xs);
+    padding: var(--space-1) var(--space-2);
+  }
+  
+  .aqua-status-badge {
+    font-size: var(--font-xs);
+    padding: var(--space-1) var(--space-3);
+  }
+  
+  .aqua-feed-amount {
+    font-size: var(--font-2xl);
+  }
+  
+  .aqua-feed-recommended {
+    font-size: var(--font-xs);
+  }
+  
+  .aqua-progress-bar {
+    height: 8px;
+  }
+  
+  .aqua-progress-text {
+    font-size: var(--font-xs);
+  }
+  
+  .aqua-secondary-info {
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: flex-start;
+  }
+  
+  .aqua-biomassa-value,
+  .aqua-remaining-value {
+    font-size: var(--font-sm);
+  }
+  
+  .aqua-card-actions {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .aqua-btn {
+    width: 100%;
+    justify-content: center;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-sm);
+  }
+  
+  .aqua-feed-input {
+    width: 100px;
+    font-size: var(--font-xl);
+    padding: var(--space-2);
+  }
+  
+  .aqua-quick-btn {
+    font-size: var(--font-xs);
+    padding: var(--space-1) var(--space-2);
+    min-width: 40px;
+  }
+  
+  .aqua-feed-total-value {
+    font-size: var(--font-2xl);
+  }
+  
+  .aqua-panel-title {
+    font-size: var(--font-lg);
+  }
+  
+  .aqua-panel-metric-value {
+    font-size: var(--font-sm);
+  }
+  
+  /* Modal mobile */
+  .aqua-modal-overlay {
+    padding: var(--space-2);
+  }
+  
+  .aqua-modal {
+    min-width: stretch;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 95vh;
+    margin: 0;
+  }
+  
+  .aqua-modal-header {
+    padding: var(--space-4);
+  }
+  
+  .aqua-modal-title {
+    font-size: var(--font-lg);
+  }
+  
+  .aqua-modal-body {
+    padding: var(--space-4);
+  }
+  
+  .aqua-modal-footer {
+    padding: var(--space-4);
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .aqua-modal-footer .aqua-btn {
+    width: 100%;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles */
+.aqua-btn:focus-visible,
+.aqua-feed-input:focus-visible,
+.aqua-quick-btn:focus-visible {
+  outline: 2px solid var(--aqua-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .aqua-viveiro-card {
+    border-width: 2px;
+  }
+  
+  .aqua-btn {
+    border-width: 2px;
+  }
+}
+
+/* ===== PREENCHER DIAS FALTANTES MODAL ===== */
+
+.fill-missing-days-modal {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.no-missing-days {
+  text-align: center;
+  padding: 2rem;
+  color: var(--success-green);
+}
+
+.no-missing-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.no-missing-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.no-missing-subtitle {
+  color: var(--neutral-600);
+  font-size: 0.875rem;
+}
+
+.missing-days-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.missing-days-summary {
+  background: var(--bg-tertiary);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid var(--aqua-primary);
+}
+
+.missing-days-summary p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.viveiro-missing-section {
+  border: 1px solid var(--neutral-200);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.viveiro-missing-title {
+  background: var(--aqua-primary);
+  color: white;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.missing-days-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  background: var(--bg-tertiary);
+  padding: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--neutral-100);
+  align-items: center;
+}
+
+.table-row:hover {
+  background: var(--neutral-50);
+}
+
+.date-cell {
+  font-size: 0.875rem;
+  color: var(--neutral-700);
+  font-weight: 500;
+}
+
+.input-cell {
+  display: flex;
+  justify-content: center;
+}
+
+.aqua-small-input {
+  width: 80px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--neutral-300);
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.aqua-small-input:focus {
+  outline: none;
+  border-color: var(--aqua-primary);
+  box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.1);
+}
+
+.aqua-small-input:hover {
+  border-color: var(--neutral-400);
+}
+
+.total-cell {
+  font-weight: 600;
+  color: var(--aqua-primary);
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .table-header > div,
+  .table-row > div {
+    padding: 0.25rem 0;
+  }
+  
+  .table-header > div::before,
+  .table-row > div::before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+  
+  .date-cell::before {
+    content: "Data: ";
+  }
+  
+  .input-cell::before {
+    content: attr(data-label);
+  }
+  
+  .total-cell::before {
+    content: "Total: ";
+  }
+}

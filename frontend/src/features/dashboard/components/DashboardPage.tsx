@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFarmStatus } from '../../domains/fazenda/hooks/useFarmStatus';
-import { FarmStatusCard } from '../../domains/fazenda/components/FarmStatusCard';
-import { ViveiroCard } from '../../domains/viveiros/components/ViveiroCard';
-import { useDashboardData } from '../../hooks/useDashboardData';
-import { VisualMode } from '../../features/viveiros/types';
+import { FilterType, VisualMode } from '../types';
+import { useDashboardData } from '../hooks/useDashboardData';
+import { ViveiroCard } from '../../viveiros/components/ViveiroCard';
+import { Button } from '../../../shared/ui/Button';
 import './DashboardPage.css';
-
-type FilterType = 'todos' | 'pendentes' | 'alimentados' | 'parciais';
+import { FarmStatusCard } from './FarmStatusCard';
 
 /**
- * Página principal do Dashboard com arquitetura modular
+ * Página principal do Dashboard com arquitetura Feature Slice
  */
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   
   // Hook principal de dados
-  const { dashboard, loading, error } = useDashboardData();
-  
-  // Hooks de domínio
-  const { status, viveirosAlimentados, viveirosParciais, viveirosPendentes } = useFarmStatus(dashboard);
+  const { dashboard, loading, error, refetchData } = useDashboardData();
   
   // Estados locais para UI
-  const [visualMode, setVisualMode] = useState<VisualMode>('grid');
   const [activeFilter, setActiveFilter] = useState<FilterType>('todos');
+  const [visualMode, setVisualMode] = useState<VisualMode>('grid');
 
   // Renderização condicional
   if (loading) {
@@ -43,6 +38,7 @@ export const DashboardPage: React.FC = () => {
           <div className="error-icon">⚠️</div>
           <div className="error-message">Falha ao carregar dados do dashboard</div>
           <div className="error-details">{error}</div>
+          <Button onClick={refetchData}>Tentar Novamente</Button>
         </div>
       </div>
     );
@@ -60,11 +56,11 @@ export const DashboardPage: React.FC = () => {
   }
 
   // Filtrar viveiros baseado no filtro ativo
-  const viveirosFiltrados = dashboard.viveiros.filter((viveiro: any) => {
+  const viveirosFiltrados = dashboard.viveiros.filter(viveiro => {
     if (activeFilter === 'todos') return true;
     
     const hoje = new Date().toISOString().split('T')[0];
-    const racaoHoje = viveiro.racoes.find((r: any) => r.data.split('T')[0] === hoje);
+    const racaoHoje = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
     const alimentouManha = racaoHoje ? racaoHoje.qntManha > 0 : false;
     const alimentouTarde = racaoHoje ? racaoHoje.qntTarde > 0 : false;
     
@@ -90,18 +86,18 @@ export const DashboardPage: React.FC = () => {
             <p className="dashboard-subtitle">Gestão inteligente de carcinicultura</p>
           </div>
           <div className="header-actions">
-            <button className="export-btn primary">
+            <Button variant="primary">
               📊 Exportar CSV
-            </button>
-            <button className="export-btn secondary">
+            </Button>
+            <Button variant="success">
               📄 Gerar PDF
-            </button>
+            </Button>
           </div>
         </div>
       </header>
 
       {/* STATUS DA FAZENDA */}
-      <FarmStatusCard status={status} />
+      <FarmStatusCard dashboard={dashboard} />
 
       {/* MAPA DE VIVEIROS */}
       <section className="viveiros-section">
@@ -109,50 +105,50 @@ export const DashboardPage: React.FC = () => {
           <h2>🗺️ MAPA DA FAZENDA</h2>
           <div className="section-controls">
             <div className="filter-tabs">
-              <button 
-                className={`filter-tab ${activeFilter === 'todos' ? 'active' : ''}`}
+              <Button 
+                variant={activeFilter === 'todos' ? 'primary' : 'secondary'}
                 onClick={() => setActiveFilter('todos')}
               >
                 📊 Todos ({dashboard.viveiros.length})
-              </button>
-              <button 
-                className={`filter-tab ${activeFilter === 'pendentes' ? 'active' : ''}`}
+              </Button>
+              <Button 
+                variant={activeFilter === 'pendentes' ? 'primary' : 'secondary'}
                 onClick={() => setActiveFilter('pendentes')}
               >
-                ⚠️ Pendentes ({viveirosPendentes})
-              </button>
-              <button 
-                className={`filter-tab ${activeFilter === 'alimentados' ? 'active' : ''}`}
+                ⚠️ Pendentes ({dashboard.totais.viveirosPendentes})
+              </Button>
+              <Button 
+                variant={activeFilter === 'alimentados' ? 'primary' : 'secondary'}
                 onClick={() => setActiveFilter('alimentados')}
               >
-                ✅ Alimentados ({viveirosAlimentados})
-              </button>
-              <button 
-                className={`filter-tab ${activeFilter === 'parciais' ? 'active' : ''}`}
+                ✅ Alimentados ({dashboard.totais.viveirosAlimentados})
+              </Button>
+              <Button 
+                variant={activeFilter === 'parciais' ? 'primary' : 'secondary'}
                 onClick={() => setActiveFilter('parciais')}
               >
-                🌅 Parciais ({viveirosParciais})
-              </button>
+                🌅 Parciais ({dashboard.totais.viveirosParciais})
+              </Button>
             </div>
             <div className="visual-controls">
-              <button 
-                className={`visual-btn ${visualMode === 'grid' ? 'active' : ''}`}
+              <Button 
+                variant={visualMode === 'grid' ? 'primary' : 'secondary'}
                 onClick={() => setVisualMode('grid')}
               >
                 📦 Grade
-              </button>
-              <button 
-                className={`visual-btn ${visualMode === 'list' ? 'active' : ''}`}
+              </Button>
+              <Button 
+                variant={visualMode === 'list' ? 'primary' : 'secondary'}
                 onClick={() => setVisualMode('list')}
               >
                 📋 Lista
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         <div className={`viveiros-container ${visualMode}`}>
-          {viveirosFiltrados.map((viveiro: any) => (
+          {viveirosFiltrados.map((viveiro) => (
             <ViveiroCard
               key={viveiro.viveiro.id}
               viveiro={viveiro}

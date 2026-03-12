@@ -223,8 +223,8 @@ function Home() {
       <div className="farm-nav-card" onClick={() => navigate('/fazenda/racao')}>
         <div className="farm-nav-icon">&#127834;</div>
         <div className="farm-nav-text">
-          <span className="farm-nav-title">Racao da Fazenda</span>
-          <span className="farm-nav-desc">Gestao de racao de todos os viveiros &middot; Recomendacao diaria</span>
+          <span className="farm-nav-title">Gestão de Ração</span>
+          <span className="farm-nav-desc">Controle de racionamento para todos os viveiros, com recomendação diária.</span>
         </div>
         <span className="farm-nav-arrow">&rsaquo;</span>
       </div>

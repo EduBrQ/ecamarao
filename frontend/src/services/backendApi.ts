@@ -228,12 +228,18 @@ export const backendApi = {
         if (registroExistente && registroExistente.length > 0) {
           // Já existe registro, atualizar apenas o período específico
           const registro = registroExistente[0];
-          const racaoData = {
-            data: hoje,
-            qnt_manha: periodo === 'manha' ? quantidade : (quantidadeManha || registro.qntManha || 0),
-            qnt_tarde: periodo === 'tarde' ? quantidade : registro.qntTarde || 0
-          };
-          
+          const racaoData: any = { data: hoje };
+          if (periodo === 'manha') {
+            if (quantidade && quantidade > 0) racaoData.qnt_manha = quantidade;
+            // preserve existing tarde
+            if (registro.qntTarde && registro.qntTarde > 0) racaoData.qnt_tarde = registro.qntTarde;
+          } else {
+            if (quantidade && quantidade > 0) racaoData.qnt_tarde = quantidade;
+            // preserve existing manha
+            if (quantidadeManha && quantidadeManha > 0) racaoData.qnt_manha = quantidadeManha;
+            else if (registro.qntManha && registro.qntManha > 0) racaoData.qnt_manha = registro.qntManha;
+          }
+
           const response = await axios.put(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao/${registro.id}`, racaoData);
           return response.data;
         }
@@ -242,12 +248,14 @@ export const backendApi = {
       }
       
       // Não existe registro, criar novo com apenas o período específico
-      const racaoData = {
-        data: hoje,
-        qnt_manha: periodo === 'manha' ? quantidade : (quantidadeManha || 0),
-        qnt_tarde: periodo === 'tarde' ? quantidade : 0
-      };
-      
+      const racaoData: any = { data: hoje };
+      if (periodo === 'manha') {
+        if (quantidade && quantidade > 0) racaoData.qnt_manha = quantidade;
+        if (quantidadeManha && quantidadeManha > 0) racaoData.qnt_manha = quantidadeManha;
+      } else {
+        if (quantidade && quantidade > 0) racaoData.qnt_tarde = quantidade;
+      }
+
       const response = await axios.post(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao`, racaoData);
       return response.data;
     } catch (error) {
@@ -266,12 +274,16 @@ export const backendApi = {
         if (registroExistente && registroExistente.length > 0) {
           // Já existe registro, atualizar apenas o período específico
           const registro = registroExistente[0];
-          const racaoData = {
-            data: data,
-            qnt_manha: periodo === 'manha' ? quantidade : (quantidadeManha || registro.qntManha || 0),
-            qnt_tarde: periodo === 'tarde' ? quantidade : registro.qntTarde || 0
-          };
-          
+          const racaoData: any = { data: data };
+          if (periodo === 'manha') {
+            if (quantidade && quantidade > 0) racaoData.qnt_manha = quantidade;
+            if (registro.qntTarde && registro.qntTarde > 0) racaoData.qnt_tarde = registro.qntTarde;
+          } else {
+            if (quantidade && quantidade > 0) racaoData.qnt_tarde = quantidade;
+            if (quantidadeManha && quantidadeManha > 0) racaoData.qnt_manha = quantidadeManha;
+            else if (registro.qntManha && registro.qntManha > 0) racaoData.qnt_manha = registro.qntManha;
+          }
+
           const response = await axios.put(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao/${registro.id}`, racaoData);
           return response.data;
         }
@@ -280,12 +292,14 @@ export const backendApi = {
       }
       
       // Não existe registro, criar novo com apenas o período específico
-      const racaoData = {
-        data: data,
-        qnt_manha: periodo === 'manha' ? quantidade : (quantidadeManha || 0),
-        qnt_tarde: periodo === 'tarde' ? quantidade : 0
-      };
-      
+      const racaoData: any = { data: data };
+      if (periodo === 'manha') {
+        if (quantidade && quantidade > 0) racaoData.qnt_manha = quantidade;
+        if (quantidadeManha && quantidadeManha > 0) racaoData.qnt_manha = quantidadeManha;
+      } else {
+        if (quantidade && quantidade > 0) racaoData.qnt_tarde = quantidade;
+      }
+
       const response = await axios.post(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao`, racaoData);
       return response.data;
     } catch (error) {
@@ -293,6 +307,46 @@ export const backendApi = {
       throw error;
     }
   },
+
+    /**
+     * Registra alimentação do dia em um único endpoint (manhã e/ou tarde)
+     * Envia apenas os campos maiores que 0. Se já existir registro para a data,
+     * atualiza via PUT; caso contrário cria via POST.
+     */
+    registrarAlimentacaoDia: async (viveiroId: number, data: string, qntManha?: number, qntTarde?: number) => {
+      try {
+        // Buscar registro existente para a data
+        try {
+          const getResponse = await axios.get(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao?data=${data}`);
+          const registroExistente = getResponse.data;
+
+          if (registroExistente && registroExistente.length > 0) {
+            const registro = registroExistente[0];
+            const racaoData: any = { data };
+            if (qntManha && qntManha > 0) racaoData.qnt_manha = qntManha;
+            else if (registro.qntManha && registro.qntManha > 0) racaoData.qnt_manha = registro.qntManha;
+            if (qntTarde && qntTarde > 0) racaoData.qnt_tarde = qntTarde;
+            else if (registro.qntTarde && registro.qntTarde > 0) racaoData.qnt_tarde = registro.qntTarde;
+
+            const response = await axios.put(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao/${registro.id}`, racaoData);
+            return response.data;
+          }
+        } catch (err) {
+          // não encontrado -> criar
+        }
+
+        // Criar novo registro com campos > 0
+        const racaoData: any = { data };
+        if (qntManha && qntManha > 0) racaoData.qnt_manha = qntManha;
+        if (qntTarde && qntTarde > 0) racaoData.qnt_tarde = qntTarde;
+
+        const response = await axios.post(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao`, racaoData);
+        return response.data;
+      } catch (error) {
+        console.error('Erro ao registrar alimentação do dia:', error);
+        throw error;
+      }
+    },
 
   updateColetaRacao: async (viveiroId: string, id: string, racaoData: {
     data: string;

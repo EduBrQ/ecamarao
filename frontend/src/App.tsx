@@ -10,10 +10,10 @@ import Racao from './pages/Racao'
 import Anotacoes from './pages/Anotacoes'
 import Mortalidade from './pages/Mortalidade'
 import Aeradores from './pages/Aeradores'
-import FazendaRacao from './pages/FazendaRacao'
 import { ViveirosListBackend } from './pages/ViveirosListBackend'
 import Ciclo from './pages/Ciclo'
 import './styles/Toast.css'
+import FazendaRacao from './pages/FazendaRacao/index'
 
 function AppContent() {
   return (

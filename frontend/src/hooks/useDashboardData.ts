@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { backendApi } from '../services/backendApi';
 import { DashboardResponse } from '../domains/fazenda/types';
-import { calcularRacaoLocal } from '../models/CalculadoraRacao';
+import { CalculadoraRacao } from '../models/CalculadoraRacao';
 
 interface UseDashboardDataReturn {
   dashboard: DashboardResponse | null;
@@ -31,12 +31,9 @@ export const useDashboardData = (): UseDashboardDataReturn => {
         ...dashboardData,
         viveiros: dashboardData.viveiros.map((viveiro: any) => {
           // Usar nova calculadora
-          const resultadoCalculadora = calcularRacaoLocal({
-            viveiro: viveiro.viveiro,
-            doc: viveiro.doc,
-            biomassaEstimadaKg: 0,
-            pesoEstimadoG: 0,
-            usandoNovaCalculadora: false
+          const resultadoCalculadora = CalculadoraRacao.calcularRacaoDiaria({
+            quantidadeCamaroes: viveiro.viveiro.densidade * 1000,
+            pesoMedioGramas: viveiro.pesoEstimadoG || 0.1
           });
           
           // Atualizar viveiro com valores calculados
@@ -55,7 +52,7 @@ export const useDashboardData = (): UseDashboardDataReturn => {
             usandoNovaCalculadora: true,
             faixaPeso: resultadoCalculadora.faixaPeso,
             faseCultivo: resultadoCalculadora.faseCultivo,
-            taxaAlimentacaoDecimal: resultadoCalculadora.taxaAlimentacaoDecimal
+            taxaAlimentacaoDecimal: resultadoCalculadora.taxaAlimentacao / 100
           };
         })
       };

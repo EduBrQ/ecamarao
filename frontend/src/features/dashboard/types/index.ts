@@ -1,3 +1,9 @@
+export interface DashboardResponse {
+  viveiros: import('../../viveiros/types').ViveiroDashboard[];
+  totais: TotaisFazenda;
+  atualizado: string;
+}
+
 export interface TotaisFazenda {
   totalViveiros: number;
   totalRacaoHoje: number;
@@ -8,12 +14,6 @@ export interface TotaisFazenda {
   viveirosAlimentados: number;
   viveirosParciais: number;
   viveirosPendentes: number;
-}
-
-export interface DashboardResponse {
-  viveiros: import('../../../features/viveiros/types').ViveiroDashboard[];
-  totais: TotaisFazenda;
-  atualizado: string;
 }
 
 export interface FarmEvent {
@@ -32,3 +32,6 @@ export interface FarmStatus {
   recomendadoHoje: number;
   alertasAtivos: number;
 }
+
+export type FilterType = 'todos' | 'pendentes' | 'alimentados' | 'parciais';
+export type VisualMode = 'grid' | 'list';

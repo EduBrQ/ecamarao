@@ -1,3 +1,5 @@
+/* FarmStatusCard - Status geral da fazenda */
+
 .farm-status-container {
   margin: 2rem 0;
   padding: 1.5rem;
@@ -5,14 +7,6 @@
   border-radius: 16px;
   color: white;
   box-shadow: 0 10px 25px rgba(30, 64, 175, 0.2);
-}
-
-.farm-status-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  color: #6b7280;
 }
 
 .farm-status-header {
@@ -48,12 +42,19 @@
   background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.status-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .status-value {
   font-size: 3rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
+  line-height: 1;
 }
 
 .status-label {
@@ -71,15 +72,24 @@
   display: inline-block;
 }
 
-.status-progress {
-  height: 10px;
-  background: rgba(255,255,255,0.12);
-  border-radius: 8px;
-  margin: 8px 0;
-  overflow: hidden;
-}
-
-.status-progress-bar {
-  height: 100%;
-  transition: width 0.4s ease;
+/* Responsivo */
+@media (max-width: 768px) {
+  .farm-status-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .status-value {
+    font-size: 2rem;
+  }
+  
+  .farm-status-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .farm-status-header h2 {
+    font-size: 1.25rem;
+  }
 }

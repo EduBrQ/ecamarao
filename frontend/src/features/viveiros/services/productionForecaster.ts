@@ -1,5 +1,4 @@
-import { ProductionForecast } from "../types/dashboard"
-
+import { ProductionForecast } from "../types"
 
 
 export const preverProducao = (viveiro: any): ProductionForecast => {
@@ -26,7 +25,7 @@ export const preverProducao = (viveiro: any): ProductionForecast => {
   const pesoColheita = 10
 
   // Número de camarões baseado na estocagem
-  const camaroesEstocados = viveiro.populacaoEstimada || 0
+  const camaroesEstocados = viveiro.camaroes || 0
   const taxaSobrevivencia = viveiro.sobrevivencia || 0.7
 
   const numeroCamaroes = camaroesEstocados * taxaSobrevivencia

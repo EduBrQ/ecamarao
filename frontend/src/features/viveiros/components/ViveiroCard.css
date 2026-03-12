@@ -1,0 +1,543 @@
+/* ViveiroCard - Componente reutilizável para exibição de viveiros */
+
+.viveiro-card {
+  background: white;
+  border-radius: 16px;
+  border: 2px solid #e5e7eb;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  position: relative;
+  cursor: pointer;
+}
+
+.viveiro-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.viveiro-card.needs-attention {
+  border-color: #f59e0b;
+  box-shadow: 0 6px 25px rgba(245, 158, 11, 0.15);
+}
+
+.viveiro-card.needs-attention::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  animation: pulse 2s infinite;
+}
+
+.viveiro-card.complete {
+  border-left: 4px solid #10b981;
+}
+
+.viveiro-card.partial {
+  border-left: 4px solid #f59e0b;
+}
+
+.viveiro-card.pending {
+  border-left: 4px solid #ef4444;
+}
+
+/* Health Score */
+.viveiro-health-score {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  border-left: 4px solid #10b981;
+}
+
+.health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.health-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.health-score-value {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.health-score-number {
+  font-size: 1.125rem;
+}
+
+.health-score-max {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.health-status {
+  text-align: center;
+}
+
+.health-indicator {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.health-indicator.excelente {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.health-indicator.bom {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.health-indicator.atencao {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.health-indicator.critico {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Header */
+.viveiro-header {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.viveiro-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.viveiro-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.viveiro-doc {
+  background: #667eea;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.viveiro-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.feed-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.feed-status span {
+  font-size: 0.8rem;
+}
+
+.feed-amount {
+  text-align: right;
+  min-width: 120px;
+}
+
+.feed-amount strong {
+  display: block;
+  font-size: 1.125rem;
+  color: #1f2937;
+}
+
+.feed-amount span {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Previsão Inteligente */
+.viveiro-previsao {
+  padding: 1rem 1.5rem;
+  background: #f0f9ff;
+  border-bottom: 1px solid #e0f2fe;
+}
+
+.previsao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.previsao-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.previsao-tendencia {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+}
+
+.previsao-tendencia.aumento {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.previsao-tendencia.estavel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.previsao-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.previsao-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.previsao-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.previsao-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Métricas */
+.viveiro-metrics {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.metric-item {
+  text-align: center;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.metric-value {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.metric-value.excellent {
+  color: #16a34a;
+}
+
+.metric-value.good {
+  color: #d97706;
+}
+
+.metric-value.warning {
+  color: #dc2626;
+}
+
+.fcr-indicator {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Progresso */
+.viveiro-progress {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-percent {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.progress-fill.complete {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.progress-fill.partial {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.progress-fill.pending {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Alertas */
+.viveiro-alerts {
+  padding: 1rem 1.5rem;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+}
+
+.alerts-header {
+  margin-bottom: 0.75rem;
+}
+
+.alerts-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.alert-icon {
+  font-size: 0.875rem;
+  margin-top: 0.125rem;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-message {
+  font-size: 0.75rem;
+  color: #7f1d1d;
+  line-height: 1.4;
+}
+
+/* Produção */
+.viveiro-producao {
+  padding: 1rem 1.5rem;
+  background: #f0fdf4;
+  border-bottom: 1px solid #dcfce7;
+}
+
+.producao-header {
+  margin-bottom: 0.75rem;
+}
+
+.producao-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #166534;
+}
+
+.producao-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.producao-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.producao-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.producao-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #166534;
+}
+
+/* Ações */
+.viveiro-actions {
+  padding: 1rem 1.5rem;
+  background: #f9fafb;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.action-btn:disabled,
+.action-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.action-btn.manha {
+  background: #fbbf24;
+  color: #78350f;
+}
+
+.action-btn.manha:hover:not(:disabled):not(.disabled) {
+  background: #f59e0b;
+  transform: translateY(-1px);
+}
+
+.action-btn.tarde {
+  background: #8b5cf6;
+  color: white;
+}
+
+.action-btn.tarde:hover:not(:disabled):not(.disabled) {
+  background: #7c3aed;
+  transform: translateY(-1px);
+}
+
+.action-btn.details {
+  background: #6b7280;
+  color: white;
+}
+
+.action-btn.details:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+/* Animações */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.viveiro-card {
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .viveiro-metrics {
+    grid-template-columns: 1fr;
+    text-align: left;
+    gap: 0.75rem;
+  }
+  
+  .metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .metric-item:last-child {
+    border-bottom: none;
+  }
+  
+  .viveiro-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .producao-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}

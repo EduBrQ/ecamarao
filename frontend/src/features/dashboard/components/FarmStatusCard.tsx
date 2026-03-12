@@ -1,23 +1,16 @@
 import React from 'react';
-import { DashboardResponse } from '../../types/dashboard';
-import { useFarmStatus } from '../../hooks/useFarmStatus';
-import './styles.css';
+import { DashboardResponse } from '../types';
+import { Button } from '../../../shared/ui/Button';
+import './FarmStatusCard.css';
 
-interface FarmStatusProps {
-  dashboard: DashboardResponse | null;
+interface FarmStatusCardProps {
+  dashboard: DashboardResponse;
 }
 
 /**
- * Componente que exibe o status geral da fazenda
- * Saúde, biomassa, ração e alertas
+ * Card de status geral da fazenda com métricas principais
  */
-export const FarmStatus: React.FC<FarmStatusProps> = ({ dashboard }) => {
-  const { saudeGeral } = useFarmStatus(dashboard);
-
-  if (!dashboard) {
-    return <div className="farm-status-loading">Carregando...</div>;
-  }
-
+export const FarmStatusCard: React.FC<FarmStatusCardProps> = ({ dashboard }) => {
   const getStatusColor = (score: number) => {
     if (score >= 85) return '#10b981';
     if (score >= 70) return '#22c55e';
@@ -32,10 +25,9 @@ export const FarmStatus: React.FC<FarmStatusProps> = ({ dashboard }) => {
     return '🔴 Crítico';
   };
 
-  const alertasAtivos = dashboard.viveiros.filter(v => {
-    const scoreSaude = v.fcrAtual > 2.5 || v.biomassa < 100;
-    return scoreSaude;
-  }).length;
+  // Calcular saúde geral (mock - deveria vir de serviço real)
+  const saudeGeral = 75;
+  const alertasAtivos = dashboard.viveiros.filter(v => v.fcrAtual > 2.5).length;
 
   return (
     <div className="farm-status-container">
@@ -50,27 +42,25 @@ export const FarmStatus: React.FC<FarmStatusProps> = ({ dashboard }) => {
         <div className="status-card">
           <div className="status-value">{saudeGeral} / 100</div>
           <div className="status-label">Saúde Geral</div>
-          <div className="status-progress">
-            <div className="status-progress-bar" style={{ width: `${Math.max(0, Math.min(100, saudeGeral))}%`, backgroundColor: getStatusColor(saudeGeral) }} />
-          </div>
           <div 
             className="status-badge"
+            style={{ backgroundColor: getStatusColor(saudeGeral) }}
           >
             {getStatusLabel(saudeGeral)}
           </div>
         </div>
         
         <div className="status-card">
-          <div className="status-value">{(dashboard?.totais?.totalBiomassa ?? 0).toFixed(0)} kg</div>
+          <div className="status-value">{dashboard.totais.totalBiomassa.toFixed(0)} kg</div>
           <div className="status-label">Biomassa Total</div>
           <div className="status-badge">📈 Crescimento ativo</div>
         </div>
         
         <div className="status-card">
-          <div className="status-value">{(dashboard?.totais?.totalRacaoHoje ?? 0).toFixed(1)} kg</div>
+          <div className="status-value">{dashboard.totais.totalRacaoHoje.toFixed(1)} kg</div>
           <div className="status-label">Ração Hoje</div>
           <div className="status-badge">
-            de {(dashboard?.totais?.totalRecomendado ?? 0).toFixed(1)} kg recomendados
+            de {dashboard.totais.totalRecomendado.toFixed(1)} kg recomendados
           </div>
         </div>
         

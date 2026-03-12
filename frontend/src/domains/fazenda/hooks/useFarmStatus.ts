@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { DashboardResponse, FarmStatus } from '../types';
-import { calcularScoreSaude } from '../viveiros/services/healthCalculator';
+import { calcularScoreSaude } from '../../../features/viveiros/services/healthCalculator';
 
 interface UseFarmStatusReturn {
   status: FarmStatus;
@@ -35,7 +35,7 @@ export const useFarmStatus = (dashboard: DashboardResponse | null): UseFarmStatu
     
     // Calcular status de alimentação
     const statusViveiros = dashboard.viveiros.reduce((acc, viveiro) => {
-      const racaoHoje = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
+      const racaoHoje = viveiro.racoes.find((r: any) => r.data.split('T')[0] === hoje);
       const alimentouManha = racaoHoje ? racaoHoje.qntManha > 0 : false;
       const alimentouTarde = racaoHoje ? racaoHoje.qntTarde > 0 : false;
       
@@ -67,7 +67,7 @@ export const useFarmStatus = (dashboard: DashboardResponse | null): UseFarmStatu
 
     // Calcular totais de ração hoje
     const racaoHoje = dashboard.viveiros.reduce((total, viveiro) => {
-      const racaoHojeViveiro = viveiro.racoes.find(r => r.data.split('T')[0] === hoje);
+      const racaoHojeViveiro = viveiro.racoes.find((r: any) => r.data.split('T')[0] === hoje);
       return total + (racaoHojeViveiro?.total || 0);
     }, 0);
 
