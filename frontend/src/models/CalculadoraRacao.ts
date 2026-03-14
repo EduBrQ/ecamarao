@@ -9,6 +9,7 @@
 export interface ParametrosViveiro {
   quantidadeCamaroes: number;
   pesoMedioGramas: number;
+  doc?: number; // DOC opcional para cálculo mais preciso
 }
 
 export interface TaxaAlimentacao {
@@ -97,7 +98,7 @@ const CONFIGURACOES_ARRACOAMENTO: Record<string, ConfiguracaoArracoamento> = {
  */
 class ValidadorParametros {
   static validar(parametros: ParametrosViveiro): void {
-    const { quantidadeCamaroes, pesoMedioGramas } = parametros;
+    const { quantidadeCamaroes, pesoMedioGramas, doc } = parametros;
     
     if (!quantidadeCamaroes || quantidadeCamaroes <= 0) {
       throw new Error('Quantidade de camarões deve ser um número positivo maior que zero');
@@ -122,6 +123,10 @@ class ValidadorParametros {
     if (pesoMedioGramas < 0.01) {
       console.warn('Aviso: Peso médio muito baixo, possivelmente fase de pós-larva inicial');
     }
+    
+    if (doc !== undefined && (doc < 0 || doc > 365)) {
+      console.warn('Aviso: DOC fora do range esperado (0-365 dias)');
+    }
   }
 }
 
@@ -141,11 +146,75 @@ export class CalculadoraRacao {
     const biomassaGramas = quantidadeCamaroes * pesoMedioGramas;
     const biomassaKg = biomassaGramas / 1000;
     
-    return Math.round(biomassaKg * 100) / 100; // Arredondar para 2 casas decimais
+    // Não arredondar para valores muito pequenos - manter precisão
+    return Number(biomassaKg.toFixed(4));
   }
   
   /**
-   * Determina a taxa de alimentação baseada no peso médio
+   * Determina a taxa de alimentação baseada no DOC (Dias de Ciclo)
+   * Baseado em fontes científicas para Litopenaeus vannamei
+   * Referências: 
+   * - Tacon (2019) - Nutrition of Litopenaeus vannamei
+   * - Aquaculture Stewardship Council guidelines
+   * - FAO Technical Guidelines
+   * @param doc Dias de ciclo do cultivo
+   * @returns Objeto com taxa e informações da fase
+   */
+  static determinarTaxaAlimentacaoPorDOC(doc: number): TaxaAlimentacao {
+    // Tabela baseada em literatura científica para L. vannamei
+    if (doc <= 15) {
+      return {
+        faixaPeso: '0.01 – 0.05g',
+        taxaPercentual: 20,
+        faseCultivo: 'Pós-larva (PL15-PL25)'
+      };
+    } else if (doc <= 25) {
+      return {
+        faixaPeso: '0.05 – 0.5g',
+        taxaPercentual: 15,
+        faseCultivo: 'Berçário I'
+      };
+    } else if (doc <= 35) {
+      return {
+        faixaPeso: '0.5 – 2g',
+        taxaPercentual: 10,
+        faseCultivo: 'Berçário II'
+      };
+    } else if (doc <= 45) {
+      return {
+        faixaPeso: '2 – 5g',
+        taxaPercentual: 6,
+        faseCultivo: 'Engorda I'
+      };
+    } else if (doc <= 60) {
+      return {
+        faixaPeso: '5 – 10g',
+        taxaPercentual: 4,
+        faseCultivo: 'Engorda II'
+      };
+    } else if (doc <= 75) {
+      return {
+        faixaPeso: '10 – 15g',
+        taxaPercentual: 3.5,
+        faseCultivo: 'Engorda III'
+      };
+    } else if (doc <= 90) {
+      return {
+        faixaPeso: '15 – 20g',
+        taxaPercentual: 3,
+        faseCultivo: 'Engorda Final'
+      };
+    } else {
+      return {
+        faixaPeso: '20g+',
+        taxaPercentual: 2.5,
+        faseCultivo: 'Abate'
+      };
+    }
+  }
+
+  /**
+   * Determina a taxa de alimentação baseada no peso médio (método legado)
    * @param pesoMedioGramas Peso médio dos camarões em gramas
    * @returns Objeto com taxa e informações da fase
    */
@@ -190,7 +259,8 @@ export class CalculadoraRacao {
     const taxaDecimal = taxaPercentual / 100;
     const racaoTotal = biomassa * taxaDecimal;
     
-    return Math.round(racaoTotal * 100) / 100; // Arredondar para 2 casas decimais
+    // Manter precisão para valores pequenos
+    return Number(racaoTotal.toFixed(4));
   }
   
   /**
@@ -208,7 +278,7 @@ export class CalculadoraRacao {
     for (let i = 0; i < configuracao.periodos; i++) {
       const percentual = configuracao.distribuicao[i] / 100;
       const racaoPeriodo = racaoTotal * percentual;
-      racoesPorPeriodo.push(Math.round(racaoPeriodo * 100) / 100);
+      racoesPorPeriodo.push(Number(racaoPeriodo.toFixed(4)));
     }
     
     return racoesPorPeriodo;
@@ -228,13 +298,20 @@ export class CalculadoraRacao {
     // 1. Validação dos parâmetros
     ValidadorParametros.validar(parametros);
     
-    const { quantidadeCamaroes, pesoMedioGramas } = parametros;
+    const { quantidadeCamaroes, pesoMedioGramas, doc } = parametros;
     
     // 2. Cálculo da biomassa
     const biomassa = this.calcularBiomassa(quantidadeCamaroes, pesoMedioGramas);
     
-    // 3. Determinação da taxa de alimentação
-    const taxaInfo = this.determinarTaxaAlimentacao(pesoMedioGramas);
+    // 3. Determinação da taxa de alimentação (priorizar DOC)
+    let taxaInfo: TaxaAlimentacao;
+    if (doc !== undefined && doc >= 0) {
+      // Usar método baseado em DOC (mais preciso)
+      taxaInfo = this.determinarTaxaAlimentacaoPorDOC(doc);
+    } else {
+      // Fallback para método baseado em peso
+      taxaInfo = this.determinarTaxaAlimentacao(pesoMedioGramas);
+    }
     
     // 4. Cálculo da ração diária total
     const racaoTotalDia = this.calcularRacaoDiariaTotal(biomassa, taxaInfo.taxaPercentual);
@@ -257,6 +334,41 @@ export class CalculadoraRacao {
     return resultado;
   }
   
+  /**
+   * Calcula o total recomendado para múltiplos viveiros
+   * @param viveiros Array com dados dos viveiros
+   * @returns Objeto com totais calculados
+   */
+  static calcularTotalRecomendado(viveiros: any[]): {
+    totalRecomendado: number;
+    totalManha: number;
+    totalTarde: number;
+    totalBiomassa: number;
+  } {
+    let totalRecomendado = 0;
+    let totalManha = 0;
+    let totalTarde = 0;
+    let totalBiomassa = 0;
+
+    viveiros.forEach(viveiro => {
+      if (viveiro.recomendadoTotal) {
+        totalRecomendado += viveiro.recomendadoTotal;
+        totalManha += viveiro.recomendadoManha || 0;
+        totalTarde += viveiro.recomendadoTarde || 0;
+      }
+      if (viveiro.biomassa) {
+        totalBiomassa += viveiro.biomassa;
+      }
+    });
+
+    return {
+      totalRecomendado: Number(totalRecomendado.toFixed(2)),
+      totalManha: Number(totalManha.toFixed(2)),
+      totalTarde: Number(totalTarde.toFixed(2)),
+      totalBiomassa: Number(totalBiomassa.toFixed(3))
+    };
+  }
+
   /**
    * Versão estendida para múltiplos períodos
    * @param parametros Parâmetros do viveiro

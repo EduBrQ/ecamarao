@@ -219,3 +219,70 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-gray-400);
 }
+
+/* ===== DARK THEME FOR GLOBALS ===== */
+.dark-mode {
+  /* Dark Theme Colors */
+  --color-primary: #667eea;
+  --color-primary-dark: #5a67d8;
+  --color-secondary: #9ca3af;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  /* Dark Theme Grays */
+  --color-gray-50: #111827;
+  --color-gray-100: #1f2937;
+  --color-gray-200: #374151;
+  --color-gray-300: #4b5563;
+  --color-gray-400: #6b7280;
+  --color-gray-500: #9ca3af;
+  --color-gray-600: #d1d5db;
+  --color-gray-700: #e5e7eb;
+  --color-gray-800: #f3f4f6;
+  --color-gray-900: #f9fafb;
+  
+  /* Dark Theme Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode body {
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-800);
+}
+
+.dark-mode h1, 
+.dark-mode h2, 
+.dark-mode h3, 
+.dark-mode h4, 
+.dark-mode h5, 
+.dark-mode h6 {
+  color: var(--color-gray-900);
+}
+
+.dark-mode p {
+  color: var(--color-gray-600);
+}
+
+.dark-mode a {
+  color: var(--color-primary);
+}
+
+.dark-mode a:hover {
+  color: var(--color-primary-dark);
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: var(--color-gray-100);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
+}

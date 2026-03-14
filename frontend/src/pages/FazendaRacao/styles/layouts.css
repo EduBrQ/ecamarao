@@ -274,6 +274,10 @@
   align-items: flex-start;
 }
 
+main {
+  margin: 0 auto;
+}
+
 .farm-map-area {
   flex: 1 1 auto;
   width: stretch;
@@ -422,4 +426,146 @@
     width: 100%;
     margin-top: 1rem;
   }
+}
+
+/* ===== DARK THEME FOR LAYOUTS ===== */
+.dark-mode .fazenda-dashboard-container {
+  background-color: var(--bg-primary);
+}
+
+.dark-mode .dashboard-header {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+}
+
+.dark-mode .dashboard-title {
+  color: var(--text-primary);
+}
+
+.dark-mode .dashboard-subtitle {
+  color: var(--text-secondary);
+}
+
+.dark-mode .farm-map-section,
+.dark-mode .events-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+}
+
+.dark-mode .section-header h2 {
+  color: var(--text-primary);
+}
+
+.dark-mode .visual-btn {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+}
+
+.dark-mode .visual-btn.active {
+  background-color: var(--aqua-primary);
+  color: white;
+}
+
+.dark-mode .visual-btn:hover:not(.active) {
+  background-color: var(--border-medium);
+}
+
+.dark-mode .map-placeholder {
+  background-color: var(--bg-tertiary);
+  border: 2px dashed var(--border-medium);
+  color: var(--text-secondary);
+}
+
+.dark-mode .no-events {
+  color: var(--text-secondary);
+}
+
+.dark-mode .no-events-subtitle {
+  color: var(--text-muted);
+}
+
+.dark-mode .event-item.alimentacao {
+  background-color: var(--success-green-light);
+  border-left-color: var(--success-green);
+}
+
+.dark-mode .event-item.alerta {
+  background-color: var(--danger-red-light);
+  border-left-color: var(--danger-red);
+}
+
+.dark-mode .event-item.completou {
+  background-color: var(--aqua-primary-light);
+  border-left-color: var(--aqua-primary);
+}
+
+.dark-mode .event-time {
+  color: var(--text-secondary);
+}
+
+.dark-mode .event-message {
+  color: var(--text-primary);
+}
+
+.dark-mode .event-details {
+  color: var(--text-secondary);
+}
+
+.dark-mode .dashboard-loading,
+.dark-mode .dashboard-error,
+.dark-mode .dashboard-empty {
+  color: var(--text-secondary);
+}
+
+.dark-mode .dashboard-error {
+  color: var(--danger-red);
+  background-color: var(--danger-red-light);
+  border: 1px solid var(--danger-red);
+}
+
+.dark-mode .viveiro-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+}
+
+.dark-mode .viveiro-panel.empty {
+  color: var(--text-secondary);
+}
+
+.dark-mode .panel-header {
+  border-bottom: 1px solid var(--border-medium);
+}
+
+.dark-mode .panel-header h3 {
+  color: var(--text-primary);
+}
+
+.dark-mode .close-panel {
+  color: var(--text-secondary);
+}
+
+.dark-mode .panel-row {
+  border-bottom: 1px dashed var(--border-light);
+}
+
+.dark-mode .panel-value {
+  color: var(--text-primary);
+}
+
+.dark-mode .sparkline .bar {
+  background: var(--aqua-primary);
+}
+
+.dark-mode .viveiro-panel .primary {
+  background: var(--aqua-primary);
+  color: white;
+}
+
+.dark-mode .legend-item {
+  color: var(--text-primary);
+}
+
+.dark-mode .events-day-header {
+  color: var(--text-primary);
 }

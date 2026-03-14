@@ -4,9 +4,19 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/img/shrimp.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#5f9ea0" />
+    <meta name="theme-color" content="#0f172a" />
     <meta name="description" content="AquaFarm - Sistema de Controle de Carcinicultura" />
     <title>AquaFarm</title>
+    <script>
+      // Aplicar tema escuro por default antes do React carregar
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme !== 'light') {
+          document.documentElement.classList.add('dark-mode');
+          document.body.classList.add('dark-mode');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

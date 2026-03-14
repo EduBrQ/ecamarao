@@ -3,7 +3,7 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import Toast from './components/Toast'
 import { ToastProvider, useToastGlobal } from './hooks/useToastGlobal'
-import Home from './pages/Home'
+// import Home from './pages/Home'
 import Viveiro from './pages/Viveiro'
 import Dashboard from './pages/Dashboard'
 import Racao from './pages/Racao'
@@ -22,7 +22,7 @@ function AppContent() {
       <main style={{ flex: 1 }}>
         <Routes>
           <Route path="/" element={<Navigate to="/home-page" replace />} />
-          <Route path="/home-page" element={<Home />} />
+          <Route path="/home-page" element={<FazendaRacao />} />
           <Route path="/viveiro/:id" element={<Viveiro />} />
           <Route path="/viveiro/:id/dashboard" element={<Dashboard />} />
           <Route path="/viveiro/:id/racao" element={<Racao />} />

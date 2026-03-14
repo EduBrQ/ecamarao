@@ -8,27 +8,27 @@
   --aqua-primary: #0891b2;
   --aqua-primary-dark: #0e7490;
   --aqua-primary-light: #e0f7fa;
-  
+
   /* Secondary Colors */
   --aqua-secondary: #06b6d4;
   --aqua-secondary-dark: #0891b2;
   --aqua-secondary-light: #cffafe;
-  
+
   /* Success - Alimentação Completa */
   --success-green: #10b981;
   --success-green-dark: #059669;
   --success-green-light: #dcfce7;
-  
+
   /* Warning - Alimentação Parcial */
   --warning-amber: #f59e0b;
   --warning-amber-dark: #d97706;
   --warning-amber-light: #fef3c7;
-  
+
   /* Danger - Pendente/Crítico */
   --danger-red: #ef4444;
   --danger-red-dark: #dc2626;
   --danger-red-light: #fee2e2;
-  
+
   /* Neutral Scale */
   --neutral-50: #f8fafc;
   --neutral-100: #f1f5f9;
@@ -40,30 +40,30 @@
   --neutral-700: #334155;
   --neutral-800: #1e293b;
   --neutral-900: #0f172a;
-  
+
   /* Background Colors */
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
-  
+
   /* Text Colors */
   --text-primary: #0f172a;
   --text-secondary: #334155;
   --text-muted: #64748b;
   --text-light: #94a3b8;
-  
+
   /* Border Colors */
   --border-light: #e2e8f0;
   --border-medium: #cbd5e1;
   --border-dark: #94a3b8;
-  
+
   /* Shadow System */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  
+
   /* Border Radius */
   --radius-xs: 4px;
   --radius-sm: 8px;
@@ -71,7 +71,7 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-2xl: 24px;
-  
+
   /* Spacing System */
   --space-1: 4px;
   --space-2: 8px;
@@ -84,7 +84,7 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-20: 80px;
-  
+
   /* Typography */
   --font-xs: 12px;
   --font-sm: 14px;
@@ -94,7 +94,7 @@
   --font-2xl: 24px;
   --font-3xl: 30px;
   --font-4xl: 36px;
-  
+
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
@@ -109,6 +109,11 @@
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   padding: var(--space-6);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+}
+
+/* Dark theme for main dashboard */
+.dark-mode .aqua-dashboard {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
 /* Dashboard Header */
@@ -237,7 +242,7 @@
 .aqua-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: anchor-center;
   margin-bottom: var(--space-4);
 }
 
@@ -351,13 +356,18 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .aqua-progress-text {
@@ -434,7 +444,7 @@
   padding: var(--space-3);
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-light);
+  /* border: 1px solid var(--border-light); */
 }
 
 .aqua-button {
@@ -463,7 +473,7 @@
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   transform: translate(-50%, -50%);
   transition: width var(--transition-slow), height var(--transition-slow);
 }
@@ -523,7 +533,7 @@
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
   transition: width var(--transition-slow), height var(--transition-slow);
 }
@@ -581,8 +591,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .aqua-modal {
@@ -598,11 +613,12 @@
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(20px) scale(0.95);
   }
-  to { 
+
+  to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
@@ -842,7 +858,7 @@
 }
 
 .aqua-panel-close {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
   font-size: var(--font-lg);
@@ -853,7 +869,7 @@
 }
 
 .aqua-panel-close:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .aqua-panel-body {
@@ -931,148 +947,156 @@
 /* ===== MOBILE OPTIMIZATIONS ===== */
 
 @media (max-width: 768px) {
+
   /* Otimizações de touch */
   .aqua-viveiro-card {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
-  
+
   .aqua-btn {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    min-height: 44px; /* Mínimo para touch */
+    min-height: 44px;
+    /* Mínimo para touch */
   }
-  
+
   /* Layout principal mobile */
   .farm-main {
+    border-radius: 30px;
+    padding: 10px;
     flex-direction: column;
     gap: var(--space-4);
   }
-  
+
   .farm-map-area {
     order: 1;
   }
-  
+
   .aqua-side-panel {
     order: 2;
     margin-top: var(--space-4);
   }
-  
+
   /* Seção header mobile */
   .section-header {
     flex-direction: column;
     gap: var(--space-3);
     text-align: center;
   }
-  
+
   .section-header h2 {
     font-size: var(--font-xl);
     margin-bottom: var(--space-2);
   }
-  
+
   .visual-controls {
     justify-content: center;
   }
-  
+
   .visual-btn {
     padding: var(--space-2) var(--space-4);
     font-size: var(--font-sm);
   }
-  
+
   /* Cards mobile */
   .aqua-dashboard {
     padding: var(--space-3);
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   }
-  
+
+  .dark-mode .aqua-dashboard {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  }
+
   .aqua-header {
     padding: var(--space-4);
     margin-bottom: var(--space-4);
   }
-  
+
   .aqua-header-content {
     flex-direction: column;
     text-align: center;
     gap: var(--space-4);
   }
-  
+
   .aqua-title {
     font-size: var(--font-2xl);
     line-height: 1.2;
   }
-  
+
   .aqua-subtitle {
     font-size: var(--font-sm);
   }
-  
+
   .aqua-stats-overview {
     justify-content: center;
     gap: var(--space-3);
     width: 100%;
   }
-  
+
   .aqua-stat-card {
     flex: 1;
     min-width: 100px;
     padding: var(--space-5) var(--space-5);
   }
-  
+
   .aqua-stat-value {
     font-size: var(--font-xl);
   }
-  
+
   .aqua-viveiros-grid {
     grid-template-columns: 1fr;
     gap: var(--space-4);
   }
-  
+
   .aqua-viveiro-card {
     padding: var(--space-6);
   }
-  
+
   .aqua-viveiro-name {
     font-size: var(--font-lg);
   }
-  
+
   .aqua-feed-amount {
     font-size: var(--font-3xl);
     line-height: 1.1;
   }
-  
+
   .aqua-progress-bar {
     height: 10px;
   }
-  
+
   .aqua-side-panel {
     width: 100%;
     max-height: none;
   }
-  
+
   .aqua-panel-header {
     padding: var(--space-4);
   }
-  
+
   .aqua-panel-body {
     padding: var(--space-4);
   }
-  
+
   .aqua-feed-periods {
     grid-template-columns: 1fr;
     gap: var(--space-6);
   }
-  
+
   .aqua-feed-input {
     width: 120px;
     font-size: var(--font-2xl);
   }
-  
+
   .aqua-feed-quick-add {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     gap: var(--space-2);
   }
-  
+
   .aqua-quick-btn {
     flex: 1;
     min-width: 50px;
@@ -1084,148 +1108,152 @@
   .aqua-dashboard {
     padding: var(--space-2);
   }
-  
+
+  .dark-mode .aqua-dashboard {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  }
+
   .aqua-header {
     padding: var(--space-5);
     margin-bottom: var(--space-3);
   }
-  
+
   .aqua-title {
     font-size: var(--font-xl);
   }
-  
+
   .aqua-subtitle {
     font-size: var(--font-xs);
   }
-  
+
   .aqua-stats-overview {
     gap: var(--space-2);
   }
-  
+
   .aqua-stat-card {
     padding: var(--space-5) var(--space-5);
     min-width: 80px;
   }
-  
+
   .aqua-stat-label {
     font-size: var(--font-xs);
   }
-  
+
   .aqua-stat-value {
     font-size: var(--font-lg);
   }
-  
+
   .aqua-viveiro-card {
     padding: var(--space-6);
   }
-  
+
   .aqua-viveiro-name {
     font-size: var(--font-base);
   }
-  
+
   .aqua-viveiro-doc {
     font-size: var(--font-xs);
     padding: var(--space-1) var(--space-2);
   }
-  
+
   .aqua-status-badge {
     font-size: var(--font-xs);
     padding: var(--space-1) var(--space-3);
   }
-  
+
   .aqua-feed-amount {
     font-size: var(--font-2xl);
   }
-  
+
   .aqua-feed-recommended {
     font-size: var(--font-xs);
   }
-  
+
   .aqua-progress-bar {
     height: 8px;
   }
-  
+
   .aqua-progress-text {
     font-size: var(--font-xs);
   }
-  
+
   .aqua-secondary-info {
     flex-direction: column;
     gap: var(--space-2);
     align-items: flex-start;
   }
-  
+
   .aqua-biomassa-value,
   .aqua-remaining-value {
     font-size: var(--font-sm);
   }
-  
+
   .aqua-card-actions {
     flex-direction: column;
     gap: var(--space-2);
   }
-  
+
   .aqua-btn {
     width: 100%;
     justify-content: center;
     padding: var(--space-3) var(--space-4);
     font-size: var(--font-sm);
   }
-  
+
   .aqua-feed-input {
     width: 100px;
     font-size: var(--font-xl);
     padding: var(--space-2);
   }
-  
+
   .aqua-quick-btn {
     font-size: var(--font-xs);
     padding: var(--space-1) var(--space-2);
     min-width: 40px;
   }
-  
+
   .aqua-feed-total-value {
     font-size: var(--font-2xl);
   }
-  
+
   .aqua-panel-title {
     font-size: var(--font-lg);
   }
-  
+
   .aqua-panel-metric-value {
     font-size: var(--font-sm);
   }
-  
+
   /* Modal mobile */
   .aqua-modal-overlay {
     padding: var(--space-2);
   }
-  
+
   .aqua-modal {
     min-width: stretch;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     max-height: 95vh;
     margin: 0;
   }
-  
+
   .aqua-modal-header {
     padding: var(--space-4);
   }
-  
+
   .aqua-modal-title {
     font-size: var(--font-lg);
   }
-  
+
   .aqua-modal-body {
     padding: var(--space-4);
   }
-  
+
   .aqua-modal-footer {
     padding: var(--space-4);
     flex-direction: column;
     gap: var(--space-2);
   }
-  
+
   .aqua-modal-footer .aqua-btn {
     width: 100%;
   }
@@ -1254,7 +1282,7 @@
   .aqua-viveiro-card {
     border-width: 2px;
   }
-  
+
   .aqua-btn {
     border-width: 2px;
   }
@@ -1390,33 +1418,462 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+
   .table-header,
   .table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  
-  .table-header > div,
-  .table-row > div {
+
+  .table-header>div,
+  .table-row>div {
     padding: 0.25rem 0;
   }
-  
-  .table-header > div::before,
-  .table-row > div::before {
+
+  .table-header>div::before,
+  .table-row>div::before {
     content: attr(data-label);
     font-weight: 600;
     margin-right: 0.5rem;
   }
-  
+
   .date-cell::before {
     content: "Data: ";
   }
-  
+
   .input-cell::before {
     content: attr(data-label);
   }
-  
+
   .total-cell::before {
     content: "Total: ";
+  }
+}
+
+/* ===== ALERTA DE DIAS FALTANTES ===== */
+
+.missing-days-alert {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  /* background: linear-gradient(135deg, var(--warning-amber-light), #fef9e7); */
+  border: 1px solid var(--warning-amber);
+  border-left: 4px solid var(--warning-amber);
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.missing-days-alert::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.missing-days-alert:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  border-color: var(--warning-amber-dark);
+}
+
+.missing-days-alert:hover::before {
+  left: 100%;
+}
+
+.missing-days-icon {
+  font-size: 2rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.missing-days-content {
+  flex: 1;
+}
+
+.missing-days-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--warning-amber-dark);
+  margin-bottom: 0.25rem;
+}
+
+.missing-days-subtitle {
+  font-size: 0.875rem;
+  /* color: var(--neutral-600); */
+}
+
+.missing-days-action {
+  flex-shrink: 0;
+}
+
+.aqua-btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.aqua-btn-warning {
+  background: var(--warning-amber);
+  color: white;
+  border: 1px solid var(--warning-amber);
+}
+
+.aqua-btn-warning:hover {
+  background: var(--warning-amber-dark);
+  border-color: var(--warning-amber-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .missing-days-alert {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .missing-days-action {
+    width: 100%;
+  }
+
+  .aqua-btn-small {
+    width: 100%;
+    padding: 0.75rem;
+  }
+}
+
+/* ===== DELETE BUTTON STYLES ===== */
+#delete-confirm-modal .aqua-btn-primary {
+  background-color: var(--danger-red) !important;
+  border-color: var(--danger-red) !important;
+}
+
+#delete-confirm-modal .aqua-btn-primary:hover {
+  background-color: var(--danger-red-dark) !important;
+  border-color: var(--danger-red-dark) !important;
+}
+
+.delete-viveiro-btn:hover {
+  background-color: var(--danger-red) !important;
+  color: white !important;
+  transform: scale(1.02);
+}
+
+/* ===== DARK THEME ===== */
+.dark-mode {
+  /* Dark Theme Colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+
+  --border-light: #334155;
+  --border-medium: #475569;
+  --border-dark: #64748b;
+
+  /* Dark Theme Success Colors */
+  --success-green: #10b981;
+  --success-green-dark: #059669;
+  --success-green-light: #064e3b;
+
+  /* Dark Theme Warning Colors */
+  --warning-amber: #f59e0b;
+  --warning-amber-dark: #d97706;
+  --warning-amber-light: #451a03;
+
+  /* Dark Theme Danger Colors */
+  --danger-red: #ef4444;
+  --danger-red-dark: #dc2626;
+  --danger-red-light: #7f1d1d;
+
+  /* Dark Theme Primary Colors */
+  --aqua-primary: #06b6d4;
+  --aqua-primary-dark: #0891b2;
+  --aqua-primary-light: #0891b220;
+  --aqua-secondary: #22d3ee;
+  --aqua-secondary-dark: #06b6d4;
+  --aqua-secondary-light: #164e63;
+
+  /* Dark Theme Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* Dark Theme Specific Elements */
+.dark-mode .aqua-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.dark-mode .aqua-modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+}
+
+.dark-mode .aqua-modal-title {
+  color: var(--text-primary);
+}
+
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+}
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.dark-mode .aqua-btn-primary {
+  background: var(--aqua-primary);
+  border-color: var(--aqua-primary);
+}
+
+.dark-mode .aqua-btn-secondary {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+}
+
+.dark-mode .aqua-btn-primary:hover {
+  background: var(--aqua-primary-dark);
+  border-color: var(--aqua-primary-dark);
+}
+
+.dark-mode .aqua-btn-secondary:hover {
+  background: var(--border-medium);
+}
+
+/* Dark Theme Cards */
+.dark-mode .aqua-viveiro-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+}
+
+.dark-mode .aqua-viveiro-card:hover {
+  border-color: var(--aqua-primary);
+}
+
+.dark-mode .aqua-viveiro-card.selected {
+  background: var(--aqua-primary-light);
+  border-color: var(--aqua-primary);
+}
+
+/* Dark Theme Stats */
+.dark-mode .aqua-stat-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+}
+
+/* Dark Theme Progress Bar */
+.dark-mode .aqua-progress-bar {
+  background: var(--bg-tertiary);
+}
+
+.dark-mode .aqua-progress-fill {
+  background: var(--success-green);
+}
+
+/* Dark Theme Global Styles */
+.dark-mode {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark-mode body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark-mode .farm-main {
+  background: var(--bg-primary);
+}
+
+.dark-mode .farm-map-area {
+  background: var(--bg-primary);
+}
+
+.dark-mode .aqua-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-medium);
+}
+
+.dark-mode .aqua-title {
+  color: var(--text-primary);
+}
+
+.dark-mode .aqua-subtitle {
+  color: var(--text-secondary);
+}
+
+.dark-mode .aqua-stat-label {
+  color: var(--text-secondary);
+}
+
+.dark-mode .aqua-stat-value {
+  color: var(--text-primary);
+}
+
+.dark-mode .aqua-feed-label {
+  color: var(--text-secondary);
+}
+
+.dark-mode .aqua-feed-amount {
+  color: var(--text-primary);
+}
+
+.dark-mode .aqua-feed-stat {
+  color: var(--text-secondary);
+}
+
+.dark-mode .aqua-feed-stat-value {
+  color: var(--text-primary);
+}
+
+.dark-mode .aqua-viveiro-name {
+  color: var(--text-primary);
+}
+
+.dark-mode .aqua-status-badge {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+}
+
+.dark-mode .aqua-status-badge.completo {
+  background: var(--success-green-light);
+  color: var(--success-green);
+}
+
+.dark-mode .aqua-status-badge.parcial {
+  background: var(--warning-amber-light);
+  color: var(--warning-amber);
+}
+
+.dark-mode .aqua-status-badge.pendente {
+  background: var(--danger-red-light);
+  color: var(--danger-red);
+}
+
+.dark-mode .aqua-viveiro-doc {
+  background: var(--aqua-primary-light);
+  color: var(--aqua-primary);
+}
+
+.dark-mode .delete-viveiro-btn {
+  background: var(--danger-red-light);
+  color: var(--danger-red);
+}
+
+.dark-mode .delete-viveiro-btn:hover {
+  background: var(--danger-red);
+  color: white;
+}
+
+/* ===== MOBILE COMPACT CARDS ===== */
+@media (max-width: 768px) {
+  .aqua-viveiros-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+    gap: var(--space-2) !important;
+  }
+
+  .aqua-viveiro-card {
+    padding: var(--space-3) !important;
+    min-height: 120px !important;
+  }
+
+  .aqua-card-header {
+    margin-bottom: var(--space-2) !important;
+  }
+
+  .aqua-viveiro-name {
+    font-size: var(--font-sm) !important;
+  }
+
+  .aqua-viveiro-doc {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+
+  .delete-viveiro-btn {
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 12px !important;
+    padding: 2px 4px !important;
+  }
+
+  .aqua-status-badge {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+    margin-bottom: var(--space-2) !important;
+  }
+
+  .aqua-feed-main {
+    margin-bottom: var(--space-2) !important;
+  }
+
+  .aqua-feed-label {
+    font-size: 10px !important;
+  }
+
+  .aqua-feed-amount {
+    font-size: var(--font-lg) !important;
+  }
+
+  .aqua-feed-progress {
+    margin-bottom: var(--space-1) !important;
+  }
+
+  .aqua-feed-stats {
+    gap: var(--space-1) !important;
+  }
+
+  .aqua-feed-stat {
+    font-size: 10px !important;
+  }
+
+  .aqua-feed-stat-value {
+    font-size: var(--font-sm) !important;
   }
 }

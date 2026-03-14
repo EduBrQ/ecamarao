@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDashboardData } from './hooks/useDashboardData';
 import { usePondSelection } from './hooks/usePondSelection';
 import AquaModal from './components/AquaModal';
@@ -12,96 +12,96 @@ import './styles/aqua-dashboard.css';
 // Tipos locais (garantir robustez caso imports quebrem)
 type VisualMode = 'grid' | 'list';
 
-function ViveiroPanel({ viveiro, onClose }: { viveiro: any; onClose: () => void }) {
-  if (!viveiro) return (
-    <div className="aqua-side-panel empty">
-      <div className="panel-empty">Selecione um viveiro no mapa</div>
-    </div>
-  );
+// function ViveiroPanel({ viveiro, onClose }: { viveiro: any; onClose: () => void }) {
+//   if (!viveiro) return (
+//     <div className="aqua-side-panel empty">
+//       <div className="panel-empty">Selecione um viveiro no mapa</div>
+//     </div>
+//   );
 
-  const racaoHoje = viveiro.racoes ? viveiro.racoes.find((r: any) => normalizeDate(r.data) === normalizeDate(new Date())) : null;
-  const consumo = viveiro.consumoUltimosDias || [1,2,3,4,5,6];
-  const maxConsumo = Math.max(...consumo);
+//   const racaoHoje = viveiro.racoes ? viveiro.racoes.find((r: any) => normalizeDate(r.data) === normalizeDate(new Date())) : null;
+//   const consumo = viveiro.consumoUltimosDias || [1,2,3,4,5,6];
+//   const maxConsumo = Math.max(...consumo);
 
-  return (
-    <div className="aqua-side-panel">
-      <div className="aqua-panel-header">
-        <h3 className="aqua-panel-title">VIVEIRO {viveiro.viveiro?.nome || viveiro.nome}</h3>
-        <button className="aqua-panel-close" onClick={onClose}>✖</button>
-      </div>
-      <div className="aqua-panel-body">
-        <div className="aqua-panel-section">
-          <div className="aqua-panel-section-title">Status do Viveiro</div>
-          <div className="aqua-panel-metric">
-            <span className="aqua-panel-metric-label">Saúde</span>
-            <span className="aqua-panel-metric-value">{viveiro.saude ?? '—'} / 100</span>
-          </div>
-          <div className="aqua-panel-metric">
-            <span className="aqua-panel-metric-label">Biomassa</span>
-            <span className="aqua-panel-metric-value">{viveiro.biomassa?.toFixed ? viveiro.biomassa.toFixed(0) : '-'} kg</span>
-          </div>
-          <div className="aqua-panel-metric">
-            <span className="aqua-panel-metric-label">DOC</span>
-            <span className="aqua-panel-metric-value">{viveiro.doc}</span>
-          </div>
-        </div>
+//   return (
+//     <div className="aqua-side-panel">
+//       <div className="aqua-panel-header">
+//         <h3 className="aqua-panel-title">VIVEIRO {viveiro.viveiro?.nome || viveiro.nome}</h3>
+//         <button className="aqua-panel-close" onClick={onClose}>✖</button>
+//       </div>
+//       <div className="aqua-panel-body">
+//         <div className="aqua-panel-section">
+//           <div className="aqua-panel-section-title">Status do Viveiro</div>
+//           <div className="aqua-panel-metric">
+//             <span className="aqua-panel-metric-label">Saúde</span>
+//             <span className="aqua-panel-metric-value">{viveiro.saude ?? '—'} / 100</span>
+//           </div>
+//           <div className="aqua-panel-metric">
+//             <span className="aqua-panel-metric-label">Biomassa</span>
+//             <span className="aqua-panel-metric-value">{viveiro.biomassa?.toFixed ? viveiro.biomassa.toFixed(0) : '-'} kg</span>
+//           </div>
+//           <div className="aqua-panel-metric">
+//             <span className="aqua-panel-metric-label">DOC</span>
+//             <span className="aqua-panel-metric-value">{viveiro.doc}</span>
+//           </div>
+//         </div>
 
-        <div className="aqua-panel-section">
-          <div className="aqua-panel-section-title">Alimentação Hoje</div>
-          <div className="aqua-panel-metric">
-            <span className="aqua-panel-metric-label">Fornecido</span>
-            <span className="aqua-panel-metric-value">
-              {racaoHoje ? `${(racaoHoje.qntManha||0)+(racaoHoje.qntTarde||0)} kg` : '—'}
-            </span>
-          </div>
-          <div className="aqua-panel-metric">
-            <span className="aqua-panel-metric-label">Recomendado</span>
-            <span className="aqua-panel-metric-value">{viveiro.racaoMeta || '-'} kg</span>
-          </div>
-        </div>
+//         <div className="aqua-panel-section">
+//           <div className="aqua-panel-section-title">Alimentação Hoje</div>
+//           <div className="aqua-panel-metric">
+//             <span className="aqua-panel-metric-label">Fornecido</span>
+//             <span className="aqua-panel-metric-value">
+//               {racaoHoje ? `${(racaoHoje.qntManha||0)+(racaoHoje.qntTarde||0)} kg` : '—'}
+//             </span>
+//           </div>
+//           <div className="aqua-panel-metric">
+//             <span className="aqua-panel-metric-label">Recomendado</span>
+//             <span className="aqua-panel-metric-value">{viveiro.racaoMeta || '-'} kg</span>
+//           </div>
+//         </div>
 
-        <div className="aqua-panel-section">
-          <div className="aqua-panel-section-title">Consumo Últimos Dias</div>
-          <div className="aqua-sparkline">
-            {consumo.map((c: any, i: number) => (
-              <div 
-                key={i} 
-                className="aqua-sparkline-bar" 
-                style={{ height: `${(c / maxConsumo) * 100}%` }}
-                title={`Dia ${i + 1}: ${c} kg`}
-              />
-            ))}
-          </div>
-        </div>
+//         <div className="aqua-panel-section">
+//           <div className="aqua-panel-section-title">Consumo Últimos Dias</div>
+//           <div className="aqua-sparkline">
+//             {consumo.map((c: any, i: number) => (
+//               <div 
+//                 key={i} 
+//                 className="aqua-sparkline-bar" 
+//                 style={{ height: `${(c / maxConsumo) * 100}%` }}
+//                 title={`Dia ${i + 1}: ${c} kg`}
+//               />
+//             ))}
+//           </div>
+//         </div>
 
-        <div className="aqua-panel-section">
-          <div className="aqua-panel-section-title">Produção</div>
-          <div className="aqua-panel-metric">
-            <span className="aqua-panel-metric-label">Previsão</span>
-            <span className="aqua-panel-metric-value">{viveiro.previsaoProducao ?? '-'} t</span>
-          </div>
-        </div>
+//         <div className="aqua-panel-section">
+//           <div className="aqua-panel-section-title">Produção</div>
+//           <div className="aqua-panel-metric">
+//             <span className="aqua-panel-metric-label">Previsão</span>
+//             <span className="aqua-panel-metric-value">{viveiro.previsaoProducao ?? '-'} t</span>
+//           </div>
+//         </div>
 
-        <div className="aqua-panel-section">
-          <div className="aqua-panel-section-title">Alertas</div>
-          <div className="aqua-panel-metric">
-            <span className="aqua-panel-metric-label">
-              {(viveiro.alertas && viveiro.alertas.length) ? viveiro.alertas.join(', ') : 'Nenhum'}
-            </span>
-          </div>
-        </div>
+//         <div className="aqua-panel-section">
+//           <div className="aqua-panel-section-title">Alertas</div>
+//           <div className="aqua-panel-metric">
+//             <span className="aqua-panel-metric-label">
+//               {(viveiro.alertas && viveiro.alertas.length) ? viveiro.alertas.join(', ') : 'Nenhum'}
+//             </span>
+//           </div>
+//         </div>
 
-        <button 
-          className="aqua-btn aqua-btn-primary" 
-          onClick={() => window.location.href = `/viveiro/${viveiro.viveiro?.id || viveiro.id}/racao`}
-          style={{ width: '100%', marginTop: 'auto' }}
-        >
-          Ver Detalhes Completos
-        </button>
-      </div>
-    </div>
-  );
-}
+//         <button 
+//           className="aqua-btn aqua-btn-primary" 
+//           onClick={() => window.location.href = `/viveiro/${viveiro.viveiro?.id || viveiro.id}/racao`}
+//           style={{ width: '100%', marginTop: 'auto' }}
+//         >
+//           Ver Detalhes Completos
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
 
 
 /**
@@ -112,7 +112,7 @@ function FazendaRacao() {
   const { dashboard, loading, error, totalRacaoHoje, refetchData } = useDashboardData();
   const toast = useToastGlobal();
   const { selectedViveiro } = usePondSelection();
-  const [visualMode, setVisualMode] = useState<VisualMode>('grid');
+  const [visualMode] = useState<VisualMode>('grid');
   const [activeViveiro, setActiveViveiro] = useState<any>(selectedViveiro || null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalViveiro, setModalViveiro] = useState<any>(null);
@@ -123,6 +123,131 @@ function FazendaRacao() {
   const [fillMissingModal, setFillMissingModal] = useState(false);
   const [missingDaysData, setMissingDaysData] = useState<any[]>([]);
   const [fillingSubmitting, setFillingSubmitting] = useState(false);
+  
+  // Estados para modal de novo viveiro
+  const [novoViveiroModal, setNovoViveiroModal] = useState(false);
+  const [novoViveiro, setNovoViveiro] = useState({
+    nome: '',
+    densidade: 0,
+    area: 0,
+    data_inicio_ciclo: new Date().toISOString().split('T')[0]
+  });
+
+  // Estados para modal de exclusão
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [viveiroToDelete, setViveiroToDelete] = useState<any>(null);
+
+  // Estado para tema
+  const [isDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    // Default para dark mode se não houver preferência salva
+    const isDark = savedTheme === 'light' ? false : true;
+    
+    // Aplicar classe imediatamente para evitar flash
+    if (isDark) {
+      document.body.classList.add('dark-mode');
+    }
+    
+    return isDark;
+  });
+
+  // Efeito para aplicar tema ao body
+  useEffect(() => {
+    console.log('useEffect called, isDarkMode:', isDarkMode);
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+      localStorage.setItem('theme', 'dark');
+      console.log('Applied dark mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('theme', 'light');
+      console.log('Applied light mode');
+    }
+  }, [isDarkMode]);
+
+  // Função para alternar tema
+  // const toggleTheme = () => {
+  //   console.log('Toggle theme clicked, current isDarkMode:', isDarkMode);
+  //   setIsDarkMode(!isDarkMode);
+  // };
+
+  // Função para criar novo viveiro
+  const handleCriarViveiro = async () => {
+    try {
+      setSubmitting(true);
+      
+      // Validar campos
+      if (!novoViveiro.nome.trim()) {
+        toast.error('Nome do viveiro é obrigatório');
+        return;
+      }
+      
+      if (novoViveiro.densidade <= 0) {
+        toast.error('Densidade deve ser maior que 0');
+        return;
+      }
+      
+      if (novoViveiro.area <= 0) {
+        toast.error('Área deve ser maior que 0');
+        return;
+      }
+      
+      if (!novoViveiro.data_inicio_ciclo) {
+        toast.error('Data de início do ciclo é obrigatória');
+        return;
+      }
+      
+      // Chamar API para criar viveiro
+      await backendApi.createViveiro({
+        nome: novoViveiro.nome.trim(),
+        densidade: novoViveiro.densidade,
+        area: novoViveiro.area,
+        data_inicio_ciclo: novoViveiro.data_inicio_ciclo
+      });
+      
+      toast.success('Viveiro criado com sucesso!');
+      setNovoViveiroModal(false);
+      setNovoViveiro({
+        nome: '',
+        densidade: 0,
+        area: 0,
+        data_inicio_ciclo: new Date().toISOString().split('T')[0]
+      });
+      
+      // Recarregar dados do dashboard
+      refetchData();
+      
+    } catch (error) {
+      console.error('Erro ao criar viveiro:', error);
+      toast.error('Erro ao criar viveiro. Tente novamente.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Função para abrir modal de exclusão
+  const handleDeleteClick = (viveiro: any, e: React.MouseEvent) => {
+    e.stopPropagation(); // Impedir que o clique se propague para o card
+    setViveiroToDelete(viveiro);
+    setDeleteModal(true);
+  };
+
+  // Função para confirmar exclusão
+  const handleConfirmDelete = async () => {
+    if (!viveiroToDelete) return;
+    
+    try {
+      const viveiroId = viveiroToDelete.viveiro?.id || viveiroToDelete.id;
+      await backendApi.deleteViveiro(viveiroId);
+      toast.success('Viveiro excluído com sucesso!');
+      setDeleteModal(false);
+      setViveiroToDelete(null);
+      refetchData(); // Recarregar dados
+    } catch (error) {
+      console.error('Erro ao excluir viveiro:', error);
+      toast.error('Erro ao excluir viveiro. Tente novamente.');
+    }
+  };
 
   // Função para exportar PDF
   const handleExportPDF = () => {
@@ -145,31 +270,82 @@ function FazendaRacao() {
     }
   };
 
+  // Função para calcular dias faltantes
+  const getMissingDaysInfo = () => {
+    if (!dashboard) return { totalMissing: 0, viveirosWithMissing: 0 };
+    
+    let totalMissing = 0;
+    let viveirosWithMissing = 0;
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // Final do dia
+
+    dashboard.viveiros.forEach((viveiro: any) => {
+      let missingCount = 0;
+      
+      // Usar a data de início do ciclo de cada viveiro
+      const startDate = viveiro.viveiro?.data_inicio_ciclo ? new Date(viveiro.viveiro.data_inicio_ciclo) : new Date();
+      startDate.setHours(0, 0, 0, 0); // Zerar horas para comparação correta
+      
+      const currentDate = new Date(startDate);
+
+      while (currentDate <= endDate) {
+        const racaoDia = viveiro.racoes?.find((r: any) => normalizeDate(r.data) === normalizeDate(currentDate));
+        
+        // Considerar como faltante apenas se não existir registro OU se ambos os valores forem 0
+        if (!racaoDia || (racaoDia.qntManha === 0 && racaoDia.qntTarde === 0)) {
+          // Não contar dias futuros
+          if (currentDate <= new Date()) {
+            missingCount++;
+          }
+        }
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      if (missingCount > 0) {
+        totalMissing += missingCount;
+        viveirosWithMissing++;
+      }
+    });
+
+    return { totalMissing, viveirosWithMissing };
+  };
+
   // Função para analisar dias sem registro
   const handleFillMissingDays = () => {
     if (!dashboard) return;
     
     const missingData: any[] = [];
     const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 7); // Últimos 7 dias
+    endDate.setHours(23, 59, 59, 999); // Final do dia
 
     dashboard.viveiros.forEach((viveiro: any) => {
       const missingDays: any[] = [];
+      
+      // Usar a data de início do ciclo de cada viveiro
+      const startDate = viveiro.viveiro?.data_inicio_ciclo ? new Date(viveiro.viveiro.data_inicio_ciclo) : new Date();
+      startDate.setHours(0, 0, 0, 0); // Zerar horas para comparação correta
+      
       const currentDate = new Date(startDate);
 
       while (currentDate <= endDate) {
-        const dateStr = currentDate.toISOString().split('T')[0];
         const racaoDia = viveiro.racoes?.find((r: any) => normalizeDate(r.data) === normalizeDate(currentDate));
         
+        // Considerar como faltante apenas se não existir registro OU se ambos os valores forem 0
         if (!racaoDia || (racaoDia.qntManha === 0 && racaoDia.qntTarde === 0)) {
-          missingDays.push({
-            date: dateStr,
-            dateFormatted: new Date(dateStr).toLocaleDateString('pt-BR'),
-            recommendedManha: Number((viveiro.recomendadoTotal ?? viveiro.racaoMeta ?? 0) * 0.5).toFixed(1),
-            recommendedTarde: Number((viveiro.recomendadoTotal ?? viveiro.racaoMeta ?? 0) * 0.5).toFixed(1),
-            totalRecommended: (viveiro.recomendadoTotal ?? viveiro.racaoMeta ?? 0).toFixed(1)
-          });
+          // Não contar dias futuros
+          if (currentDate <= new Date()) {
+            const recommendedManha = Number((viveiro.recomendadoManha / 2).toFixed(1));
+            const recommendedTarde = Number((viveiro.recomendadoTarde / 2).toFixed(1));
+            
+            missingDays.push({
+              date: new Date(currentDate),
+              dateFormatted: currentDate.toLocaleDateString('pt-BR'),
+              recommendedManha,
+              recommendedTarde,
+              totalRecommended: (recommendedManha + recommendedTarde).toFixed(1)
+            });
+          }
         }
         
         currentDate.setDate(currentDate.getDate() + 1);
@@ -177,8 +353,8 @@ function FazendaRacao() {
 
       if (missingDays.length > 0) {
         missingData.push({
-          viveiro: viveiro.viveiro?.nome || viveiro.nome,
-          viveiroId: viveiro.viveiro?.id || viveiro.id,
+          viveiroId: viveiro.viveiro.id,
+          viveiro: viveiro.viveiro.nome,
           missingDays
         });
       }
@@ -288,8 +464,7 @@ function FazendaRacao() {
   return (
     <div className="aqua-dashboard">
       <div className="aqua-panel-action-bar">
-        <button className="aqua-button aqua-button-primary" onClick={handleExportPDF}>Exportar PDF</button>
-        <button className="aqua-button aqua-button-secondary" onClick={handleFillMissingDays}>Preencher Dias Faltantes</button>
+        <button className="aqua-button aqua-button-primary" onClick={handleExportPDF}>Relatório geral </button>
       </div>
       
       {/* Header Principal */}
@@ -315,9 +490,54 @@ function FazendaRacao() {
                 }
               </div>
             </div>
+            {/* <button
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-2)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                transition: 'all 0.2s ease',
+                alignSelf: 'flex-start'
+              }}
+              title={isDarkMode ? 'Alternar para tema claro' : 'Alternar para tema escuro'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button> */}
           </div>
         </div>
       </header>
+
+      {/* Alerta de Dias Faltantes */}
+      {(() => {
+        const { totalMissing, viveirosWithMissing } = getMissingDaysInfo();
+        if (totalMissing === 0) return null;
+        
+        return (
+          <div className="missing-days-alert" onClick={handleFillMissingDays}>
+            <div className="missing-days-icon">⚠️</div>
+            <div className="missing-days-content">
+              <div className="missing-days-title">
+                {viveirosWithMissing} viveiro{viveirosWithMissing > 1 ? 's' : ''} com pendências de ração
+              </div>
+              <div className="missing-days-subtitle">
+                Total de {totalMissing} registro{totalMissing > 1 ? 's' : ''} pendente{totalMissing > 1 ? 's' : ''}
+              </div>
+            </div>
+            <div className="missing-days-action">
+              <button className="aqua-btn aqua-btn-small aqua-btn-warning">
+                Preencher Agora
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* STATUS DA FAZENDA */}
       {/* <FarmStatus dashboard={dashboard} /> */}
@@ -361,10 +581,37 @@ function FazendaRacao() {
                         >
                           {/* Card Header */}
                           <div className="aqua-card-header">
-                            <h3 className="aqua-viveiro-name">
-                              {viveiro.viveiro?.nome || viveiro.nome}
-                            </h3>
-                            <span className="aqua-viveiro-doc">DOC {viveiro.doc}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
+                              <h3 className="aqua-viveiro-name">
+                                {viveiro.viveiro?.nome || viveiro.nome}
+                              </h3>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                              <span className="aqua-viveiro-doc">DOC {viveiro.doc}</span>
+                              <button
+                                className="delete-viveiro-btn"
+                                onClick={(e) => handleDeleteClick(viveiro, e)}
+                                style={{
+                                  background: 'var(--danger-red-light)',
+                                  color: 'var(--danger-red)',
+                                  padding: 'var(--space-1) var(--space-2)',
+                                  borderRadius: 'var(--radius-md)',
+                                  fontSize: 'var(--font-sm)',
+                                  fontWeight: '600',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s ease',
+                                  minWidth: '24px',
+                                  height: '24px'
+                                }}
+                                title="Excluir viveiro"
+                              >
+                                ×
+                              </button>
+                            </div>
                           </div>
 
                           {/* Status Badge */}
@@ -442,6 +689,65 @@ function FazendaRacao() {
                         </div>
                       );
                     })}
+
+                                        {/* Card para adicionar novo viveiro */}
+                    <div 
+                      className="aqua-viveiro-card"
+                      style={{ 
+                        padding: 'var(--space-4)', 
+                        cursor: 'pointer',
+                        border: '2px dashed var(--border)',
+                        backgroundColor: 'var(--bg-secondary)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: '200px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => setNovoViveiroModal(true)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--accent-light)';
+                        e.currentTarget.style.borderColor = 'var(--accent)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                        e.currentTarget.style.borderColor = 'var(--border)';
+                      }}
+                    >
+                      <div style={{ 
+                        width: '60px', 
+                        height: '60px', 
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--accent)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginBottom: 'var(--space-3)'
+                      }}>
+                        <span style={{ 
+                          fontSize: '24px', 
+                          color: 'white',
+                          lineHeight: 1 
+                        }}>+</span>
+                      </div>
+                      <div style={{ 
+                        fontSize: 'var(--font-lg)', 
+                        fontWeight: '600', 
+                        color: 'var(--text-primary)',
+                        textAlign: 'center' 
+                      }}>
+                        Adicionar Viveiro
+                      </div>
+                      <div style={{ 
+                        fontSize: 'var(--font-sm)', 
+                        color: 'var(--text-muted)',
+                        textAlign: 'center',
+                        marginTop: 'var(--space-1)' 
+                      }}>
+                        Clique para criar um novo viveiro
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="aqua-viveiros-list" style={{
@@ -693,6 +999,128 @@ function FazendaRacao() {
           )}
         </div>
       </div> */}
+
+      {/* Modal para criar novo viveiro */}
+      <AquaModal
+        isOpen={novoViveiroModal}
+        onClose={() => {
+          setNovoViveiroModal(false);
+          setNovoViveiro({
+            nome: '',
+            densidade: 0,
+            area: 0,
+            data_inicio_ciclo: new Date().toISOString().split('T')[0]
+          });
+        }}
+        onSave={handleCriarViveiro}
+        title="Criar Novo Viveiro"
+        saveButtonText={submitting ? 'Criando...' : 'Criar Viveiro'}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: '600' }}>
+              Nome do Viveiro
+            </label>
+            <input
+              type="text"
+              value={novoViveiro.nome}
+              onChange={(e) => setNovoViveiro(prev => ({ ...prev, nome: e.target.value }))}
+              placeholder="Ex: Viveiro Principal"
+              style={{ 
+                width: '100%', 
+                padding: 'var(--space-2)', 
+                border: '1px solid var(--border)', 
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 'var(--font-base)'
+              }}
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: '600' }}>
+                Densidade (x 1000)
+              </label>
+              <input
+                type="number"
+                value={novoViveiro.densidade || ''}
+                onChange={(e) => setNovoViveiro(prev => ({ ...prev, densidade: Number(e.target.value) }))}
+                placeholder="Ex: 100"
+                min="1"
+                style={{ 
+                  width: '100%', 
+                  padding: 'var(--space-2)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: 'var(--font-base)'
+                }}
+              />
+            </div>
+            
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: '600' }}>
+                Área (m²)
+              </label>
+              <input
+                type="number"
+                value={novoViveiro.area || ''}
+                onChange={(e) => setNovoViveiro(prev => ({ ...prev, area: Number(e.target.value) }))}
+                placeholder="Ex: 2000"
+                min="1"
+                style={{ 
+                  width: '100%', 
+                  padding: 'var(--space-2)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: 'var(--font-base)'
+                }}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: 'var(--space-2)', fontWeight: '600' }}>
+              Data de Início do Ciclo
+            </label>
+            <input
+              type="date"
+              value={novoViveiro.data_inicio_ciclo}
+              onChange={(e) => setNovoViveiro(prev => ({ ...prev, data_inicio_ciclo: e.target.value }))}
+              style={{ 
+                width: '100%', 
+                padding: 'var(--space-2)', 
+                border: '1px solid var(--border)', 
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 'var(--font-base)'
+              }}
+            />
+          </div>
+        </div>
+      </AquaModal>
+
+      {/* Modal de confirmação de exclusão */}
+      <div id="delete-confirm-modal">
+        <AquaModal
+          isOpen={deleteModal}
+          onClose={() => { setDeleteModal(false); setViveiroToDelete(null); }}
+          onSave={handleConfirmDelete}
+          title="Confirmar Exclusão"
+          saveButtonText="Excluir"
+        >
+        <div style={{ textAlign: 'center', padding: 'var(--space-4)' }}>
+          <div style={{ fontSize: '48px', marginBottom: 'var(--space-3)' }}>⚠️</div>
+          <p style={{ marginBottom: 'var(--space-2)', fontWeight: '600' }}>
+            Tem certeza que deseja excluir este viveiro?
+          </p>
+          <p style={{ color: '#666', marginBottom: 'var(--space-4)' }}>
+            <strong>{viveiroToDelete?.viveiro?.nome || viveiroToDelete?.nome}</strong>
+          </p>
+          <p style={{ color: '#dc3545', fontSize: '14px' }}>
+            Esta ação não poderá ser desfeita.
+          </p>
+        </div>
+      </AquaModal>
+      </div>
     </div>
   );
 }
