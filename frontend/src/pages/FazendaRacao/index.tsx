@@ -159,8 +159,8 @@ function FazendaRacao() {
       localStorage.setItem('theme', 'dark');
       console.log('Applied dark mode');
     } else {
-      document.body.classList.remove('dark-mode');
-      localStorage.setItem('theme', 'light');
+      document.body.classList.add('dark-mode');
+      localStorage.setItem('theme', 'dark');
       console.log('Applied light mode');
     }
   }, [isDarkMode]);
@@ -728,7 +728,8 @@ function FazendaRacao() {
                         <span style={{ 
                           fontSize: '24px', 
                           color: 'white',
-                          lineHeight: 1 
+                          lineHeight: 1 ,
+                          paddingBottom: '4px'
                         }}>+</span>
                       </div>
                       <div style={{ 

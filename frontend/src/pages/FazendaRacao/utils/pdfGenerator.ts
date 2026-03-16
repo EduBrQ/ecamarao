@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export interface FeedingData {
   date: string;
@@ -15,344 +16,457 @@ export interface ReportData {
   totalViveiros: number;
   dados: FeedingData[];
   dataGeracao: Date;
+  viveirosInfo: Array<{
+    numero: number;
+    diasDesdeInicio: number;
+    nome: string;
+  }>;
 }
 
 export function generateFeedingReportPDF(data: ReportData) {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  let yPosition = 20;
-
-  // Cores do AquaFarm
-  const colors = {
-    primary: [0, 102, 204],    // Azul
-    secondary: [0, 153, 102],  // Verde
-    accent: [255, 153, 0],     // Laranja
-    text: [51, 51, 51],        // Cinza escuro
-    light: [245, 245, 245]     // Cinza claro
-  };
-
-  // Funções auxiliares
-  const addText = (text: string, fontSize: number, x: number, y: number, color: number[] = colors.text, isBold = false) => {
-    doc.setFontSize(fontSize);
-    doc.setTextColor(color[0], color[1], color[2]);
-    if (isBold) {
-      doc.setFont('helvetica', 'bold');
-    } else {
-      doc.setFont('helvetica', 'normal');
-    }
-    doc.text(text, x, y);
-  };
-
-  const addLine = (y: number) => {
-    doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
-    doc.line(20, y, pageWidth - 20, y);
-  };
-
-  const addSection = (title: string) => {
-    if (yPosition > pageHeight - 40) {
-      doc.addPage();
-      yPosition = 20;
-    }
-    
-    addText(title, 16, 20, yPosition, colors.primary, true);
-    yPosition += 10;
-    addLine(yPosition);
-    yPosition += 15;
-  };
-
-  // 1. CAPA DO RELATÓRIO
-  addText('AquaFarm', 24, pageWidth / 2, yPosition, colors.primary, true);
-  doc.text('Sistema de Gestão Aquícola', pageWidth / 2, yPosition + 8, { align: 'center' });
+  // Criar elemento temporário para o relatório
+  const reportElement = document.createElement('div');
+  reportElement.style.cssText = `
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 210mm;
+    padding: 20px;
+    background: white;
+    font-family: Arial, sans-serif;
+    color: #333;
+  `;
   
-  yPosition += 25;
-  addText('RELATÓRIO ANALÍTICO DE ALIMENTAÇÃO', 20, pageWidth / 2, yPosition, colors.text, true);
-  doc.text('', pageWidth / 2, yPosition, { align: 'center' });
-  
-  yPosition += 20;
-  addText(`Período: ${data.periodo.inicio} — ${data.periodo.fim}`, 12, pageWidth / 2, yPosition);
-  doc.text('', pageWidth / 2, yPosition, { align: 'center' });
-  
-  yPosition += 8;
-  addText(`Viveiros analisados: ${data.totalViveiros}`, 12, pageWidth / 2, yPosition);
-  doc.text('', pageWidth / 2, yPosition, { align: 'center' });
-  
-  yPosition += 8;
-  addText(`Relatório gerado em: ${data.dataGeracao.toLocaleDateString('pt-BR')}`, 12, pageWidth / 2, yPosition);
-  doc.text('', pageWidth / 2, yPosition, { align: 'center' });
-  
-  yPosition += 20;
-  addText('Este relatório apresenta uma análise histórica da distribuição de ração nos viveiros registrados no sistema AquaFarm.', 10, pageWidth / 2, yPosition);
-  doc.text('', pageWidth / 2, yPosition, { align: 'center' });
+  // Data atual
+  const dataAtual = new Date().toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
-  // Nova página para o conteúdo
-  doc.addPage();
-  yPosition = 20;
-
-  // 2. RESUMO EXECUTIVO
-  addSection('RESUMO EXECUTIVO');
-
+  // Cálculos para o resumo
   const diasAnalise = data.dados.length;
   const diasComAlimentacao = data.dados.filter(d => d.totalRacao > 0).length;
-  const diasSemAlimentacao = diasAnalise - diasComAlimentacao;
   const totalRacao = data.dados.reduce((sum, d) => sum + d.totalRacao, 0);
   const mediaDiaria = diasComAlimentacao > 0 ? totalRacao / diasComAlimentacao : 0;
   const consistenciaOperacional = diasAnalise > 0 ? (diasComAlimentacao / diasAnalise) * 100 : 0;
-
-  // Métricas em grid
-  const metrics = [
-    { label: 'Dias analisados:', value: diasAnalise.toString() },
-    { label: 'Dias com alimentação:', value: diasComAlimentacao.toString() },
-    { label: 'Dias sem alimentação:', value: diasSemAlimentacao.toString() },
-    { label: 'Total de ração distribuída:', value: `${totalRacao.toFixed(1)} kg` },
-    { label: 'Média diária:', value: `${mediaDiaria.toFixed(1)} kg` },
-    { label: 'Consistência operacional:', value: `${consistenciaOperacional.toFixed(0)}%` }
-  ];
-
-  metrics.forEach((metric, index) => {
-    addText(metric.label, 11, 20, yPosition);
-    addText(metric.value, 11, 80, yPosition, colors.secondary, true);
-    
-    if (index % 2 === 0 && index > 0) {
-      yPosition += 8;
-    } else if (index % 2 === 1) {
-      yPosition += 15;
-    }
-  });
-
-  // 3. GRÁFICO DE CONSUMO DE RAÇÃO
-  addSection('GRÁFICO DE CONSUMO DE RAÇÃO');
-
-  // Criar gráfico de barras simples
-  const chartX = 20;
-  const chartY = yPosition;
-  const chartWidth = pageWidth - 40;
-  const chartHeight = 80;
-  const maxValue = Math.max(...data.dados.map(d => d.totalRacao));
-
-  // Eixos do gráfico
-  doc.setDrawColor(colors.text[0], colors.text[1], colors.text[2]);
-  doc.rect(chartX, chartY, chartWidth, chartHeight);
-
-  // Barras do gráfico
-  const barWidth = chartWidth / (data.dados.length * 2);
-  data.dados.forEach((dado, index) => {
-    const barHeight = maxValue > 0 ? (dado.totalRacao / maxValue) * (chartHeight - 10) : 0;
-    const barX = chartX + (index * 2 * barWidth) + barWidth / 2;
-    const barY = chartY + chartHeight - barHeight - 5;
-    
-    doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-    doc.rect(barX, barY, barWidth, barHeight, 'F');
-    
-    // Data no eixo X
-    doc.setFontSize(8);
-    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-    const dataShort = new Date(dado.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-    doc.text(dataShort, barX + barWidth / 2, chartY + chartHeight + 5, { align: 'center' });
-  });
-
-  yPosition += chartHeight + 20;
-
-  // 4. HISTÓRICO DETALHADO DE ALIMENTAÇÃO
-  addSection('HISTÓRICO DETALHADO DE ALIMENTAÇÃO');
-
-  // Cabeçalho da tabela
-  const tableHeaders = ['Data', 'Ração total (kg)', 'Viveiros', '%'];
-  const tableColWidths = [40, 50, 40, 30];
-  let tableX = 20;
-
-  tableHeaders.forEach((header, index) => {
-    addText(header, 10, tableX, yPosition, colors.primary, true);
-    tableX += tableColWidths[index];
-  });
-
-  yPosition += 8;
-  addLine(yPosition);
-  yPosition += 5;
-
-  // Dados da tabela
-  data.dados.filter(d => d.totalRacao > 0).forEach((dado) => {
-    if (yPosition > pageHeight - 30) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    tableX = 20;
-    const dataFormatada = new Date(dado.date).toLocaleDateString('pt-BR');
-    const percentual = dado.totalViveiros > 0 ? (dado.viveirosAlimentados / dado.totalViveiros * 100).toFixed(0) : '0';
-    
-    addText(dataFormatada, 9, tableX, yPosition);
-    tableX += tableColWidths[0];
-    
-    addText(dado.totalRacao.toFixed(1), 9, tableX, yPosition);
-    tableX += tableColWidths[1];
-    
-    addText(`${dado.viveirosAlimentados}/${dado.totalViveiros}`, 9, tableX, yPosition);
-    tableX += tableColWidths[2];
-    
-    addText(`${percentual}%`, 9, tableX, yPosition);
-    tableX += tableColWidths[3];
-    
-    yPosition += 7;
-  });
-
-  // 5. DIAS SEM REGISTRO DE ALIMENTAÇÃO
-  yPosition += 10;
-  addSection('DIAS SEM REGISTRO DE ALIMENTAÇÃO');
-
-  const diasSemRegistro = data.dados.filter(d => d.totalRacao === 0);
+  const totalViveiros = data.totalViveiros;
   
-  if (diasSemRegistro.length === 0) {
-    addText('Todos os dias do período possuem registro de alimentação.', 10, 20, yPosition, colors.secondary);
-  } else {
-    diasSemRegistro.forEach((dado) => {
-      if (yPosition > pageHeight - 30) {
-        doc.addPage();
-        yPosition = 20;
-      }
-      
-      const dataFormatada = new Date(dado.date).toLocaleDateString('pt-BR');
-      addText(dataFormatada, 10, 20, yPosition);
-      addText('Nenhum registro encontrado', 10, 60, yPosition, colors.accent);
-      yPosition += 8;
-    });
+  // Mapeamento correto por viveiro para cálculo de dias sem registro
+  let totalDiasSemRegistroPorViveiros = 0;
+  let totalDiasComRegistroPorViveiros = 0;
+  for (let i = 1; i <= totalViveiros; i++) {
+    const diasSemRegistroViveiro = data.dados.filter(d => {
+      return !(d.totalRacao > 0 && d.viveirosAlimentados >= i);
+    }).length;
+    const diasComRegistroViveiro = data.dados.filter(d => {
+      return d.totalRacao > 0 && d.viveirosAlimentados >= i;
+    }).length;
+    totalDiasSemRegistroPorViveiros += diasSemRegistroViveiro;
+    totalDiasComRegistroPorViveiros += diasComRegistroViveiro;
   }
-
-  // 6. ANÁLISE DE VARIAÇÃO DE CONSUMO
-  yPosition += 10;
-  addSection('ANÁLISE DE VARIAÇÃO DE CONSUMO');
-
-  const valoresConsumo = data.dados.filter(d => d.totalRacao > 0).map(d => d.totalRacao);
-  let mediaConsumo = 0;
   
-  if (valoresConsumo.length > 0) {
-    const maiorConsumo = Math.max(...valoresConsumo);
-    const menorConsumo = Math.min(...valoresConsumo);
-    mediaConsumo = valoresConsumo.reduce((a, b) => a + b, 0) / valoresConsumo.length;
-    const variacaoPercentual = mediaConsumo > 0 ? ((maiorConsumo - menorConsumo) / mediaConsumo) * 100 : 0;
+  // Cálculo de custo (valor estimado por kg de ração)
+  const valorPorKg = 9.50; // Valor estimado - pode ser ajustado
+  const custoTotal = totalRacao * valorPorKg;
 
-    addText(`Maior consumo registrado: ${maiorConsumo.toFixed(1)} kg`, 11, 20, yPosition);
-    yPosition += 8;
-    addText(`Menor consumo registrado: ${menorConsumo.toFixed(1)} kg`, 11, 20, yPosition);
-    yPosition += 8;
-    addText(`Variação de consumo: ${variacaoPercentual.toFixed(0)}%`, 11, 20, yPosition);
-    yPosition += 10;
-    
-    addText('Isso pode indicar:', 10, 20, yPosition, colors.text, true);
-    yPosition += 6;
-    addText('• Mudança de biomassa', 9, 25, yPosition);
-    yPosition += 6;
-    addText('• Ajuste alimentar', 9, 25, yPosition);
-    yPosition += 6;
-    addText('• Variação operacional', 9, 25, yPosition);
-  }
-
-  // 7. ANÁLISE DE CONSISTÊNCIA OPERACIONAL
-  yPosition += 10;
-  addSection('ANÁLISE DE CONSISTÊNCIA OPERACIONAL');
-
+  // Classificação de desempenho
   let classificacao = '';
-  let classificacaoCor = colors.text;
+  let classificacaoCor = '';
+  let classificacaoIcon = '';
   
   if (consistenciaOperacional >= 90) {
-    classificacao = 'Excelente';
-    classificacaoCor = colors.secondary;
+    classificacao = 'EXCELENTE';
+    classificacaoCor = '#10b981';
+    classificacaoIcon = '🟢';
   } else if (consistenciaOperacional >= 70) {
-    classificacao = 'Boa';
-    classificacaoCor = colors.primary;
+    classificacao = 'BOA';
+    classificacaoCor = '#22c55e';
+    classificacaoIcon = '🟡';
   } else if (consistenciaOperacional >= 50) {
-    classificacao = 'Atenção';
-    classificacaoCor = colors.accent;
+    classificacao = 'REGULAR';
+    classificacaoCor = '#f59e0b';
+    classificacaoIcon = '🟠';
   } else {
-    classificacao = 'Crítico';
-    classificacaoCor = [220, 53, 69]; // Vermelho
+    classificacao = 'CRÍTICA';
+    classificacaoCor = '#ef4444';
+    classificacaoIcon = '🔴';
   }
 
-  addText(`Consistência operacional: ${consistenciaOperacional.toFixed(0)}%`, 12, 20, yPosition);
-  yPosition += 8;
-  addText(`Classificação: ${classificacao}`, 12, 20, yPosition, classificacaoCor, true);
+  // Montar HTML do relatório
+  reportElement.innerHTML = `
+    <div style="margin-bottom: 30px; text-align: center;">
+      <h1 style="margin: 0; color: #1f2937; font-size: 28px; margin-bottom: 10px;">
+        🦐 Relatório de Alimentação - AquaFarm
+      </h1>
+      <p style="margin: 0; color: #6b7280; font-size: 14px;">
+        Análise completa do período de alimentação - Gerado em ${dataAtual}
+      </p>
+    </div>
 
-  // 8. INSIGHTS AUTOMÁTICOS
-  yPosition += 15;
-  addSection('INSIGHTS AUTOMÁTICOS');
+    <div style="margin-bottom: 30px;">
+      <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+        📊 Resumo do Período
+      </h2>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <tr>
+          <td style="padding: 10px; background: #f3f4f6; font-weight: bold; width: 50%;">Período de Análise</td>
+          <td style="padding: 10px; background: #f9fafb;">${data.periodo.inicio} — ${data.periodo.fim}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Total de Viveiros</td>
+          <td style="padding: 10px; background: #f9fafb;">${totalViveiros} viveiros</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Dias Analisados</td>
+          <td style="padding: 10px; background: #f9fafb;">${diasAnalise} dias</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Dias com Alimentação</td>
+          <td style="padding: 10px; background: #f9fafb;">${diasComAlimentacao} dias (${((diasComAlimentacao/diasAnalise)*100).toFixed(1)}%)</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Total de Ração Distribuída</td>
+          <td style="padding: 10px; background: #f9fafb;">${totalRacao.toFixed(1)} kg</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Média Diária</td>
+          <td style="padding: 10px; background: #f9fafb;">${mediaDiaria.toFixed(1)} kg/dia</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">Consistência Operacional</td>
+          <td style="padding: 10px; background: #f9fafb; font-weight: bold; color: ${classificacaoCor};">
+            ${classificacaoIcon} ${consistenciaOperacional.toFixed(0)}% - ${classificacao}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #fef3c7; font-weight: bold;">💰 Custo Total Estimado</td>
+          <td style="padding: 10px; background: #fef9c3; font-weight: bold; color: #b45309;">R$ ${custoTotal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</td>
+        </tr>
+      </table>
+    </div>
 
-  const insights = [];
-  
-  if (consistenciaOperacional >= 90) {
-    insights.push({ type: 'EXCELENTE', message: 'Alta consistência nos registros de alimentação.', color: colors.secondary });
-  }
-  
-  if (diasSemRegistro.length > 0) {
-    insights.push({ type: 'ATENÇÃO', message: 'Existem dias sem registro de ração.', color: colors.accent });
-  }
-  
-  if (valoresConsumo.length > 1) {
-    const variacoes = [];
-    for (let i = 1; i < valoresConsumo.length; i++) {
-      const variacao = Math.abs(valoresConsumo[i] - valoresConsumo[i-1]);
-      variacoes.push(variacao);
-    }
-    const mediaVariacoes = variacoes.reduce((a, b) => a + b, 0) / variacoes.length;
+    <div style="margin-bottom: 30px;">
+      <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+        📈 Análise de Desempenho
+      </h2>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <tr>
+          <td style="padding: 10px; background: #dcfce7; font-weight: bold; width: 50%;">🟢 Dias com Registro Completo</td>
+          <td style="padding: 10px; background: #f0fdf4;">${totalDiasComRegistroPorViveiros} dias (${((totalDiasComRegistroPorViveiros/(diasAnalise * totalViveiros))*100).toFixed(1)}%)</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #fee2e2; font-weight: bold;">🔴 Dias sem Registro</td>
+          <td style="padding: 10px; background: #fef2f2;">${totalDiasSemRegistroPorViveiros} dias (${((totalDiasSemRegistroPorViveiros/(diasAnalise * totalViveiros))*100).toFixed(1)}%)</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; background: #f3f4f6; font-weight: bold;">📊 Eficiência Operacional</td>
+          <td style="padding: 10px; background: #f9fafb; font-weight: bold; color: ${classificacaoCor};">
+            ${classificacaoIcon} ${classificacao}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+        📋 Resumo por Viveiro
+      </h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+        ${(() => {
+          // Agrupar dados por viveiro (simulado - na prática viria do dashboard)
+          const viveirosResumo = [];
+          for (let i = 1; i <= totalViveiros; i++) {
+            const dadosViveiro = data.dados.map(d => {
+              // Calcular ração por viveiro apenas se foi alimentado
+              const racaoPorViveiro = d.totalRacao > 0 && d.viveirosAlimentados >= i ? 
+                (d.totalRacao / d.viveirosAlimentados) : 0;
+              
+              return {
+                date: d.date,
+                totalRacao: racaoPorViveiro,
+                alimentado: d.totalRacao > 0 && d.viveirosAlimentados >= i
+              };
+            });
+            
+            const totalRacaoViveiro = dadosViveiro.reduce((sum, d) => sum + d.totalRacao, 0);
+            const diasAlimentados = dadosViveiro.filter(d => d.alimentado).length;
+            const diasTotais = dadosViveiro.length;
+            const mediaDiaria = diasAlimentados > 0 ? totalRacaoViveiro / diasAlimentados : 0;
+            const consistencia = diasTotais > 0 ? (diasAlimentados / diasTotais) * 100 : 0;
+            
+            // Obter informação real de dias desde o início do ciclo dos dados coletados
+            const viveiroInfo = data.viveirosInfo.find(v => v.numero === i);
+            const diasDesdeInicio = viveiroInfo ? viveiroInfo.diasDesdeInicio : 45;
+            const nomeViveiro = viveiroInfo ? viveiroInfo.nome : `Viveiro ${i}`;
+            
+            viveirosResumo.push({
+              nome: nomeViveiro,
+              totalRacao: totalRacaoViveiro,
+              diasAlimentados,
+              diasTotais,
+              mediaDiaria,
+              consistencia,
+              diasDesdeInicio
+            });
+          }
+          
+          return viveirosResumo.map(viveiro => {
+            const statusColor = viveiro.consistencia >= 80 ? '#dcfce7' : viveiro.consistencia >= 60 ? '#fef3c7' : '#fee2e2';
+            const statusIcon = viveiro.consistencia >= 80 ? '🟢' : viveiro.consistencia >= 60 ? '🟡' : '🔴';
+            const statusText = viveiro.consistencia >= 80 ? 'Excelente' : viveiro.consistencia >= 60 ? 'Bom' : 'Atenção';
+            
+            // Determinar motivo quando for Atenção
+            let motivoAtencao = '';
+            if (viveiro.consistencia < 60) {
+              if (viveiro.diasAlimentados === 0) {
+                motivoAtencao = 'Sem registros de alimentação';
+              } else if (viveiro.consistencia < 30) {
+                motivoAtencao = 'Baixíssima frequência de alimentação';
+              } else if (viveiro.consistencia < 50) {
+                motivoAtencao = 'Frequência de alimentação irregular';
+              } else {
+                motivoAtencao = 'Frequência de alimentação abaixo do esperado';
+              }
+            }
+            
+            // Cálculo de custo por viveiro
+            const custoViveiro = viveiro.totalRacao * valorPorKg;
+            
+            return `
+              <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h3 style="margin: 0; color: #1f2937; font-size: 16px; font-weight: bold;">${viveiro.nome} (${viveiro.diasDesdeInicio} dias)</h3>
+                  <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; background: ${statusColor}; color: ${viveiro.consistencia >= 80 ? '#166534' : viveiro.consistencia >= 60 ? '#92400e' : '#991b1b'};">
+                    ${statusIcon} ${statusText}
+                  </span>
+                </div>
+                
+                ${viveiro.consistencia < 60 ? `
+                  <div style="background: #fef2f2; padding: 8px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #ef4444;">
+                    <div style="font-size: 11px; color: #991b1b; font-weight: bold; margin-bottom: 2px;">⚠️ Motivo da Atenção</div>
+                    <div style="font-size: 12px; color: #7f1d1d;">${motivoAtencao}</div>
+                  </div>
+                ` : ''}
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                  <div style="text-align: center; padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #10b981;">
+                    <div style="font-size: 11px; color: #059669; margin-bottom: 2px; font-weight: 600;">Total Acumulado</div>
+                    <div style="font-size: 20px; font-weight: bold; color: #047857;">${viveiro.totalRacao.toFixed(1)} kg</div>
+                  </div>
+                  <div style="text-align: center; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                    <div style="font-size: 11px; color: #6b7280; margin-bottom: 2px; font-weight: 600;">Média Diária</div>
+                    <div style="font-size: 20px; font-weight: bold; color: #111827;">${viveiro.mediaDiaria.toFixed(1)} kg</div>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                  <div style="text-align: center; padding: 8px; background: #f9fafb; border-radius: 6px;">
+                    <div style="font-size: 11px; color: #6b7280; margin-bottom: 2px;">Dias Alimentados</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #111827;">${viveiro.diasAlimentados}/${viveiro.diasTotais}</div>
+                  </div>
+                  <div style="text-align: center; padding: 8px; background: #f3f4f6; border-radius: 6px;">
+                    <div style="font-size: 11px; color: #374151; margin-bottom: 2px;">Consistência</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #111827;">${viveiro.consistencia.toFixed(0)}%</div>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 10px;">
+                  <div style="text-align: center; padding: 10px; background: #fef3c7; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-size: 11px; color: #92400e; margin-bottom: 2px; font-weight: 600;">Custo Total Estimado</div>
+                    <div style="font-size: 20px; font-weight: bold; color: #b45309;">R$ ${custoViveiro.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</div>
+                  </div>
+                </div>
+                
+                <div style="padding: 8px; background: #f8fafc; border-radius: 6px; text-align: center;">
+                  <div style="font-size: 10px; color: #6b7280; margin-bottom: 2px;">Desempenho no Período</div>
+                  <div style="display: flex; justify-content: center; gap: 15px;">
+                    <span style="font-size: 12px; color: #059669; font-weight: 600;">
+                      📊 ${viveiro.consistencia >= 80 ? 'Alta' : viveiro.consistencia >= 60 ? 'Média' : 'Baixa'} frequência
+                    </span>
+                    <span style="font-size: 12px; color: #7c3aed; font-weight: 600;">
+                      🎯 ${viveiro.mediaDiaria > 0 ? 'Regular' : 'Irregular'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        })()}
+      </div>
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <h2 style="margin: 0 0 15px 0; color: #374151; font-size: 20px; border-bottom: 2px solid #10b981; padding-bottom: 5px;">
+        🎯 Insights e Recomendações
+      </h2>
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+        <h3 style="margin: 0 0 10px 0; color: #059669; font-size: 16px;">📊 Análise de Desempenho Real</h3>
+        <p style="margin: 0 0 10px 0; color: #374151; line-height: 1.5;">
+          Análise baseada nos dados reais dos ${totalViveiros} viveiros ativos no período.
+        </p>
+        
+        <!-- Análise por viveiro e recomendações -->
+        ${(() => {
+          // Agrupar dados por viveiro para análise
+          const viveirosResumo = [];
+          for (let i = 1; i <= totalViveiros; i++) {
+            const dadosViveiro = data.dados.map(d => {
+              const racaoPorViveiro = d.totalRacao > 0 && d.viveirosAlimentados >= i ? 
+                (d.totalRacao / d.viveirosAlimentados) : 0;
+              return {
+                date: d.date,
+                totalRacao: racaoPorViveiro,
+                alimentado: d.totalRacao > 0 && d.viveirosAlimentados >= i
+              };
+            });
+            
+            const totalRacaoViveiro = dadosViveiro.reduce((sum, d) => sum + d.totalRacao, 0);
+            const diasAlimentados = dadosViveiro.filter(d => d.alimentado).length;
+            const diasTotais = dadosViveiro.length;
+            const mediaDiaria = diasAlimentados > 0 ? totalRacaoViveiro / diasAlimentados : 0;
+            const consistencia = diasTotais > 0 ? (diasAlimentados / diasTotais) * 100 : 0;
+            
+            const viveiroInfo = data.viveirosInfo.find(v => v.numero === i);
+            const diasDesdeInicio = viveiroInfo ? viveiroInfo.diasDesdeInicio : 45;
+            const nomeViveiro = viveiroInfo ? viveiroInfo.nome : `Viveiro ${i}`;
+            
+            viveirosResumo.push({
+              nome: nomeViveiro,
+              totalRacao: totalRacaoViveiro,
+              diasAlimentados,
+              diasTotais,
+              mediaDiaria,
+              consistencia,
+              diasDesdeInicio
+            });
+          }
+          
+          const viveirosComProblemas = viveirosResumo.filter((v: any) => v.consistencia < 60).length;
+          const viveirosExcelentes = viveirosResumo.filter((v: any) => v.consistencia >= 80).length;
+          const viveirosRegulares = viveirosResumo.filter((v: any) => v.consistencia >= 60 && v.consistencia < 80).length;
+          
+          let html = `
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+              <div style="background: #fef2f2; padding: 10px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 14px; color: #991b1b; font-weight: bold;">⚠️ Viveiros em Atenção</div>
+                <div style="font-size: 20px; color: #dc2626; font-weight: bold;">${viveirosComProblemas}</div>
+              </div>
+              <div style="background: #fef3c7; padding: 10px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 14px; color: #92400e; font-weight: bold;">📊 Viveiros Regulares</div>
+                <div style="font-size: 20px; color: #d97706; font-weight: bold;">${viveirosRegulares}</div>
+              </div>
+              <div style="background: #f0fdf4; padding: 10px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 14px; color: #166534; font-weight: bold;">✅ Viveiros Excelentes</div>
+                <div style="font-size: 20px; color: #16a34a; font-weight: bold;">${viveirosExcelentes}</div>
+              </div>
+            </div>
+          `;
+          
+          // Recomendações específicas
+          html += `
+            <div style="background: #fffbeb; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+              <p style="margin: 0; color: #92400e; font-weight: bold;">💡 Recomendações Específicas</p>
+              <ul style="margin: 5px 0 0 0; color: #78350f; font-size: 14px; padding-left: 20px;">
+          `;
+          
+          const recomendacoes = [];
+          const viveirosProblema = viveirosResumo.filter((v: any) => v.consistencia < 60);
+          if (viveirosProblema.length > 0) {
+            recomendacoes.push(`<li><strong>Atenção Imediata:</strong> ${viveirosProblema.length} viveiro(s) com baixa consistência de alimentação (${viveirosProblema.map((v: any) => v.nome).join(', ')})</li>`);
+          }
+          
+          const viveirosBaixaMedia = viveirosResumo.filter((v: any) => v.mediaDiaria < 1);
+          if (viveirosBaixaMedia.length > 0) {
+            recomendacoes.push(`<li><strong>Revisar Metas:</strong> ${viveirosBaixaMedia.length} viveiro(s) com média diária abaixo de 1kg (${viveirosBaixaMedia.map((v: any) => v.nome).join(', ')})</li>`);
+          }
+          
+          const custoMedioPorViveiro = custoTotal / totalViveiros;
+          if (custoMedioPorViveiro > 1000) {
+            recomendacoes.push(`<li><strong>Otimizar Custos:</strong> Custo médio de R$ ${custoMedioPorViveiro.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')} por viveiro - avaliar eficiência</li>`);
+          }
+          
+          recomendacoes.push('<li>Manter registros diários para melhor análise de desempenho e ajuste de estratégias</li>');
+          html += recomendacoes.join('');
+          html += '</ul></div>';
+          
+          // Destaques positivos
+          const viveirosExcelentesLista = viveirosResumo.filter((v: any) => v.consistencia >= 80);
+          if (viveirosExcelentesLista.length > 0) {
+            html += `
+              <div style="background: #f0fdf4; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                <p style="margin: 0; color: #166534; font-weight: bold;">🌟 Destaques Positivos</p>
+                <p style="margin: 5px 0 0 0; color: #15803d; font-size: 14px;">
+                  <strong>${viveirosExcelentesLista.map((v: any) => v.nome).join(', ')}</strong> apresentam excelente consistência operacional (≥80%)
+                </p>
+              </div>
+            `;
+          }
+          
+          // Resumo financeiro
+          html += `
+            <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #374151; font-weight: bold;">💰 Resumo Financeiro do Período</p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+                <div style="text-align: center;">
+                  <div style="font-size: 12px; color: #6b7280;">Total Investido</div>
+                  <div style="font-size: 16px; color: #b45309; font-weight: bold;">R$ ${custoTotal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 12px; color: #6b7280;">Média por Viveiro</div>
+                  <div style="font-size: 16px; color: #b45309; font-weight: bold;">R$ ${(custoTotal / totalViveiros).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          return html;
+        })()}
+      </div>
+    </div>
+
+    <div style="margin-top: 40px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+      <p style="margin: 0;">Relatório gerado automaticamente pelo sistema AquaFarm</p>
+      <p style="margin: 5px 0 0 0;">🦐 Sistema Inteligente de Gestão Aquícola - Análise Completa de Alimentação</p>
+    </div>
+  `;
+
+  document.body.appendChild(reportElement);
+
+  // Gerar PDF usando html2canvas
+  html2canvas(reportElement, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff'
+  }).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
     
-    if (mediaVariacoes > mediaConsumo * 0.3) {
-      insights.push({ type: 'ALERTA', message: 'Grande variação no volume de ração entre dias consecutivos.', color: [220, 53, 69] });
-    }
-  }
+    // Calcular dimensões para ajustar à página A4
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95;
+    const imgX = (pdfWidth - imgWidth * ratio) / 2;
+    const imgY = 0;
 
-  insights.forEach((insight) => {
-    if (yPosition > pageHeight - 30) {
-      doc.addPage();
-      yPosition = 20;
-    }
+    pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
     
-    addText(insight.type, 10, 20, yPosition, insight.color, true);
-    yPosition += 6;
-    addText(insight.message, 9, 25, yPosition);
-    yPosition += 10;
+    // Salvar PDF
+    const fileName = `relatorio_alimentacao_aquafarm_${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(fileName);
+
+    // Limpar elemento temporário
+    document.body.removeChild(reportElement);
+  }).catch(error => {
+    console.error('Erro ao gerar PDF:', error);
+    document.body.removeChild(reportElement);
+    throw error;
   });
-
-  // 9. RECOMENDAÇÕES OPERACIONAIS
-  yPosition += 5;
-  addSection('RECOMENDAÇÕES OPERACIONAIS');
-
-  const recomendacoes = [
-    'Padronizar o registro diário de alimentação.',
-    'Evitar grandes variações no volume de ração.',
-    'Monitorar biomassa para ajuste alimentar.'
-  ];
-
-  recomendacoes.forEach((rec, index) => {
-    if (yPosition > pageHeight - 30) {
-      doc.addPage();
-      yPosition = 20;
-    }
-    
-    addText(`${index + 1}. ${rec}`, 10, 20, yPosition);
-    yPosition += 8;
-  });
-
-  // 10. RODAPÉ DO RELATÓRIO
-  const totalPages = doc.internal.pages.length - 1;
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    
-    // Rodapé
-    addText('AquaFarm — Sistema de Gestão Aquícola', 8, pageWidth / 2, pageHeight - 15, colors.text);
-    doc.text('', pageWidth / 2, pageHeight - 15, { align: 'center' });
-    
-    addText('Relatório gerado automaticamente', 8, pageWidth / 2, pageHeight - 10, colors.text);
-    doc.text('', pageWidth / 2, pageHeight - 10, { align: 'center' });
-    
-    addText(`${data.dataGeracao.toLocaleDateString('pt-BR')} ${data.dataGeracao.toLocaleTimeString('pt-BR')}`, 8, pageWidth / 2, pageHeight - 5, colors.text);
-    doc.text('', pageWidth / 2, pageHeight - 5, { align: 'center' });
-    
-    // Número da página
-    addText(`Página ${i} de ${totalPages}`, 8, pageWidth - 20, pageHeight - 5, colors.text);
-  }
-
-  // Download do PDF
-  const fileName = `relatorio_alimentacao_${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(fileName);
 }
 
 // Função para coletar dados do dashboard
@@ -393,7 +507,12 @@ export function collectFeedingData(dashboard: any, startDate: Date, endDate: Dat
     },
     totalViveiros: dashboard.viveiros.length,
     dados,
-    dataGeracao: new Date()
+    dataGeracao: new Date(),
+    viveirosInfo: dashboard.viveiros.map((viveiro: any, index: number) => ({
+  numero: index + 1,
+  diasDesdeInicio: viveiro.doc || 45,
+  nome: viveiro.viveiro?.nome || viveiro.nome || `Viveiro ${index + 1}` // Usar mesma estrutura do componente
+}))
   };
 }
 

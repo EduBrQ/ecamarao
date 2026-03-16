@@ -1131,7 +1131,7 @@
   }
 
   .aqua-stat-card {
-    padding: var(--space-5) var(--space-5);
+    padding: var(--space-4) var(--space-1);
     min-width: 80px;
   }
 
@@ -1456,7 +1456,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  /* background: linear-gradient(135deg, var(--warning-amber-light), #fef9e7); */
+  background: darkslategrey;
   border: 1px solid var(--warning-amber);
   border-left: 4px solid var(--warning-amber);
   border-radius: 0.75rem;
