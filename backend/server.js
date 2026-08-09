@@ -30,8 +30,14 @@ const pool = new Pool({
 const app = express();
 
 app.use(helmet());
+// CORS_ORIGIN, comma-separated, overrides the dev defaults in production
+// (nginx proxies /api same-origin, so this mostly matters for direct API
+// access — e.g. the mobile apps).
+const corsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+  : ['http://localhost:5173', 'http://192.168.18.21:5173', /^http:\/\/192\.168\.\d+\.\d+:5173$/];
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://192.168.18.21:5173', /^http:\/\/192\.168\.\d+\.\d+:5173$/],
+  origin: corsOrigins,
   credentials: true
 }));
 app.use(morgan('combined'));

@@ -1,10 +1,5 @@
 # 🐳 Docker
 docker-compose.override.yml
-docker-compose.prod.yml
-docker-compose.dev.yml
-.dockerignore
-Dockerfile*
-docker-compose*.yml
 .docker/
 
 # 📦 Node.js
@@ -212,6 +207,7 @@ build/
 .env
 .env.*
 !.env.example
+!.env.prod.example
 
 # 📝 Deployment
 .vercel
