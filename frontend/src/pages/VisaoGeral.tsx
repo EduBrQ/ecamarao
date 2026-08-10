@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, Droplets, Loader2 } from 'lucide-react'
 import {
   calcularDOC,
-  calcularBiomassa,
   calcularSobrevivencia,
+  calcularRacaoDiariaAvancada,
   calcularFCR,
   gerarAlertas,
   RANGES_IDEAIS,
@@ -89,13 +89,16 @@ function VisaoGeral() {
 
   const doc = calcularDOC(viveiro.data_inicio_ciclo)
   const densidade = viveiro.densidade ?? 0
-  const populacaoInicial = densidade * 1000
+  const area = viveiro.area ?? 0
+  const populacaoInicial = densidade * area
   const mortalidadeTotal = mortalidade.reduce((acc, m) => acc + m.quantidade, 0)
   const vivos = populacaoInicial - mortalidadeTotal
-  const sobrevivencia = calcularSobrevivencia(densidade, mortalidadeTotal)
-  const pesoMedio = 0 // Peso médio não está disponível no backend ainda
-  const biomassa = calcularBiomassa(densidade, mortalidadeTotal, pesoMedio)
+  const sobrevivencia = calcularSobrevivencia(densidade, area, mortalidadeTotal)
   const racaoTotal = racao.reduce((acc, r) => acc + r.qntManha + r.qntTarde, 0)
+  // Biomassa estimada via peso previsto pela curva de crescimento (DOC), não
+  // um peso fixo — a biomassa real cresce ao longo do ciclo.
+  const recomendacao = calcularRacaoDiariaAvancada(densidade, area, doc, mortalidade, undefined, undefined)
+  const biomassa = recomendacao.biomassaEstimadaKg
   const fcr = calcularFCR(racaoTotal, biomassa)
 
   const diasParaDespesca = doc > 0 ? Math.max(0, 100 - doc) : 0

@@ -145,7 +145,7 @@ function Home() {
         <div className="nav-list">
           {viveiros.map((v) => {
             const doc = calcularDOC(v.data_inicio_ciclo)
-            const populacao = (v.densidade ?? 0) * 1000
+            const populacao = (v.densidade ?? 0) * (v.area ?? 0)
             return (
               <div key={v.id} className="card" style={{ padding: 0 }}>
                 <button
@@ -166,7 +166,7 @@ function Home() {
                       </span>
                       <span className="stat-tile">
                         <span className="stat-value">{populacao.toLocaleString('pt-BR')}</span>
-                        <span className="stat-label">Larvas</span>
+                        <span className="stat-label">População</span>
                       </span>
                       <span className="stat-tile">
                         <span className="stat-value">{v.densidade ?? 0}</span>

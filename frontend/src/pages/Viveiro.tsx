@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Wheat, Droplets, Skull, Fan, ChevronRight, Download, Loader2 } from 'lucide-react'
-import { calcularDOC } from '../models/types'
+import { calcularDOC, calcularSobrevivencia, calcularPopulacaoInicial } from '../models/types'
 import { backendApi, type Viveiro } from '../services/backendApi'
 
 const MENU_ITEMS = [
@@ -75,8 +75,9 @@ function VivieroPage() {
           ])
           const racaoTotal = racaoData.reduce((acc, r) => acc + r.qntManha + r.qntTarde, 0)
           const mortTotal = mortalidadeData.reduce((acc, m) => acc + m.quantidade, 0)
-          const vivos = (viveiro.densidade ?? 0) * 1000 - mortTotal
-          const sobrevivencia = (viveiro.densidade ?? 0) * 1000 > 0 ? (vivos / ((viveiro.densidade ?? 0) * 1000)) * 100 : 0
+          const populacaoInicial = calcularPopulacaoInicial(viveiro.densidade ?? 0, viveiro.area ?? 0)
+          const vivos = populacaoInicial - mortTotal
+          const sobrevivencia = calcularSobrevivencia(viveiro.densidade ?? 0, viveiro.area ?? 0, mortTotal)
           downloadCsv(
             `visao_geral_${viveiro.nome}.csv`,
             ['Indicador', 'Valor', 'Unidade'],
@@ -85,7 +86,7 @@ function VivieroPage() {
               ['Nome do Viveiro', viveiro.nome, '-'],
               ['Área', viveiro.area, 'm²'],
               ['Densidade', viveiro.densidade || 0, 'camarões/m²'],
-              ['População Inicial', ((viveiro.densidade || 0) * 1000).toLocaleString('pt-BR'), 'camarões'],
+              ['População Inicial', populacaoInicial.toLocaleString('pt-BR'), 'camarões'],
               ['Vivos Atuais', vivos.toLocaleString('pt-BR'), 'camarões'],
               ['Sobrevivência', sobrevivencia.toFixed(1), '%'],
               ['Ração Total', racaoTotal.toFixed(1), 'kg'],
@@ -160,8 +161,8 @@ function VivieroPage() {
         </div>
         <div className="stat-grid">
           <div className="stat-tile">
-            <span className="stat-value">{((viveiro.densidade ?? 0) * 1000).toLocaleString('pt-BR')}</span>
-            <span className="stat-label">Larvas</span>
+            <span className="stat-value">{calcularPopulacaoInicial(viveiro.densidade ?? 0, viveiro.area ?? 0).toLocaleString('pt-BR')}</span>
+            <span className="stat-label">População</span>
           </div>
           <div className="stat-tile">
             <span className="stat-value">{viveiro.densidade ?? 0}</span>
