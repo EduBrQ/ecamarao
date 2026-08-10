@@ -301,4 +301,16 @@ export const backendApi = {
     const response = await http.delete(`/api/viveiros/${viveiroId}/aeradores/${id}`);
     return response.data;
   },
+
+  // ===== ADMINISTRAÇÃO =====
+
+  seedDemoData: async (): Promise<{ viveiros: number; racoes: number; mortalidades: number; medicoes: number; aeradores: number }> => {
+    const response = await http.post('/api/admin/seed-demo');
+    return response.data;
+  },
+
+  clearData: async (): Promise<{ message: string }> => {
+    const response = await http.post('/api/admin/clear-data');
+    return response.data;
+  },
 };

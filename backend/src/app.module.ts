@@ -11,6 +11,7 @@ import { MedicoesModule } from './medicoes/medicoes.module';
 import { MortalidadeModule } from './mortalidade/mortalidade.module';
 import { AeradoresModule } from './aeradores/aeradores.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     MortalidadeModule,
     AeradoresModule,
     DashboardModule,
+    AdminModule,
   ],
   controllers: [AppController],
 })

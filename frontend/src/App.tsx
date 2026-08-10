@@ -13,6 +13,7 @@ import Anotacoes from './pages/Anotacoes'
 import Mortalidade from './pages/Mortalidade'
 import Aeradores from './pages/Aeradores'
 import FazendaRacao from './pages/FazendaRacao'
+import Configuracoes from './pages/Configuracoes'
 
 function AppLayout() {
   return (
@@ -40,6 +41,7 @@ function AppContent() {
         <Route path="/viveiro/:id/mortalidade" element={<Mortalidade />} />
         <Route path="/viveiro/:id/aeradores" element={<Aeradores />} />
         <Route path="/fazenda/racao" element={<FazendaRacao />} />
+        <Route path="/configuracoes" element={<Configuracoes />} />
       </Route>
     </Routes>
   )

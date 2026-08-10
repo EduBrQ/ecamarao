@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, LogOut } from 'lucide-react'
+import { ArrowLeft, LogOut, Settings } from 'lucide-react'
 import { auth } from '../services/backendApi'
 
 function Header() {
@@ -25,6 +25,9 @@ function Header() {
           <span className="header-title">ecamarao</span>
         </button>
         <div className="header-spacer" />
+        <button className="icon-btn" onClick={() => navigate('/configuracoes')} aria-label="Configurações">
+          <Settings size={20} />
+        </button>
         <button className="icon-btn" onClick={handleLogout} aria-label="Sair">
           <LogOut size={20} />
         </button>
