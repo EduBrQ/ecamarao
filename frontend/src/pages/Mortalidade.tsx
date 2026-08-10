@@ -67,8 +67,9 @@ function Mortalidade() {
 
   const mortalidadeTotal = registros.reduce((acc, r) => acc + r.quantidade, 0)
   const densidade = viveiro?.densidade ?? 0
-  const populacaoInicial = densidade * 1000
-  const sobrevivencia = calcularSobrevivencia(densidade, mortalidadeTotal)
+  const area = viveiro?.area ?? 0
+  const populacaoInicial = densidade * area
+  const sobrevivencia = calcularSobrevivencia(densidade, area, mortalidadeTotal)
   const vivos = populacaoInicial - mortalidadeTotal
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

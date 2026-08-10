@@ -67,22 +67,31 @@ export function calcularDOC(dataInicio: string | undefined): number {
   return Math.max(0, diff);
 }
 
+// Helper: estimate total stocked population (camarões) from stocking
+// density (camarões/m²) and pond surface area (m²). Density alone is not a
+// headcount — it must be multiplied by the pond's actual area.
+export function calcularPopulacaoInicial(densidadePorM2: number, areaM2: number): number {
+  return Math.max(0, densidadePorM2 * areaM2);
+}
+
 // Helper: estimate biomass (kg)
 export function calcularBiomassa(
-  densidadeMilLarvas: number,
+  densidadePorM2: number,
+  areaM2: number,
   mortalidadeTotal: number,
   pesoMedioG: number
 ): number {
-  const vivos = (densidadeMilLarvas * 1000) - mortalidadeTotal;
+  const vivos = calcularPopulacaoInicial(densidadePorM2, areaM2) - mortalidadeTotal;
   return Math.max(0, (vivos * pesoMedioG) / 1000);
 }
 
 // Helper: calculate survival rate (%)
 export function calcularSobrevivencia(
-  densidadeMilLarvas: number,
+  densidadePorM2: number,
+  areaM2: number,
   mortalidadeTotal: number
 ): number {
-  const total = densidadeMilLarvas * 1000;
+  const total = calcularPopulacaoInicial(densidadePorM2, areaM2);
   if (total === 0) return 0;
   return Math.max(0, ((total - mortalidadeTotal) / total) * 100);
 }
@@ -136,24 +145,6 @@ export function getFaixaRacao(doc: number): FaixaRacao | null {
   }
   
   return faixa;
-}
-
-// Calculate recommended daily feed (kg) for a viveiro
-export function calcularRacaoDiaria(
-  densidadeMilLarvas: number,
-  mortalidadeTotal: number,
-  pesoMedioG: number,
-  doc: number
-): { totalKg: number; manhaKg: number; tardeKg: number; faixa: FaixaRacao | null } {
-  const faixa = getFaixaRacao(doc);
-  if (!faixa) return { totalKg: 0, manhaKg: 0, tardeKg: 0, faixa: null };
-  const vivos = Math.max(0, (densidadeMilLarvas * 1000) - mortalidadeTotal);
-  const biomassaKg = (vivos * pesoMedioG) / 1000;
-  const totalKg = (biomassaKg * faixa.taxaAlimentacao) / 100;
-  // Morning 40% / Afternoon 60% based on Akiyama & Yukasano (2024)
-  const manhaKg = totalKg * 0.4;
-  const tardeKg = totalKg * 0.6;
-  return { totalKg: Math.round(totalKg * 100) / 100, manhaKg: Math.round(manhaKg * 100) / 100, tardeKg: Math.round(tardeKg * 100) / 100, faixa };
 }
 
 // Helper: generate water quality alerts from a measurement
@@ -377,11 +368,12 @@ export function preverPesoAtual(doc: number, pesoInicialG: number = 0.1): number
 
 // Helper: estimate current shrimp population considering mortality curve
 export function estimarPopulacaoAtual(
-  densidadeInicialMilLarvas: number,
+  densidadePorM2: number,
+  areaM2: number,
   doc: number,
   registrosMortalidade: RegistroMortalidade[]
 ): number {
-  const populacaoInicial = densidadeInicialMilLarvas * 1000;
+  const populacaoInicial = calcularPopulacaoInicial(densidadePorM2, areaM2);
   
   // Base mortality curve by phase (cumulative %)
   const mortalidadeBase = {
@@ -417,12 +409,13 @@ export function estimarPopulacaoAtual(
 
 // Enhanced daily feed calculation with weight prediction and population estimation
 export function calcularRacaoDiariaAvancada(
-  densidadeMilLarvas: number,
+  densidadePorM2: number,
+  areaM2: number,
   doc: number,
   registrosMortalidade: RegistroMortalidade[],
   pesoRegistradoG?: number,
   plInicial?: string
-): { 
+): {
   totalKg: number; 
   manhaKg: number; 
   tardeKg: number; 
@@ -432,19 +425,10 @@ export function calcularRacaoDiariaAvancada(
   faixa: FaixaRacao | null;
   plData?: PLData | null;
 } {
-  // Debug logs
-  console.log('calcularRacaoDiariaAvancada - Entrada:', {
-    densidadeMilLarvas,
-    doc,
-    registrosMortalidade: registrosMortalidade.length,
-    pesoRegistradoG,
-    plInicial
-  });
-
   // Validate inputs
-  if (!densidadeMilLarvas || densidadeMilLarvas <= 0) {
-    console.warn('calcularRacaoDiariaAvancada - Densidade inválida:', densidadeMilLarvas);
-    return { 
+  if (!densidadePorM2 || densidadePorM2 <= 0 || !areaM2 || areaM2 <= 0) {
+    console.warn('calcularRacaoDiariaAvancada - Densidade ou área inválida:', densidadePorM2, areaM2);
+    return {
       totalKg: 0, 
       manhaKg: 0, 
       tardeKg: 0, 
@@ -456,11 +440,9 @@ export function calcularRacaoDiariaAvancada(
   }
 
   const faixa = getFaixaRacao(doc);
-  console.log('calcularRacaoDiariaAvancada - Faixa encontrada:', faixa);
-  
-  if (!faixa) { 
-    console.log('calcularRacaoDiariaAvancada - Sem faixa para DOC:', doc);
-    return { 
+
+  if (!faixa) {
+    return {
       totalKg: 0, 
       manhaKg: 0, 
       tardeKg: 0, 
@@ -484,16 +466,12 @@ export function calcularRacaoDiariaAvancada(
     pesoEstimadoG = preverPesoAtual(doc);
   }
   
-  console.log('calcularRacaoDiariaAvancada - Peso estimado:', pesoEstimadoG, 'PL:', plData?.pl);
-  
   // Estimate current population
-  const populacaoEstimada = estimarPopulacaoAtual(densidadeMilLarvas, doc, registrosMortalidade);
-  console.log('calcularRacaoDiariaAvancada - População estimada:', populacaoEstimada);
-  
+  const populacaoEstimada = estimarPopulacaoAtual(densidadePorM2, areaM2, doc, registrosMortalidade);
+
   // Validate population
   if (populacaoEstimada <= 0) {
-    console.warn('calcularRacaoDiariaAvancada - População estimada inválida:', populacaoEstimada);
-    return { 
+    return {
       totalKg: 0, 
       manhaKg: 0, 
       tardeKg: 0, 

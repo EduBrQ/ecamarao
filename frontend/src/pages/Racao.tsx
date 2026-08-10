@@ -7,7 +7,7 @@ import Modal from '../components/Modal'
 import FieldError from '../components/FieldError'
 import {
   ColetaRacao, RegistroMortalidade,
-  calcularBiomassa, calcularFCR, calcularDOC,
+  calcularFCR, calcularDOC,
   calcularRacaoDiariaAvancada, TABELA_RACAO,
 } from '../models/types'
 
@@ -83,15 +83,17 @@ function Racao() {
   const precoKg = 3
   const gastoRacao = racaoTotal * precoKg
   const densidade = viveiro?.densidade ?? 0
-  const mortTotal = mortalidade.reduce((acc, m) => acc + m.quantidade, 0)
-  const pesoMedio = 0.015
+  const area = viveiro?.area ?? 0
   const doc = calcularDOC(viveiro?.data_inicio_ciclo)
-  const biomassa = calcularBiomassa(densidade, mortTotal, pesoMedio)
+  const recomendacao = calcularRacaoDiariaAvancada(densidade, area, doc, mortalidade, undefined, undefined)
+  // Biomassa/FCR usam o mesmo peso e população estimados da recomendação
+  // (curva de crescimento por DOC), em vez de um peso fixo de pós-larva,
+  // para não subestimar a biomassa real do viveiro ao longo do ciclo.
+  const biomassa = recomendacao.biomassaEstimadaKg
   const fcr = calcularFCR(racaoTotal, biomassa)
-  const recomendacao = calcularRacaoDiariaAvancada(densidade, doc, mortalidade, pesoMedio, undefined)
 
   const dadosIncompletos = !viveiro || !viveiro.densidade || !viveiro.data_inicio_ciclo
-  const densidadeFormatada = viveiro?.densidade ? `${viveiro.densidade} larvas/m²` : 'Não informada'
+  const densidadeFormatada = viveiro?.densidade ? `${viveiro.densidade} camarões/m²` : 'Não informada'
   const cicloFormatado = viveiro?.data_inicio_ciclo ? new Date(viveiro.data_inicio_ciclo).toLocaleDateString('pt-BR') : 'Não iniciado'
 
   const hoje = new Date().toISOString().split('T')[0]
@@ -151,7 +153,7 @@ function Racao() {
           <div className="alert-body">
             <strong>Dados essenciais faltando</strong>
             <span>
-              {!viveiro?.densidade && 'Densidade (larvas/m²). '}
+              {!viveiro?.densidade && 'Densidade (camarões/m²). '}
               {!viveiro?.data_inicio_ciclo && 'Data de início do ciclo. '}
               Sem isso não é possível calcular a recomendação de ração. Densidade: {densidadeFormatada} &middot; Ciclo: {cicloFormatado} &middot; DOC: {doc}
             </span>
