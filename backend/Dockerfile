@@ -1,14 +1,26 @@
-# Production image for the Express backend
-FROM node:22-alpine
+# Multi-stage build for the NestJS backend
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 
-COPY server.js start.js ./
+COPY tsconfig*.json nest-cli.json ./
+COPY src ./src
+
+RUN npm run build \
+    && npm prune --omit=dev
+
+FROM node:22-alpine AS runner
 
 ENV NODE_ENV=production
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package.json ./
+
 EXPOSE 8000
 
-CMD ["node", "start.js"]
+CMD ["node", "dist/main.js"]

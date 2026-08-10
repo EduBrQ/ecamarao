@@ -27,9 +27,21 @@ services:
     environment:
       NODE_ENV: production
       PORT: 8000
-      DATABASE_URL: postgresql://${DB_USER:-ecamarao}:${DB_PASSWORD:?DB_PASSWORD is required}@postgres:5432/${DB_NAME:-ecamarao}
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       CORS_ORIGIN: ${CORS_ORIGIN:-}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-ecamarao}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      DB_NAME: ${DB_NAME:-ecamarao}
+      # TypeORM auto-syncs the schema on boot. OK for this MVP because there
+      # are no migrations in the repo yet; switch to "false" and introduce
+      # proper migrations before this app carries real production data.
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-true}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-admin}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?SEED_ADMIN_PASSWORD is required}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@ecamarao.local}
 
   frontend:
     build:

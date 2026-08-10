@@ -208,7 +208,7 @@ function Viveiro() {
     { label: 'Dashboard', icon: 'estrategia.svg', route: 'dashboard', desc: 'KPIs e indicadores do ciclo' },
     { label: 'Racao', icon: 'planilha.svg', route: 'racao', desc: 'Controle alimentar e FCR' },
     { label: 'Qualidade da Agua', icon: 'calculadora2.svg', route: 'anotacoes', desc: 'Medicoes e alertas' },
-    { label: 'Mortalidade', icon: 'shrimp.png', route: 'mortalidade', desc: 'Registro e sobrevivencia' },
+    { label: 'Mortalidade', icon: 'shrimp.svg', route: 'mortalidade', desc: 'Registro e sobrevivencia' },
     { label: 'Ciclo de Cultivo', icon: 'estrategia.svg', route: 'ciclo', desc: 'DOC, biomassa e despesca' },
     { label: 'Aeradores', icon: 'fan.svg', route: 'aeradores', desc: 'Controle de aeracao' },
   ]

@@ -1,14 +1,38 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
+const API_BASE_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD ? '' : 'http://localhost:8000');
 
-export interface User {
+const TOKEN_KEY = 'ecamarao_token';
+
+const http = axios.create({ baseURL: API_BASE_URL });
+
+http.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+http.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
+export interface AuthUser {
   id: number;
   username: string;
   email: string;
   role: string;
-  created_at: string;
 }
 
 export interface Viveiro {
@@ -29,7 +53,7 @@ export interface Stats {
 
 export interface ColetaRacao {
   id: number;
-  viveiro_id: number;
+  viveiroId: number;
   data: string;
   qntManha: number;
   qntTarde: number;
@@ -38,7 +62,7 @@ export interface ColetaRacao {
 
 export interface Medicao {
   id: number;
-  viveiro_id: number;
+  viveiroId: number;
   data: string;
   oxigenio: number;
   ph: number;
@@ -51,7 +75,7 @@ export interface Medicao {
 
 export interface RegistroMortalidade {
   id: number;
-  viveiro_id: number;
+  viveiroId: number;
   data: string;
   quantidade: number;
   causa: string;
@@ -60,69 +84,47 @@ export interface RegistroMortalidade {
 
 export interface Aerador {
   id: number;
-  viveiro_id: number;
+  viveiroId: number;
   nome: string;
   status: boolean;
   created_at: string;
 }
 
+export const auth = {
+  isAuthenticated: () => Boolean(localStorage.getItem(TOKEN_KEY)),
+
+  login: async (username: string, password: string) => {
+    const response = await http.post('/api/auth/login', { username, password });
+    localStorage.setItem(TOKEN_KEY, response.data.accessToken);
+    return response.data.user as AuthUser;
+  },
+
+  logout: () => {
+    localStorage.removeItem(TOKEN_KEY);
+  },
+
+  me: async () => {
+    const response = await http.get('/api/auth/me');
+    return response.data as AuthUser;
+  },
+};
+
 export const backendApi = {
-  // Health check
   healthCheck: async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/health`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro no health check:', error);
-      throw error;
-    }
+    const response = await http.get('/health');
+    return response.data;
   },
 
-  // Usuários
-  registerUser: async (userData: {
-    username: string;
-    email: string;
-    password: string;
-    role?: string;
-  }) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/users/register`, userData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao registrar usuário:', error);
-      throw error;
-    }
+  // ===== VIVEIROS =====
+
+  getViveiros: async (): Promise<Viveiro[]> => {
+    const response = await http.get('/api/viveiros');
+    return response.data;
   },
 
-  getUsers: async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/users`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao listar usuários:', error);
-      throw error;
-    }
-  },
-
-  // Viveiros
-  getViveiros: async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/viveiros`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao listar viveiros:', error);
-      throw error;
-    }
-  },
-
-  getViveiroById: async (id: string) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/viveiros/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar viveiro:', error);
-      throw error;
-    }
+  getViveiroById: async (id: string): Promise<Viveiro> => {
+    const response = await http.get(`/api/viveiros/${id}`);
+    return response.data;
   },
 
   createViveiro: async (viveiroData: {
@@ -131,14 +133,9 @@ export const backendApi = {
     area: number;
     data_inicio_ciclo: string;
     status?: string;
-  }) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/viveiros`, viveiroData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar viveiro:', error);
-      throw error;
-    }
+  }): Promise<Viveiro> => {
+    const response = await http.post('/api/viveiros', viveiroData);
+    return response.data;
   },
 
   updateViveiro: async (id: string, viveiroData: {
@@ -147,109 +144,63 @@ export const backendApi = {
     area?: number;
     data_inicio_ciclo?: string;
     status?: string;
-  }) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/api/viveiros/${id}`, viveiroData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar viveiro:', error);
-      throw error;
-    }
+  }): Promise<Viveiro> => {
+    const response = await http.put(`/api/viveiros/${id}`, viveiroData);
+    return response.data;
   },
 
   deleteViveiro: async (id: string) => {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/api/viveiros/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao deletar viveiro:', error);
-      throw error;
-    }
+    const response = await http.delete(`/api/viveiros/${id}`);
+    return response.data;
   },
 
-  // Estatísticas
-  getStats: async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/stats`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao obter estatísticas:', error);
-      throw error;
-    }
+  // ===== ESTATÍSTICAS E DASHBOARD =====
+
+  getStats: async (): Promise<Stats> => {
+    const response = await http.get('/api/stats');
+    return response.data;
   },
 
-  // ===== DASHBOARD DA FAZENDA =====
-  
   getDashboardFazenda: async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/fazenda/dashboard`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar dashboard da fazenda:', error);
-      throw error;
-    }
+    const response = await http.get('/api/dashboard');
+    return response.data;
   },
 
   // ===== COLETAS DE RAÇÃO =====
-  
-  getColetasRacao: async (viveiroId: string) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao`);
-  return response.data.racoes || response.data; // compatibilidade
-    } catch (error) {
-      console.error('Erro ao listar coletas de ração:', error);
-      throw error;
-    }
+
+  getColetasRacao: async (viveiroId: string): Promise<ColetaRacao[]> => {
+    const response = await http.get(`/api/viveiros/${viveiroId}/racao`);
+    return response.data;
   },
 
   createColetaRacao: async (viveiroId: string, racaoData: {
     data: string;
     qnt_manha: number;
     qnt_tarde: number;
-  }) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao`, racaoData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar coleta de ração:', error);
-      throw error;
-    }
+  }): Promise<ColetaRacao> => {
+    const response = await http.post(`/api/viveiros/${viveiroId}/racao`, racaoData);
+    return response.data;
   },
 
   updateColetaRacao: async (viveiroId: string, id: string, racaoData: {
     data: string;
     qnt_manha: number;
     qnt_tarde: number;
-  }) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao/${id}`, racaoData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar coleta de ração:', error);
-      throw error;
-    }
+  }): Promise<ColetaRacao> => {
+    const response = await http.put(`/api/viveiros/${viveiroId}/racao/${id}`, racaoData);
+    return response.data;
   },
 
   deleteColetaRacao: async (viveiroId: string, id: string) => {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/api/viveiros/${viveiroId}/racao/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao deletar coleta de ração:', error);
-      throw error;
-    }
+    const response = await http.delete(`/api/viveiros/${viveiroId}/racao/${id}`);
+    return response.data;
   },
 
   // ===== MEDIÇÕES DE QUALIDADE DA ÁGUA =====
 
-  getMedicoes: async (viveiroId: string) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/viveiros/${viveiroId}/medicoes`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao listar medições:', error);
-      throw error;
-    }
+  getMedicoes: async (viveiroId: string): Promise<Medicao[]> => {
+    const response = await http.get(`/api/viveiros/${viveiroId}/medicoes`);
+    return response.data;
   },
 
   createMedicao: async (viveiroId: string, medicaoData: {
@@ -260,14 +211,9 @@ export const backendApi = {
     alcalinidade: number;
     transparencia: number;
     salinidade: number;
-  }) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/viveiros/${viveiroId}/medicoes`, medicaoData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar medição:', error);
-      throw error;
-    }
+  }): Promise<Medicao> => {
+    const response = await http.post(`/api/viveiros/${viveiroId}/medicoes`, medicaoData);
+    return response.data;
   },
 
   updateMedicao: async (viveiroId: string, id: string, medicaoData: {
@@ -278,133 +224,71 @@ export const backendApi = {
     alcalinidade: number;
     transparencia: number;
     salinidade: number;
-  }) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/api/viveiros/${viveiroId}/medicoes/${id}`, medicaoData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar medição:', error);
-      throw error;
-    }
+  }): Promise<Medicao> => {
+    const response = await http.put(`/api/viveiros/${viveiroId}/medicoes/${id}`, medicaoData);
+    return response.data;
   },
 
   deleteMedicao: async (viveiroId: string, id: string) => {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/api/viveiros/${viveiroId}/medicoes/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao deletar medição:', error);
-      throw error;
-    }
+    const response = await http.delete(`/api/viveiros/${viveiroId}/medicoes/${id}`);
+    return response.data;
   },
 
   // ===== REGISTROS DE MORTALIDADE =====
 
-  getRegistrosMortalidade: async (viveiroId: string) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/viveiros/${viveiroId}/mortalidade`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao listar registros de mortalidade:', error);
-      throw error;
-    }
+  getRegistrosMortalidade: async (viveiroId: string): Promise<RegistroMortalidade[]> => {
+    const response = await http.get(`/api/viveiros/${viveiroId}/mortalidade`);
+    return response.data;
   },
 
   createRegistroMortalidade: async (viveiroId: string, mortalidadeData: {
     data: string;
     quantidade: number;
     causa: string;
-  }) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/viveiros/${viveiroId}/mortalidade`, mortalidadeData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar registro de mortalidade:', error);
-      throw error;
-    }
+  }): Promise<RegistroMortalidade> => {
+    const response = await http.post(`/api/viveiros/${viveiroId}/mortalidade`, mortalidadeData);
+    return response.data;
   },
 
   updateRegistroMortalidade: async (viveiroId: string, id: string, mortalidadeData: {
     data: string;
     quantidade: number;
     causa: string;
-  }) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/api/viveiros/${viveiroId}/mortalidade/${id}`, mortalidadeData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar registro de mortalidade:', error);
-      throw error;
-    }
+  }): Promise<RegistroMortalidade> => {
+    const response = await http.put(`/api/viveiros/${viveiroId}/mortalidade/${id}`, mortalidadeData);
+    return response.data;
   },
 
   deleteRegistroMortalidade: async (viveiroId: string, id: string) => {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/api/viveiros/${viveiroId}/mortalidade/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao deletar registro de mortalidade:', error);
-      throw error;
-    }
+    const response = await http.delete(`/api/viveiros/${viveiroId}/mortalidade/${id}`);
+    return response.data;
   },
 
   // ===== AERADORES =====
 
-  getAeradores: async (viveiroId: string) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/viveiros/${viveiroId}/aeradores`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao listar aeradores:', error);
-      throw error;
-    }
+  getAeradores: async (viveiroId: string): Promise<Aerador[]> => {
+    const response = await http.get(`/api/viveiros/${viveiroId}/aeradores`);
+    return response.data;
   },
 
   createAerador: async (viveiroId: string, aeradorData: {
     nome: string;
     status: boolean;
-  }) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/viveiros/${viveiroId}/aeradores`, aeradorData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar aerador:', error);
-      throw error;
-    }
+  }): Promise<Aerador> => {
+    const response = await http.post(`/api/viveiros/${viveiroId}/aeradores`, aeradorData);
+    return response.data;
   },
 
   updateAerador: async (viveiroId: string, id: string, aeradorData: {
     nome: string;
     status: boolean;
-  }) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/api/viveiros/${viveiroId}/aeradores/${id}`, aeradorData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar aerador:', error);
-      throw error;
-    }
+  }): Promise<Aerador> => {
+    const response = await http.put(`/api/viveiros/${viveiroId}/aeradores/${id}`, aeradorData);
+    return response.data;
   },
 
   deleteAerador: async (viveiroId: string, id: string) => {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/api/viveiros/${viveiroId}/aeradores/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao deletar aerador:', error);
-      throw error;
-    }
+    const response = await http.delete(`/api/viveiros/${viveiroId}/aeradores/${id}`);
+    return response.data;
   },
-
-  // ===== SETUP =====
-  
-  setupDatabase: async () => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/setup`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao configurar banco de dados:', error);
-      throw error;
-    }
-  }
 };

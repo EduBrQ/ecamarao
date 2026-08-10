@@ -2,7 +2,7 @@
 
 Este guia segue o mesmo padrão usado no **oficina-inteligente**: uma única EC2
 rodando `docker compose` com três containers — **nginx (frontend)**, **backend
-(Express)** e **postgres** — e deploy automático via GitHub Actions (rsync +
+(NestJS)** e **postgres** — e deploy automático via GitHub Actions (rsync +
 SSH) a cada push na `main`.
 
 ## Arquitetura
@@ -17,7 +17,7 @@ SSH) a cada push na `main`.
 - `frontend` (nginx) expõe a porta 80, serve o SPA buildado em
   `/usr/share/nginx/html` e faz proxy de `/api/*` e `/health` para o backend
   interno.
-- `backend` (Express) escuta em `8000` dentro da rede Docker.
+- `backend` (NestJS) escuta em `8000` dentro da rede Docker.
 - `postgres` guarda os dados em um volume `ecamarao-pgdata` (persistente).
 
 Só a porta 80 é exposta para a internet; backend e postgres ficam na rede
@@ -106,13 +106,15 @@ git clone https://github.com/EduBrQ/ecamarao.git
 cd ecamarao
 
 cp .env.prod.example .env
-vim .env   # ajuste DB_PASSWORD, JWT_SECRET, CORS_ORIGIN
+vim .env   # ajuste DB_PASSWORD, JWT_SECRET, SEED_ADMIN_PASSWORD
 
 sudo docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 ```
 
 A UI fica acessível em `http://<IP-DA-EC2>/` e a API em
-`http://<IP-DA-EC2>/api/`.
+`http://<IP-DA-EC2>/api/`. No primeiro boot com o banco vazio, o backend cria
+um usuário admin com as credenciais de `SEED_ADMIN_USERNAME`/`SEED_ADMIN_PASSWORD`
+— é esse usuário que faz login em `/login`.
 
 ## 4. Configurar o deploy automático (GitHub Actions)
 
@@ -155,25 +157,36 @@ sudo docker compose -f docker-compose.prod.yml exec postgres \
 
 - `DB_PASSWORD`
 - `JWT_SECRET` (ex.: `openssl rand -hex 48`)
+- `SEED_ADMIN_PASSWORD`
 
-As demais (`DB_USER`, `DB_NAME`, `CORS_ORIGIN`) têm defaults sensatos — ver
-`.env.prod.example`.
+As demais (`DB_USER`, `DB_NAME`, `CORS_ORIGIN`, `SEED_ADMIN_USERNAME`,
+`SEED_ADMIN_EMAIL`) têm defaults sensatos — ver `.env.prod.example`.
+
+`DB_SYNCHRONIZE=true` no `.env` mantém o TypeORM criando/atualizando o schema
+automaticamente (MVP). Quando o projeto ganhar migrations, trocar para
+`false` e rodar migrations manualmente.
+
+## Primeiro login
+
+O admin é criado automaticamente no primeiro boot com o banco vazio:
+
+- Usuário: valor de `SEED_ADMIN_USERNAME` (default `admin`)
+- Senha: valor de `SEED_ADMIN_PASSWORD` no `.env`
+
+Se o `SEED_ADMIN_PASSWORD` for alterado depois do primeiro boot, o seed não
+roda de novo — trocar a senha exige acesso direto ao banco (não há tela de
+"esqueci minha senha" ainda).
 
 ## Pontos conhecidos a melhorar
 
 - **Porta 443 / TLS**: o deploy é HTTP-only por enquanto. Quando houver um
   domínio, adicionar Let's Encrypt (certbot + volume montado no container
   nginx, igual ao `oficina-inteligente`) ou colocar um ALB na frente.
-- **Schema do banco**: o backend não tem migrations. `POST /setup` (ou
-  `node setup_db.js` apontando para o host certo) cria só `coletas_racao`,
-  `medicoes_agua`, `registros_mortalidade` e `aeradores` — as tabelas `users`
-  e `viveiros` não são criadas em lugar nenhum do código e precisam existir
-  no banco antes do primeiro uso (hoje isso é feito manualmente via
-  `setup_database.html`/SQL direto). Vale formalizar isso como uma migration
-  única antes de guardar dados reais.
-- **Apps mobile**: `mobile/android` e `mobile/ios` apontam para uma URL fixa
-  (`WEB_APP_URL`) — atualizar para `http://<IP-da-EC2>/` (ou o domínio, quando
-  existir) depois do primeiro deploy.
+- **Schema do banco**: sem migrations ainda — `DB_SYNCHRONIZE=true` cria e
+  atualiza as tabelas a partir das entidades TypeORM no boot. Trocar por
+  migrations versionadas antes de guardar dados reais.
+- **Apps mobile nativos**: descontinuados — o app agora é instalável como PWA
+  direto do navegador (ver `frontend/public/manifest.webmanifest`).
 - **Credenciais IAM**: usar um Access Key de deploy com policy escopada
   (`ec2:Describe*`, `ec2:*Address*` na instância específica) em vez de
   `AmazonEC2FullAccess`.

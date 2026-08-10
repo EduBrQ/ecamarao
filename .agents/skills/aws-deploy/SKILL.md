@@ -33,7 +33,7 @@ aws ec2 describe-addresses \
 ## Arquitetura em cima da EC2
 
 ```
-Internet :80 → nginx (container frontend) → backend:8000 (Express) → postgres:5432
+Internet :80 → nginx (container frontend) → backend:8000 (NestJS) → postgres:5432
 ```
 
 Tudo orquestrado por `docker-compose.prod.yml`. O nginx serve o SPA buildado e faz
@@ -77,17 +77,17 @@ Segredos obrigatórios:
 
 - `DB_PASSWORD`
 - `JWT_SECRET`
+- `SEED_ADMIN_PASSWORD`
 
-`CORS_ORIGIN` fica vazio enquanto o app só é acessado via nginx (mesma origem);
-preencher quando algo (ex.: os apps mobile) precisar bater direto na API.
+`CORS_ORIGIN` fica vazio enquanto o app só é acessado via nginx (mesma origem).
 
 ## Pontos conhecidos a melhorar
 
 - Porta 443 / TLS: o deploy hoje é HTTP-only. Para produção real, adicionar
   Let's Encrypt (certbot + volume montado no nginx, igual ao
   `oficina-inteligente`) ou um ALB na frente, assim que houver domínio.
-- Schema do banco: sem migrations; `users` e `viveiros` precisam existir antes
-  do primeiro `POST /setup` (ver DEPLOY.md).
+- Schema do banco: sem migrations; `DB_SYNCHRONIZE=true` cria/atualiza as
+  tabelas a partir das entidades TypeORM no boot (ver DEPLOY.md).
 - Backup automático do Postgres: hoje é manual via `pg_dump`. Considerar um
   cron + S3 ou migrar para RDS.
 - Credenciais IAM: usar Access Key de deploy com policy escopada em vez de
