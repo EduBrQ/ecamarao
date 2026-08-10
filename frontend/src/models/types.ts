@@ -102,9 +102,16 @@ export function calcularFCR(racaoTotalKg: number, biomassakg: number): number {
   return racaoTotalKg / biomassakg;
 }
 
-// Feed rate table based on academic research
+// Feed rate table based on academic research, with DOC/weight bands
+// recalibrated for Nordeste Brazil semi-intensive vannamei practice: ciclo
+// de ~70-100 dias com despesca entre 8-12g (RN/CE respondem por ~99% da
+// producao nacional). A taxa de alimentacao por faixa de peso segue a
+// literatura internacional (FAO 583, Skretting); as faixas de DOC/peso
+// foram recalibradas para essa janela de ciclo curto, tipica do Nordeste,
+// em vez de ciclos longos (120-130 dias) voltados a camarao maior.
 // Sources: FAO Technical Paper 583 (Hung & Quy, 2013), Aqua Culture Asia Pacific (Akiyama & Yukasano, 2024),
-// Skretting Feed Management Guide (2022), SciELO Brasil (Ciencia Animal Brasileira, 2018)
+// Skretting Feed Management Guide (2022), SciELO Brasil (Ciencia Animal Brasileira, 2018),
+// HOLOS/IFRN - Carcinicultura no Vale do Acu-RN (despesca com 10-12g em 70-80 dias)
 // Feeding Rate (FR) = % of estimated biomass per day
 // Distribution: Morning 40% / Afternoon 60% (shrimp are more active in late afternoon)
 export interface FaixaRacao {
@@ -120,14 +127,14 @@ export interface FaixaRacao {
 }
 
 export const TABELA_RACAO: FaixaRacao[] = [
-  { docMin: 1, docMax: 15, pesoMedioMin: 0, pesoMedioMax: 1, taxaAlimentacao: 15, frequencia: 4, tipoRacao: 'Farelado/Triturado', proteina: 40, fase: 'Bercario' },
-  { docMin: 16, docMax: 30, pesoMedioMin: 1, pesoMedioMax: 3, taxaAlimentacao: 8, frequencia: 3, tipoRacao: 'Pellet 1.0mm', proteina: 38, fase: 'Fase Inicial' },
-  { docMin: 31, docMax: 45, pesoMedioMin: 3, pesoMedioMax: 5, taxaAlimentacao: 6, frequencia: 2, tipoRacao: 'Pellet 1.5mm', proteina: 36, fase: 'Crescimento I' },
-  { docMin: 46, docMax: 60, pesoMedioMin: 5, pesoMedioMax: 8, taxaAlimentacao: 5, frequencia: 2, tipoRacao: 'Pellet 2.0mm', proteina: 35, fase: 'Crescimento II' },
-  { docMin: 61, docMax: 75, pesoMedioMin: 8, pesoMedioMax: 12, taxaAlimentacao: 4, frequencia: 2, tipoRacao: 'Pellet 2.5mm', proteina: 35, fase: 'Engorda I' },
-  { docMin: 76, docMax: 90, pesoMedioMin: 12, pesoMedioMax: 18, taxaAlimentacao: 3, frequencia: 2, tipoRacao: 'Pellet 2.5mm', proteina: 34, fase: 'Engorda II' },
-  { docMin: 91, docMax: 110, pesoMedioMin: 18, pesoMedioMax: 25, taxaAlimentacao: 2.5, frequencia: 2, tipoRacao: 'Pellet 3.0mm', proteina: 32, fase: 'Pre-Despesca' },
-  { docMin: 111, docMax: 130, pesoMedioMin: 25, pesoMedioMax: 35, taxaAlimentacao: 2, frequencia: 2, tipoRacao: 'Pellet 3.0mm', proteina: 32, fase: 'Despesca' },
+  { docMin: 1, docMax: 15, pesoMedioMin: 0, pesoMedioMax: 0.6, taxaAlimentacao: 15, frequencia: 4, tipoRacao: 'Farelado/Triturado', proteina: 40, fase: 'Bercario' },
+  { docMin: 16, docMax: 30, pesoMedioMin: 0.6, pesoMedioMax: 1.7, taxaAlimentacao: 8, frequencia: 3, tipoRacao: 'Pellet 1.0mm', proteina: 38, fase: 'Fase Inicial' },
+  { docMin: 31, docMax: 45, pesoMedioMin: 1.7, pesoMedioMax: 3.5, taxaAlimentacao: 6, frequencia: 2, tipoRacao: 'Pellet 1.5mm', proteina: 36, fase: 'Crescimento I' },
+  { docMin: 46, docMax: 60, pesoMedioMin: 3.5, pesoMedioMax: 5.5, taxaAlimentacao: 5, frequencia: 2, tipoRacao: 'Pellet 2.0mm', proteina: 35, fase: 'Crescimento II' },
+  { docMin: 61, docMax: 75, pesoMedioMin: 5.5, pesoMedioMax: 7.4, taxaAlimentacao: 4, frequencia: 2, tipoRacao: 'Pellet 2.5mm', proteina: 35, fase: 'Engorda I' },
+  { docMin: 76, docMax: 90, pesoMedioMin: 7.4, pesoMedioMax: 9.1, taxaAlimentacao: 3, frequencia: 2, tipoRacao: 'Pellet 2.5mm', proteina: 34, fase: 'Engorda II' },
+  { docMin: 91, docMax: 105, pesoMedioMin: 9.1, pesoMedioMax: 9.9, taxaAlimentacao: 2.5, frequencia: 2, tipoRacao: 'Pellet 3.0mm', proteina: 32, fase: 'Pre-Despesca' },
+  { docMin: 106, docMax: 150, pesoMedioMin: 9.9, pesoMedioMax: 13, taxaAlimentacao: 2, frequencia: 2, tipoRacao: 'Pellet 3.0mm', proteina: 32, fase: 'Despesca' },
 ];
 
 // Get the current feed rate phase based on DOC
@@ -289,80 +296,80 @@ export function preverPesoAtualComPL(doc: number, plInicial: string): number {
   
   // Apply growth from day after PL stage
   if (diasCrescimento > 0) {
-    // Growth rate factors by phase (g/day) - adjusted for PL starting point
+    // Growth rate factors by phase (g/day), adjusted for PL starting point.
+    // Calibrated to Nordeste Brazil practice: despesca com 8-10g em torno
+    // de 80-95 dias de cultivo (ver preverPesoAtual abaixo para fontes).
     const fatoresCrescimento = {
-      berçario: 0.08,      // DOC 1-15: slow growth
-      inicial: 0.15,        // DOC 16-30: moderate growth  
-      crescimento1: 0.25,   // DOC 31-45: accelerated growth
-      crescimento2: 0.35,   // DOC 46-60: peak growth
-      engorda1: 0.40,       // DOC 61-75: high growth
-      engorda2: 0.35,       // DOC 76-90: stable growth
-      preDespesca: 0.25,    // DOC 91-110: reduced growth
-      despesca: 0.15,       // DOC 111+: minimal growth
+      berçario: 0.03,       // DOC 1-15
+      inicial: 0.08,        // DOC 16-30
+      crescimento1: 0.13,   // DOC 31-50
+      crescimento2: 0.17,   // DOC 51-70
+      preDespesca: 0.15,    // DOC 71-95
+      despesca: 0.10,       // DOC 96+
     };
-    
+
     let docAtual = plData.dias + 1; // Start counting from day after PL
-    
+
     while (docAtual <= doc) {
-      let taxaCrescimento = 0.15; // default
-      
+      let taxaCrescimento: number;
+
       if (docAtual <= 15) taxaCrescimento = fatoresCrescimento.berçario;
       else if (docAtual <= 30) taxaCrescimento = fatoresCrescimento.inicial;
-      else if (docAtual <= 45) taxaCrescimento = fatoresCrescimento.crescimento1;
-      else if (docAtual <= 60) taxaCrescimento = fatoresCrescimento.crescimento2;
-      else if (docAtual <= 75) taxaCrescimento = fatoresCrescimento.engorda1;
-      else if (docAtual <= 90) taxaCrescimento = fatoresCrescimento.engorda2;
-      else if (docAtual <= 110) taxaCrescimento = fatoresCrescimento.preDespesca;
+      else if (docAtual <= 50) taxaCrescimento = fatoresCrescimento.crescimento1;
+      else if (docAtual <= 70) taxaCrescimento = fatoresCrescimento.crescimento2;
+      else if (docAtual <= 95) taxaCrescimento = fatoresCrescimento.preDespesca;
       else taxaCrescimento = fatoresCrescimento.despesca;
-      
+
       // Apply growth with diminishing returns as weight increases
-      const fatorReducao = Math.max(0.3, 1 - (peso / 50)); // Growth slows as shrimp approaches 50g
+      const fatorReducao = Math.max(0.4, 1 - (peso / 30)); // Growth slows as shrimp approaches 30g
       peso += (taxaCrescimento * fatorReducao);
       docAtual++;
     }
   }
-  
+
   return Math.round(peso * 10000) / 10000; // 4 decimal places for precision
 }
 
-// Helper: estimate current shrimp weight based on DOC and growth curve
-// Based on Vannamei shrimp growth research - exponential growth model
+// Helper: estimate current shrimp weight based on DOC and growth curve.
+// Calibrated to Nordeste Brazil semi-intensive vannamei practice (RN/CE
+// respondem por ~99% da producao nacional): ciclo de cultivo de ~70-100
+// dias, despesca tipicamente entre 8-10g (curva atinge ~8.5g no DOC 85 e
+// ~9.6g no DOC 95).
+// Sources: HOLOS/IFRN - Carcinicultura no Vale do Acu-RN (despesca com
+// 10-12g em 70-80 dias); FAO Technical Paper 583 (Hung & Quy, 2013);
+// Aqua Culture Asia Pacific (Akiyama & Yukasano, 2024).
 export function preverPesoAtual(doc: number, pesoInicialG: number = 0.1): number {
   if (doc <= 0) return pesoInicialG;
-  
+
   // Growth rate factors by phase (g/day)
   const fatoresCrescimento = {
-    berçario: 0.08,      // DOC 1-15: slow growth
-    inicial: 0.15,        // DOC 16-30: moderate growth  
-    crescimento1: 0.25,   // DOC 31-45: accelerated growth
-    crescimento2: 0.35,   // DOC 46-60: peak growth
-    engorda1: 0.40,       // DOC 61-75: high growth
-    engorda2: 0.35,       // DOC 76-90: stable growth
-    preDespesca: 0.25,    // DOC 91-110: reduced growth
-    despesca: 0.15,       // DOC 111+: minimal growth
+    berçario: 0.03,       // DOC 1-15: aclimatacao, crescimento lento
+    inicial: 0.08,        // DOC 16-30: crescimento moderado
+    crescimento1: 0.13,   // DOC 31-50: crescimento acelerado
+    crescimento2: 0.17,   // DOC 51-70: pico de crescimento
+    preDespesca: 0.15,    // DOC 71-95: janela tipica de despesca (8-10g)
+    despesca: 0.10,       // DOC 96+: ciclo estendido, crescimento reduzido
   };
-  
+
   let peso = pesoInicialG;
   let docAtual = 1;
-  
+
   while (docAtual <= doc) {
-    let taxaCrescimento = 0.15; // default
-    
+    let taxaCrescimento: number;
+
     if (docAtual <= 15) taxaCrescimento = fatoresCrescimento.berçario;
     else if (docAtual <= 30) taxaCrescimento = fatoresCrescimento.inicial;
-    else if (docAtual <= 45) taxaCrescimento = fatoresCrescimento.crescimento1;
-    else if (docAtual <= 60) taxaCrescimento = fatoresCrescimento.crescimento2;
-    else if (docAtual <= 75) taxaCrescimento = fatoresCrescimento.engorda1;
-    else if (docAtual <= 90) taxaCrescimento = fatoresCrescimento.engorda2;
-    else if (docAtual <= 110) taxaCrescimento = fatoresCrescimento.preDespesca;
+    else if (docAtual <= 50) taxaCrescimento = fatoresCrescimento.crescimento1;
+    else if (docAtual <= 70) taxaCrescimento = fatoresCrescimento.crescimento2;
+    else if (docAtual <= 95) taxaCrescimento = fatoresCrescimento.preDespesca;
     else taxaCrescimento = fatoresCrescimento.despesca;
-    
+
     // Apply growth with diminishing returns as weight increases
-    const fatorReducao = Math.max(0.3, 1 - (peso / 50)); // Growth slows as shrimp approaches 50g
+    const fatorReducao = Math.max(0.4, 1 - (peso / 30)); // Growth slows as shrimp approaches 30g
     peso += (taxaCrescimento * fatorReducao);
     docAtual++;
   }
-  
+
   return Math.round(peso * 100) / 100;
 }
 
@@ -375,26 +382,27 @@ export function estimarPopulacaoAtual(
 ): number {
   const populacaoInicial = calcularPopulacaoInicial(densidadePorM2, areaM2);
   
-  // Base mortality curve by phase (cumulative %)
+  // Base mortality curve by phase (cumulative %), recalibrated to the
+  // shorter ~70-100 day Nordeste cycle. A healthy commercial cycle in RN/CE
+  // typically closes with 70-85% survival; ~20% cumulative mortality by
+  // despesca reflects a well-managed pond (disease outbreaks like
+  // WSSV/AHPND can push this much higher, which recorded mortality would
+  // then override via the max() below).
   const mortalidadeBase = {
-    berçario: 5,        // DOC 1-15: 5% expected mortality
-    inicial: 8,         // DOC 16-30: additional 3% (8% total)
-    crescimento1: 12,   // DOC 31-45: additional 4% (12% total)
-    crescimento2: 18,   // DOC 46-60: additional 6% (18% total)
-    engorda1: 25,       // DOC 61-75: additional 7% (25% total)
-    engorda2: 32,       // DOC 76-90: additional 7% (32% total)
-    preDespesca: 38,    // DOC 91-110: additional 6% (38% total)
-    despesca: 42,       // DOC 111+: additional 4% (42% total)
+    berçario: 4,         // DOC 1-15
+    inicial: 7,          // DOC 16-30
+    crescimento1: 11,    // DOC 31-50
+    crescimento2: 15,    // DOC 51-70
+    preDespesca: 19,     // DOC 71-95
+    despesca: 22,        // DOC 96+
   };
-  
-  let mortalidadeEsperadaPercentual = 5;
+
+  let mortalidadeEsperadaPercentual = mortalidadeBase.berçario;
   if (doc <= 15) mortalidadeEsperadaPercentual = mortalidadeBase.berçario;
   else if (doc <= 30) mortalidadeEsperadaPercentual = mortalidadeBase.inicial;
-  else if (doc <= 45) mortalidadeEsperadaPercentual = mortalidadeBase.crescimento1;
-  else if (doc <= 60) mortalidadeEsperadaPercentual = mortalidadeBase.crescimento2;
-  else if (doc <= 75) mortalidadeEsperadaPercentual = mortalidadeBase.engorda1;
-  else if (doc <= 90) mortalidadeEsperadaPercentual = mortalidadeBase.engorda2;
-  else if (doc <= 110) mortalidadeEsperadaPercentual = mortalidadeBase.preDespesca;
+  else if (doc <= 50) mortalidadeEsperadaPercentual = mortalidadeBase.crescimento1;
+  else if (doc <= 70) mortalidadeEsperadaPercentual = mortalidadeBase.crescimento2;
+  else if (doc <= 95) mortalidadeEsperadaPercentual = mortalidadeBase.preDespesca;
   else mortalidadeEsperadaPercentual = mortalidadeBase.despesca;
   
   // Use recorded mortality if available, otherwise use expected curve
