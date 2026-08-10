@@ -22,14 +22,21 @@ export class RacaoService {
   async upsert(viveiroId: number, dto: UpsertRacaoDto): Promise<ColetaRacao> {
     await this.viveirosService.findOne(viveiroId);
 
-    const existing = await this.racaoRepository.findOne({
-      where: { viveiroId, data: dto.data },
-    });
+    // A DB-level ON CONFLICT upsert (rather than find-then-save) so two
+    // concurrent requests for the same viveiro+data can't both see "no
+    // existing row" and both try to insert, tripping the unique constraint.
+    await this.racaoRepository.upsert(
+      {
+        viveiroId,
+        data: dto.data,
+        qntManha: dto.qnt_manha ?? 0,
+        qntTarde: dto.qnt_tarde ?? 0,
+      },
+      { conflictPaths: ['viveiroId', 'data'] },
+    );
 
-    const coleta = existing ?? this.racaoRepository.create({ viveiroId, data: dto.data });
-    coleta.qntManha = dto.qnt_manha ?? 0;
-    coleta.qntTarde = dto.qnt_tarde ?? 0;
-    return this.racaoRepository.save(coleta);
+    const coleta = await this.racaoRepository.findOneOrFail({ where: { viveiroId, data: dto.data } });
+    return coleta;
   }
 
   async update(viveiroId: number, id: number, dto: UpsertRacaoDto): Promise<ColetaRacao> {

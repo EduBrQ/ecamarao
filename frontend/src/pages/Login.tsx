@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { LogIn } from 'lucide-react'
 import { auth } from '../services/backendApi'
 
 function Login() {
@@ -24,10 +25,14 @@ function Login() {
   }
 
   return (
-    <div className="container fade-in" style={{ maxWidth: '360px', marginTop: '3rem' }}>
-      <div className="card">
-        <h2 className="page-title" style={{ textAlign: 'center' }}>🦐 ecamarao</h2>
-        <form onSubmit={handleSubmit}>
+    <div className="login-page fade-in">
+      <div className="login-card">
+        <div className="login-brand">
+          <img src="/img/shrimp.svg" alt="" width={40} height={40} />
+          <span className="header-title" style={{ fontSize: '1.3rem' }}>ecamarao</span>
+        </div>
+
+        <form className="card" onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label required">Usuário</label>
             <input
@@ -48,10 +53,9 @@ function Login() {
               required
             />
           </div>
-          {error && (
-            <p style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{error}</p>
-          )}
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+          {error && <p className="field-error">{error}</p>}
+          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+            <LogIn size={16} />
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>

@@ -28,6 +28,16 @@ http.interceptors.response.use(
   },
 );
 
+// NestJS error responses look like { message: string | string[], error, statusCode }.
+// Centralized here so every page shows errors the same way instead of each
+// guessing at the shape.
+export function getErrorMessage(err: unknown, fallback: string): string {
+  const message = (err as any)?.response?.data?.message;
+  if (Array.isArray(message) && message.length > 0) return message[0];
+  if (typeof message === 'string') return message;
+  return fallback;
+}
+
 export interface AuthUser {
   id: number;
   username: string;

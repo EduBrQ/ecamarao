@@ -3,8 +3,7 @@ function Footer() {
 
   return (
     <footer className="footer">
-      <p>&copy; {year} - AquaFarm - Controle de Carcinicultura</p>
-      <p>Versao 0.2.0</p>
+      <p>&copy; {year} ecamarao &middot; Controle de carcinicultura</p>
     </footer>
   )
 }
