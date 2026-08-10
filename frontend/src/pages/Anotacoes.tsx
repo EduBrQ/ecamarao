@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { AlertTriangle, CheckCircle2, Plus, Trash2, Loader2 } from 'lucide-react'
 import Modal from '../components/Modal'
 import FieldError from '../components/FieldError'
-import { backendApi, Medicao } from '../services/backendApi'
+import { backendApi, getErrorMessage, Medicao } from '../services/backendApi'
 import { gerarAlertas, RANGES_IDEAIS, ParametroAgua } from '../models/types'
 
 function formatDate(d: Date | string): string {
@@ -10,13 +11,15 @@ function formatDate(d: Date | string): string {
   return date.toLocaleDateString('pt-BR')
 }
 
-function getParamColor(param: ParametroAgua, valor: number): string {
+function paramVariant(param: ParametroAgua, valor: number): string {
   const range = RANGES_IDEAIS[param]
-  if (valor >= range.min && valor <= range.max) return 'var(--success)'
+  if (valor >= range.min && valor <= range.max) return 'stat-tile-good'
   const margin = (range.max - range.min) * 0.15
-  if (valor < range.min - margin || valor > range.max + margin) return 'var(--danger)'
-  return 'var(--warning)'
+  if (valor < range.min - margin || valor > range.max + margin) return 'stat-tile-critical'
+  return 'stat-tile-warning'
 }
+
+const PARAMS: ParametroAgua[] = ['ph', 'oxigenio', 'temperatura', 'alcalinidade', 'transparencia', 'salinidade']
 
 function Anotacoes() {
   const { id: viveiroId } = useParams<{ id: string }>()
@@ -31,16 +34,13 @@ function Anotacoes() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Carregar dados do backend
   useEffect(() => {
     const loadMedicoes = async () => {
       if (!viveiroId) return
-      
       try {
         setLoading(true)
         setError(null)
-        const medicoesData = await backendApi.getMedicoes(viveiroId)
-        setMedicoes(medicoesData)
+        setMedicoes(await backendApi.getMedicoes(viveiroId))
       } catch (err) {
         console.error('Erro ao carregar medições:', err)
         setError('Erro ao carregar medições do viveiro')
@@ -48,24 +48,14 @@ function Anotacoes() {
         setLoading(false)
       }
     }
-
     loadMedicoes()
   }, [viveiroId])
 
   if (loading) {
-    return (
-      <div className="container fade-in">
-        <div className="card text-center">Carregando medições...</div>
-      </div>
-    )
+    return <div className="page fade-in"><div className="card text-center"><Loader2 className="spinner" size={20} />Carregando medições...</div></div>
   }
-
   if (error) {
-    return (
-      <div className="container fade-in">
-        <div className="card text-center text-red-600">{error}</div>
-      </div>
-    )
+    return <div className="page fade-in"><div className="card text-center field-error">{error}</div></div>
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +66,6 @@ function Anotacoes() {
     setSubmitted(true)
     const allFilled = Object.values(form).every((v) => v !== '')
     if (!allFilled) return
-
     try {
       await backendApi.createMedicao(viveiroId!, {
         data: form.data,
@@ -85,60 +74,52 @@ function Anotacoes() {
         temperatura: Number(form.temperatura),
         alcalinidade: Number(form.alcalinidade),
         transparencia: Number(form.transparencia),
-        salinidade: Number(form.salinidade)
+        salinidade: Number(form.salinidade),
       })
-      
-      // Recarregar lista
-      const updatedMedicoes = await backendApi.getMedicoes(viveiroId!)
-      setMedicoes(updatedMedicoes)
-      
+      setMedicoes(await backendApi.getMedicoes(viveiroId!))
       setModalOpen(false)
       setSubmitted(false)
       setForm({ data: '', oxigenio: '', ph: '', temperatura: '', alcalinidade: '', transparencia: '', salinidade: '' })
     } catch (err) {
-      console.error('Erro ao salvar medição:', err)
-      setError('Erro ao salvar medição')
+      setError(getErrorMessage(err, 'Erro ao salvar medição'))
     }
   }
 
   const removerMedicao = async (itemId: number) => {
     try {
       await backendApi.deleteMedicao(viveiroId!, itemId.toString())
-      
-      // Recarregar lista
-      const updatedMedicoes = await backendApi.getMedicoes(viveiroId!)
-      setMedicoes(updatedMedicoes)
+      setMedicoes(await backendApi.getMedicoes(viveiroId!))
     } catch (err) {
-      console.error('Erro ao deletar medição:', err)
-      setError('Erro ao deletar medição')
+      setError(getErrorMessage(err, 'Erro ao deletar medição'))
     }
   }
 
   const fields = [
     { name: 'data', label: 'Data', type: 'date', error: 'Insira uma data' },
-    { name: 'oxigenio', label: 'O2 (mg/L)', type: 'number', error: 'Insira o oxigenio dissolvido' },
+    { name: 'oxigenio', label: 'O2 (mg/L)', type: 'number', error: 'Insira o oxigênio dissolvido' },
     { name: 'ph', label: 'pH', type: 'number', error: 'Insira o pH' },
-    { name: 'temperatura', label: 'Temperatura (C)', type: 'number', error: 'Insira a temperatura' },
+    { name: 'temperatura', label: 'Temperatura (°C)', type: 'number', error: 'Insira a temperatura' },
     { name: 'alcalinidade', label: 'Alcalinidade (ppm)', type: 'number', error: 'Insira a alcalinidade' },
-    { name: 'transparencia', label: 'Transparencia (cm)', type: 'number', error: 'Insira a transparencia' },
+    { name: 'transparencia', label: 'Transparência (cm)', type: 'number', error: 'Insira a transparência' },
     { name: 'salinidade', label: 'Salinidade (ppt)', type: 'number', error: 'Insira a salinidade' },
   ]
 
-  // Last measurement alerts
   const ultimaMedicao = medicoes.length > 0 ? medicoes[medicoes.length - 1] : null
   const alertas = ultimaMedicao ? gerarAlertas(ultimaMedicao) : []
 
   return (
-    <div className="container fade-in">
-      {/* Alert Banner */}
+    <div className="page fade-in">
       {alertas.length > 0 && (
-        <div className="card alert-banner">
-          <h3 className="card-title">Alertas de Qualidade</h3>
+        <div className="card">
+          <h3 className="section-title">Alertas de qualidade</h3>
           <div className="alert-list">
             {alertas.map((alerta, i) => (
-              <div key={i} className={`alert-item alert-${alerta.condicao.startsWith('critico') ? 'critical' : 'warning'}`}>
-                <div className="alert-msg">{alerta.mensagem}</div>
-                <div className="alert-manejo">{alerta.manejo}</div>
+              <div key={i} className={`alert ${alerta.condicao.startsWith('critico') ? 'alert-critical' : 'alert-warning'}`}>
+                <AlertTriangle className="alert-icon" size={16} />
+                <div className="alert-body">
+                  <strong>{alerta.mensagem}</strong>
+                  <span>{alerta.manejo}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -147,108 +128,101 @@ function Anotacoes() {
 
       {alertas.length === 0 && ultimaMedicao && (
         <div className="card">
-          <div className="empty-state success-state">
-            Todos os parametros dentro da faixa ideal
-          </div>
+          <div className="empty-state success"><CheckCircle2 size={20} />Todos os parâmetros dentro da faixa ideal</div>
         </div>
       )}
 
-      {/* Ideal Ranges Reference */}
       <div className="card">
-        <h3 className="card-title">Faixas Ideais</h3>
-        <div className="ranges-grid">
-          {(['ph', 'oxigenio', 'temperatura', 'alcalinidade', 'transparencia', 'salinidade'] as ParametroAgua[]).map((param) => {
+        <h3 className="section-title">Faixas ideais</h3>
+        <div className="stat-grid">
+          {PARAMS.map((param) => {
             const range = RANGES_IDEAIS[param]
             return (
-              <div key={param} className="range-chip">
-                <span className="range-chip-label">{range.label}</span>
-                <span className="range-chip-value">{range.min}-{range.max}{range.unit}</span>
+              <div key={param} className="stat-tile">
+                <span className="stat-value" style={{ fontSize: '0.9rem' }}>{range.min}-{range.max}{range.unit}</span>
+                <span className="stat-label">{range.label}</span>
               </div>
             )
           })}
         </div>
       </div>
 
-      {/* Measurements */}
       <div className="card">
-        <div className="card-header-accent">Medicoes - Viveiro {viveiroId}</div>
-
-        <div className="flex-between mb-2">
-          <span>{medicoes.length} medicao(oes)</span>
+        <div className="card-row">
+          <h3 className="section-title">Medições ({medicoes.length})</h3>
           <button className="btn btn-primary btn-sm" onClick={() => setModalOpen(true)}>
-            + Nova Medicao
+            <Plus size={14} /> Nova medição
           </button>
         </div>
 
-        <div className="medicao-list">
-          {medicoes.slice().reverse().map((m) => {
-            const mAlertas = gerarAlertas(m)
-            const isExpanded = expandedId === m.id
-            return (
-              <div key={m.id} className={`medicao-card ${mAlertas.length > 0 ? 'medicao-has-alerts' : 'medicao-ok'}`}>
-                <div className="medicao-header" onClick={() => setExpandedId(isExpanded ? null : m.id)}>
-                  <div className="medicao-date">
-                    <span className="medicao-date-text">{formatDate(m.data)}</span>
-                    {mAlertas.length > 0 && (
-                      <span className="medicao-alert-count">{mAlertas.length} alerta(s)</span>
-                    )}
-                  </div>
-                  <div className="medicao-params-mini">
-                    <span style={{ color: getParamColor('ph', m.ph) }}>pH {m.ph}</span>
-                    <span style={{ color: getParamColor('oxigenio', m.oxigenio) }}>O2 {m.oxigenio}</span>
-                    <span style={{ color: getParamColor('temperatura', m.temperatura) }}>{m.temperatura}°C</span>
-                  </div>
-                </div>
+        {medicoes.length === 0 ? (
+          <div className="empty-state">Nenhuma medição registrada ainda.</div>
+        ) : (
+          <div className="nav-list">
+            {medicoes.slice().reverse().map((m) => {
+              const mAlertas = gerarAlertas(m)
+              const isExpanded = expandedId === m.id
+              return (
+                <div key={m.id} className="card" style={{ padding: 0 }}>
+                  <button
+                    className="nav-item"
+                    style={{ border: 'none', flexWrap: 'wrap' }}
+                    onClick={() => setExpandedId(isExpanded ? null : m.id)}
+                  >
+                    <span className="nav-item-text">
+                      <span className="card-row">
+                        <span className="nav-item-title">{formatDate(m.data)}</span>
+                        {mAlertas.length > 0 && <span className="pill pill-warning">{mAlertas.length} alerta(s)</span>}
+                      </span>
+                      <span className="nav-item-desc">pH {m.ph} &middot; O2 {m.oxigenio} &middot; {m.temperatura}°C</span>
+                    </span>
+                  </button>
 
-                {isExpanded && (
-                  <div className="medicao-details">
-                    <div className="medicao-params-full">
-                      {(['ph', 'oxigenio', 'temperatura', 'alcalinidade', 'transparencia', 'salinidade'] as ParametroAgua[]).map((param) => {
-                        const range = RANGES_IDEAIS[param]
-                        const valor = m[param] as number
-                        return (
-                          <div key={param} className="medicao-param" style={{ borderLeftColor: getParamColor(param, valor) }}>
-                            <span className="medicao-param-label">{range.label}</span>
-                            <span className="medicao-param-value" style={{ color: getParamColor(param, valor) }}>
-                              {valor}{range.unit}
-                            </span>
-                            <span className="medicao-param-range">Ideal: {range.min}-{range.max}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                    {mAlertas.length > 0 && (
-                      <div className="medicao-alerts-detail">
-                        {mAlertas.map((a, i) => (
-                          <div key={i} className={`alert-item alert-${a.condicao.startsWith('critico') ? 'critical' : 'warning'}`}>
-                            <div className="alert-msg">{a.mensagem}</div>
-                            <div className="alert-manejo">{a.manejo}</div>
-                          </div>
-                        ))}
+                  {isExpanded && (
+                    <div style={{ padding: '0 var(--space-4) var(--space-4)' }}>
+                      <div className="stat-grid">
+                        {PARAMS.map((param) => {
+                          const range = RANGES_IDEAIS[param]
+                          const valor = m[param] as number
+                          return (
+                            <div key={param} className={`stat-tile ${paramVariant(param, valor)}`}>
+                              <span className="stat-value">{valor}<span className="stat-unit">{range.unit}</span></span>
+                              <span className="stat-label">{range.label}</span>
+                            </div>
+                          )
+                        })}
                       </div>
-                    )}
-                    <button className="btn btn-danger btn-sm mt-1" onClick={() => removerMedicao(m.id)}>
-                      Excluir Medicao
-                    </button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+                      {mAlertas.length > 0 && (
+                        <div className="alert-list" style={{ marginTop: 'var(--space-3)' }}>
+                          {mAlertas.map((a, i) => (
+                            <div key={i} className={`alert ${a.condicao.startsWith('critico') ? 'alert-critical' : 'alert-warning'}`}>
+                              <AlertTriangle className="alert-icon" size={16} />
+                              <div className="alert-body"><strong>{a.mensagem}</strong><span>{a.manejo}</span></div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <button className="btn btn-danger btn-sm" style={{ marginTop: 'var(--space-3)' }} onClick={() => removerMedicao(m.id)}>
+                        <Trash2 size={14} /> Excluir medição
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <Modal
-        title="Nova Medicao"
+        title="Nova medição"
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setSubmitted(false) }}
         onSave={handleSave}
       >
         {fields.map((f) => (
           <div key={f.name} className="form-group">
-            <label className={`form-label required ${submitted && !form[f.name as keyof typeof form] ? 'has-error' : ''}`}>
-              {f.label}:
-            </label>
+            <label className={`form-label required ${submitted && !form[f.name as keyof typeof form] ? 'has-error' : ''}`}>{f.label}</label>
             <input
               name={f.name}
               type={f.type}
