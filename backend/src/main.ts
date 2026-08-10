@@ -8,8 +8,12 @@ async function bootstrap() {
   const config = app.get(ConfigService);
 
   app.setGlobalPrefix('api', { exclude: ['health'] });
+  const corsOrigin = config.get<string>('CORS_ORIGIN', '*');
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN', '*'),
+    origin:
+      corsOrigin === '*' || corsOrigin === ''
+        ? corsOrigin === '*'
+        : corsOrigin.split(',').map((origin) => origin.trim()),
     credentials: true,
   });
   app.useGlobalPipes(
