@@ -1,10 +1,5 @@
 # 🐳 Docker
 docker-compose.override.yml
-docker-compose.prod.yml
-docker-compose.dev.yml
-.dockerignore
-Dockerfile*
-docker-compose*.yml
 .docker/
 
 # 📦 Node.js
@@ -73,10 +68,6 @@ jspm_packages/
 # 📝 Nuxt.js build / generate output
 .nuxt
 dist
-
-# 📝 Gatsby files
-.cache/
-public
 
 # 📝 Storybook build outputs
 .out
@@ -212,6 +203,7 @@ build/
 .env
 .env.*
 !.env.example
+!.env.prod.example
 
 # 📝 Deployment
 .vercel

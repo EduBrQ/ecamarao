@@ -1,0 +1,17 @@
+{
+  "name": "ecamarao",
+  "short_name": "ecamarao",
+  "description": "Sistema de gestão de viveiros de camarão",
+  "start_url": "/home-page",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5f9ea0",
+  "icons": [
+    {
+      "src": "/img/shrimp.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

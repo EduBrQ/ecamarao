@@ -1,14 +1,3 @@
-export interface ViveiroDTO {
-  id: number;
-  densidade?: number;
-  laboratorio?: string;
-  proprietario?: string;
-  dataInicioCiclo?: string;
-  pesoMedioAtual?: number;
-  precoRacaoKg?: number;
-  plInicial?: string; // Post-larva stage (PL5-PL7, PL10-PL12, etc.)
-}
-
 export interface AeradorDTO {
   id: number;
   nome: string;
