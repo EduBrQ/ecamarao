@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Fan, Plus, Trash2, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Fan, Plus, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Card, StatTile, Badge, IconButton, Button, Input, Checkbox, EmptyState, Spinner, Alert, type BadgeTone } from '@edubrq/design-system'
 import Modal from '../components/Modal'
-import FieldError from '../components/FieldError'
 import { backendApi, getErrorMessage, Viveiro, Aerador } from '../services/backendApi'
 
 function Aeradores() {
@@ -39,13 +39,13 @@ function Aeradores() {
   }, [viveiroId])
 
   if (loading) {
-    return <div className="page fade-in"><div className="card text-center"><Loader2 className="spinner" size={20} />Carregando aeradores...</div></div>
+    return <div className="page fade-in"><Card className="text-center"><Spinner /> Carregando aeradores...</Card></div>
   }
   if (error) {
-    return <div className="page fade-in"><div className="card text-center field-error">{error}</div></div>
+    return <div className="page fade-in"><Alert tone="danger">{error}</Alert></div>
   }
   if (!viveiro) {
-    return <div className="page fade-in"><div className="card text-center">Viveiro não encontrado</div></div>
+    return <div className="page fade-in"><EmptyState title="Viveiro não encontrado" /></div>
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,78 +92,71 @@ function Aeradores() {
   }
 
   const ativos = aeradores.filter((a) => a.status).length
+  const statusTone: BadgeTone = ativos === 0 ? 'danger' : ativos === aeradores.length ? 'success' : 'warning'
 
   return (
     <div className="page fade-in">
-      <div className="card">
+      <Card>
         <h2 className="section-title">Aeradores &mdash; {viveiro.nome}</h2>
 
         <div className="stat-grid">
-          <div className="stat-tile">
-            <span className="stat-value">{aeradores.length}</span>
-            <span className="stat-label">Total</span>
-          </div>
-          <div className="stat-tile stat-tile-good">
-            <span className="stat-value">{ativos}</span>
-            <span className="stat-label">Ativos</span>
-          </div>
-          <div className="stat-tile stat-tile-critical">
-            <span className="stat-value">{aeradores.length - ativos}</span>
-            <span className="stat-label">Inativos</span>
-          </div>
+          <StatTile label="Total" value={aeradores.length} />
+          <StatTile className="stat-tile-good" label="Ativos" value={ativos} />
+          <StatTile className="stat-tile-critical" label="Inativos" value={aeradores.length - ativos} />
         </div>
 
         {aeradores.length > 0 && (
-          <div className={`pill ${ativos === 0 ? 'pill-critical' : ativos === aeradores.length ? 'pill-good' : 'pill-warning'}`}>
+          <Badge tone={statusTone}>
             {ativos === 0 && <><AlertTriangle size={12} /> Nenhum aerador ativo</>}
             {ativos > 0 && ativos < aeradores.length && `${ativos}/${aeradores.length} aeradores ativos`}
             {ativos === aeradores.length && <><CheckCircle2 size={12} /> Todos os aeradores ativos</>}
-          </div>
+          </Badge>
         )}
 
         <div className="card-row">
           <span />
-          <button className="btn btn-primary btn-sm" onClick={() => setModalOpen(true)}>
+          <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus size={14} /> Adicionar
-          </button>
+          </Button>
         </div>
 
         {aeradores.length === 0 ? (
-          <div className="empty-state">
-            <Fan className="empty-state-icon" size={28} />
-            <strong>Nenhum aerador cadastrado</strong>
-            <span>Adicione aeradores para controlar a oxigenação do viveiro</span>
-            <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
-              <Plus size={14} /> Adicionar primeiro aerador
-            </button>
-          </div>
+          <EmptyState
+            icon={<Fan size={28} />}
+            title="Nenhum aerador cadastrado"
+            description="Adicione aeradores para controlar a oxigenação do viveiro"
+            action={
+              <Button onClick={() => setModalOpen(true)}>
+                <Plus size={14} /> Adicionar primeiro aerador
+              </Button>
+            }
+          />
         ) : (
           <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
             {aeradores.map((aerador) => (
-              <div key={aerador.id} className="card">
+              <Card key={aerador.id}>
                 <div className="card-row">
                   <strong style={{ fontSize: '0.85rem' }}>{aerador.nome}</strong>
-                  <button className="icon-btn" onClick={() => removerAerador(aerador.id)} aria-label="Remover aerador">
-                    <Trash2 size={14} />
-                  </button>
+                  <IconButton variant="ghost" size="sm" onClick={() => removerAerador(aerador.id)} aria-label="Remover aerador" icon={<Trash2 size={14} />} />
                 </div>
-                <button
-                  className={`btn btn-block ${aerador.status ? 'btn-primary' : 'btn-secondary'}`}
+                <Button
+                  variant={aerador.status ? 'primary' : 'secondary'}
+                  className="btn-block"
                   onClick={() => toggleStatus(aerador.id)}
                   disabled={loadingId === aerador.id}
                   style={{ flexDirection: 'column', gap: '0.35rem', padding: 'var(--space-3)' }}
                 >
                   <Fan size={24} className={aerador.status ? 'fan-spin' : ''} />
                   <span>{loadingId === aerador.id ? '...' : aerador.status ? 'Ligado' : 'Desligado'}</span>
-                </button>
+                </Button>
                 <span className="page-subtitle" style={{ fontSize: '0.7rem' }}>
                   Desde {new Date(aerador.created_at).toLocaleDateString('pt-BR')}
                 </span>
-              </div>
+              </Card>
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       <Modal
         title="Adicionar aerador"
@@ -171,23 +164,19 @@ function Aeradores() {
         onClose={() => { setModalOpen(false); setSubmitted(false) }}
         onSave={handleSave}
       >
-        <div className="form-group">
-          <label className={`form-label required ${submitted && !form.nome ? 'has-error' : ''}`}>Nome do aerador</label>
-          <input
-            name="nome" type="text"
-            className={`form-control ${submitted && !form.nome ? 'is-invalid' : ''}`}
-            value={form.nome} onChange={handleChange}
-            placeholder="Ex: Aerador principal, Aerador secundário"
-          />
-          <FieldError show={submitted && !form.nome} message="Insira o nome do aerador" />
-        </div>
-        <div className="form-group">
-          <div className="form-check">
-            <input name="status" type="checkbox" className="form-check-input" checked={form.status} onChange={handleChange} id="aerador-status" />
-            <label className="form-label" htmlFor="aerador-status">Ativo (ligado)</label>
-          </div>
-          <span className="form-hint">Aeradores ativos ajudam a manter os níveis de oxigênio adequados</span>
-        </div>
+        <Input
+          name="nome" type="text" label="Nome do aerador" required
+          value={form.nome} onChange={handleChange}
+          placeholder="Ex: Aerador principal, Aerador secundário"
+          error={submitted && !form.nome ? 'Insira o nome do aerador' : undefined}
+        />
+        <Checkbox
+          name="status"
+          checked={form.status}
+          onChange={handleChange}
+          label="Ativo (ligado)"
+        />
+        <span className="form-hint">Aeradores ativos ajudam a manter os níveis de oxigênio adequados</span>
       </Modal>
     </div>
   )

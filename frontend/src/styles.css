@@ -1,12 +1,14 @@
 /* =========================================================================
-   ecamarao — design system
-   One shared vocabulary of tokens + components used by every page, so a
-   new screen is built by composing these classes rather than inventing
-   new CSS. Keep additions here instead of ad-hoc styles in page files.
+   ecamarao — local layout vocabulary
+   The generic UI vocabulary (buttons, cards, badges, stat tiles, forms,
+   tables, alerts, modals, empty states) now comes from @edubrq/design-system
+   (imported in main.tsx before this file) — see Button/Card/Badge/StatTile/
+   Input/Select/Table/Alert/Modal/EmptyState there.
 
-   Color, radius, spacing and shadow tokens come from @edubrq/design-system
-   (imported in main.tsx, before this file) — see tokens/base.css and
-   tokens/brand-aqua.css there. Nothing below should hardcode a color.
+   What's left here is what the design system doesn't (yet) model:
+   app-shell chrome (header/footer), the nav-item list pattern, the cycle
+   phase timeline, and page-level layout. Color/radius/spacing/shadow are
+   still tokens from the design system — nothing below hardcodes a color.
    ========================================================================= */
 
 /* --- Reset ------------------------------------------------------------- */
@@ -103,25 +105,6 @@ button {
   flex: 1;
 }
 
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.icon-btn:hover {
-  background: var(--surface-0);
-  color: var(--text);
-}
-
 .footer {
   background: var(--surface-1);
   border-top: 1px solid var(--border);
@@ -162,17 +145,6 @@ button {
   color: var(--text);
 }
 
-/* --- Card ------------------------------------------------------------------ */
-.card {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
 .card-row {
   display: flex;
   align-items: center;
@@ -180,109 +152,23 @@ button {
   gap: var(--space-3);
 }
 
-/* --- Buttons ---------------------------------------------------------------- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: 0.55rem 1rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-sm {
-  padding: 0.35rem 0.65rem;
-  font-size: 0.78rem;
-}
-
+/* --- Button block modifier (composes with the DS Button) ------------------- */
 .btn-block {
   width: 100%;
 }
 
-.btn-primary {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-.btn-primary:hover:not(:disabled) {
-  background: var(--accent-strong);
-}
-
-.btn-secondary {
-  background: var(--surface-1);
-  color: var(--text);
-  border-color: var(--border);
-}
-.btn-secondary:hover:not(:disabled) {
-  background: var(--surface-0);
-}
-
-.btn-danger {
-  background: var(--danger-soft);
-  color: var(--danger);
-}
-.btn-danger:hover:not(:disabled) {
-  background: var(--danger);
-  color: var(--text);
-}
-
-.btn-ghost {
-  background: none;
-  color: var(--text-muted);
-}
-.btn-ghost:hover:not(:disabled) {
-  background: var(--surface-0);
-  color: var(--text);
-}
-
-/* --- Status pill / badge ----------------------------------------------------- */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 0.2rem 0.55rem;
-  border-radius: 50px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-.pill-neutral { background: var(--surface-0); color: var(--text-muted); }
-.pill-good { background: var(--success-soft); color: var(--success); }
-.pill-warning { background: var(--warning-soft); color: var(--warning); }
-.pill-critical { background: var(--danger-soft); color: var(--danger); }
-.pill-info { background: var(--accent-soft); color: var(--accent-strong); }
-
-/* --- Stat tile grid (KPIs, indicators, farm totals — everything numeric) --- */
+/* --- Stat tile tone modifiers (compose with the DS StatTile) --------------- */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: var(--space-2);
-}
-
-.stat-tile {
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  text-align: center;
-  background: var(--surface-0);
 }
 .stat-tile-good { background: var(--success-soft); }
 .stat-tile-warning { background: var(--warning-soft); }
 .stat-tile-critical { background: var(--danger-soft); }
 .stat-tile-accent { background: var(--accent-soft); }
 
+/* Standalone big-number readout (Racao FCR display) that isn't a StatTile */
 .stat-value {
   display: block;
   font-size: 1.3rem;
@@ -290,11 +176,6 @@ button {
   color: var(--text);
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
-}
-.stat-unit {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--text-muted);
 }
 .stat-label {
   display: block;
@@ -370,221 +251,34 @@ button {
   flex-shrink: 0;
 }
 
-/* --- Forms -------------------------------------------------------------------- */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.form-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text);
-}
-.form-label.required::after {
-  content: ' *';
-  color: var(--danger);
-}
-.form-label.has-error {
-  color: var(--danger);
-}
-.form-control {
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  font-family: inherit;
-  background: var(--surface-1);
-  color: var(--text);
-  transition: border-color 0.15s;
-  -webkit-appearance: none;
-}
-.form-control:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.form-control.is-invalid {
-  border-color: var(--danger);
-}
+/* --- Form hint (DS Input/Select only render label/error, not a standalone hint) */
 .form-hint {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
-.field-error {
-  font-size: 0.75rem;
-  color: var(--danger);
-}
-.form-check {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.form-check-input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
-}
 
-/* --- Table ----------------------------------------------------------------- */
+/* --- Table modifiers (compose with the DS Table) --------------------------- */
 .table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-}
-.table th,
-.table td {
-  padding: 0.55rem 0.65rem;
-  text-align: left;
-  white-space: nowrap;
-}
-.table thead th {
-  font-weight: 600;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
-}
-.table tbody tr {
-  border-bottom: 1px solid var(--border);
-}
-.table tbody tr:hover {
-  background: var(--surface-0);
-}
-.table tbody tr.active-row {
-  background: var(--accent-soft);
-  font-weight: 600;
-}
-.table .num {
+.eds-table .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-
-/* --- Modal ------------------------------------------------------------------- */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(4, 7, 10, 0.6);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.15s ease;
-}
-.modal {
-  background: var(--surface-1);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  width: 100%;
-  max-width: 480px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-popover);
-  animation: slideUp 0.2s ease;
-}
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  background: var(--surface-1);
-}
-.modal-header h3 {
-  font-size: 1rem;
-  font-weight: 700;
-}
-.modal-body {
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-.modal-footer {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: flex-end;
-  padding: var(--space-4);
-  border-top: 1px solid var(--border);
-  position: sticky;
-  bottom: 0;
-  background: var(--surface-1);
-}
-@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
-
-/* --- Empty state -------------------------------------------------------------- */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  text-align: center;
-  padding: var(--space-5) var(--space-3);
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-.empty-state-icon {
-  color: var(--text-faint);
-}
-.empty-state.success {
-  color: var(--success);
+.eds-table tr.active-row td {
+  background: var(--accent-soft);
+  font-weight: 600;
 }
 
-/* --- Alerts ------------------------------------------------------------------ */
+/* --- Alert list (layout wrapper around multiple DS Alerts) ----------------- */
 .alert-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
-.alert {
-  display: flex;
-  gap: var(--space-2);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  font-size: 0.8rem;
-}
-.alert-warning {
-  background: var(--warning-soft);
-  border-left: 3px solid var(--warning);
-}
-.alert-critical {
-  background: var(--danger-soft);
-  border-left: 3px solid var(--danger);
-}
-.alert-icon {
-  flex-shrink: 0;
-}
-.alert-body strong {
-  display: block;
-  color: var(--text);
-  margin-bottom: 0.15rem;
-}
-.alert-body span {
-  color: var(--text-muted);
-  line-height: 1.4;
-}
 
-/* --- Progress / cycle phase --------------------------------------------------- */
-.progress-track {
-  height: 8px;
-  background: var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  background: var(--accent);
-  transition: width 0.4s ease;
-}
+/* --- Cycle phase timeline ---------------------------------------------------- */
 .phase-timeline {
   display: flex;
   flex-direction: column;
@@ -621,47 +315,6 @@ button {
   margin-left: auto;
 }
 
-/* --- Confirm dialog -------------------------------------------------------------- */
-.confirm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(4, 7, 10, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1100;
-  padding: var(--space-4);
-}
-.confirm-card {
-  background: var(--surface-1);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  max-width: 380px;
-  width: 100%;
-  text-align: center;
-  box-shadow: var(--shadow-popover);
-}
-.confirm-icon {
-  color: var(--danger);
-  margin-bottom: var(--space-2);
-}
-.confirm-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: var(--space-2);
-}
-.confirm-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: var(--space-4);
-  line-height: 1.5;
-}
-.confirm-actions {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: center;
-}
-
 /* --- Login ------------------------------------------------------------------------ */
 .login-page {
   flex: 1;
@@ -692,25 +345,12 @@ button {
 /* --- Utility ----------------------------------------------------------------------- */
 .text-center { text-align: center; }
 .text-muted { color: var(--text-muted); }
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: var(--space-2) auto;
-}
 @keyframes spin { to { transform: rotate(360deg) } }
 .fan-spin { animation: spin 1.4s linear infinite; }
 .fade-in { animation: fadeInPage 0.2s ease; }
 @keyframes fadeInPage { from { opacity: 0 } to { opacity: 1 } }
 
 /* --- Responsive ---------------------------------------------------------------------- */
-@media (min-width: 640px) {
-  .modal-overlay { align-items: center; }
-  .modal { border-radius: var(--radius-lg); }
-}
 @media (min-width: 768px) {
   .header-inner, .page { padding-left: var(--space-5); padding-right: var(--space-5); }
 }

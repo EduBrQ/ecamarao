@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Sprout, Trash2, AlertTriangle, Loader2, ShieldAlert } from 'lucide-react'
+import { Sprout, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { Card, Button, Input, Alert, Spinner, Modal, EmptyState } from '@edubrq/design-system'
 import { auth, backendApi, getErrorMessage, AuthUser } from '../services/backendApi'
 import { useToastGlobal } from '../hooks/useToastGlobal'
 
@@ -51,17 +52,15 @@ function Configuracoes() {
   }
 
   if (loadingUser) {
-    return <div className="page fade-in"><div className="card text-center"><Loader2 className="spinner" size={20} />Carregando...</div></div>
+    return <div className="page fade-in"><Card className="text-center"><Spinner /> Carregando...</Card></div>
   }
 
   if (!user || user.role !== 'admin') {
     return (
       <div className="page fade-in">
-        <div className="card text-center">
-          <ShieldAlert size={28} style={{ marginBottom: 'var(--space-2)' }} />
-          <strong>Acesso restrito</strong>
-          <p className="page-subtitle">Esta página é exclusiva para administradores.</p>
-        </div>
+        <Card>
+          <EmptyState icon={<ShieldAlert size={28} />} title="Acesso restrito" description="Esta página é exclusiva para administradores." />
+        </Card>
       </div>
     )
   }
@@ -75,7 +74,7 @@ function Configuracoes() {
         </div>
       </div>
 
-      <div className="card">
+      <Card>
         <h3 className="section-title"><Sprout size={16} /> Dados de demonstração</h3>
         <p className="page-subtitle">
           Popula a base com 10 viveiros fictícios simulando um ano de operação de uma fazenda de
@@ -84,87 +83,67 @@ function Configuracoes() {
           preparo entre um ciclo e o próximo. Inclui histórico de ração, mortalidade, qualidade da
           água e aeradores. <strong>Isso substitui todos os dados atuais.</strong>
         </p>
-        <button className="btn btn-primary" onClick={() => setSeedModalOpen(true)}>
+        <Button onClick={() => setSeedModalOpen(true)}>
           <Sprout size={16} /> Popular com dados de demonstração
-        </button>
-      </div>
+        </Button>
+      </Card>
 
-      <div className="card" style={{ borderColor: 'var(--danger)' }}>
+      <Card style={{ borderColor: 'var(--danger)' }}>
         <h3 className="section-title"><AlertTriangle size={16} /> Zona de risco</h3>
         <p className="page-subtitle">
           Remove permanentemente todos os viveiros e seus registros de ração, mortalidade, qualidade
           da água e aeradores. O login de administrador não é afetado. Esta ação não pode ser desfeita.
         </p>
-        <button className="btn btn-danger" onClick={() => setClearModalOpen(true)}>
+        <Button variant="danger" onClick={() => setClearModalOpen(true)}>
           <Trash2 size={16} /> Limpar base de dados
-        </button>
-      </div>
+        </Button>
+      </Card>
 
-      {seedModalOpen && (
-        <div className="modal-overlay" onClick={() => !seeding && setSeedModalOpen(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Popular dados de demonstração</h3>
-            </div>
-            <div className="modal-body">
-              <div className="alert alert-warning">
-                <AlertTriangle className="alert-icon" size={16} />
-                <div className="alert-body">
-                  <strong>Isso é produção.</strong>
-                  <span>Todos os viveiros e registros existentes serão apagados e substituídos pelos dados fictícios. Confirma?</span>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setSeedModalOpen(false)} disabled={seeding}>Cancelar</button>
-              <button className="btn btn-primary" onClick={handleSeed} disabled={seeding}>
-                {seeding ? <><Loader2 className="spinner" size={14} /> Gerando...</> : 'Confirmar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={seedModalOpen}
+        onClose={() => !seeding && setSeedModalOpen(false)}
+        title="Popular dados de demonstração"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setSeedModalOpen(false)} disabled={seeding}>Cancelar</Button>
+            <Button onClick={handleSeed} disabled={seeding}>
+              {seeding ? <><Spinner size="sm" /> Gerando...</> : 'Confirmar'}
+            </Button>
+          </>
+        }
+      >
+        <Alert tone="warning" icon={<AlertTriangle size={16} />} title="Isso é produção.">
+          Todos os viveiros e registros existentes serão apagados e substituídos pelos dados fictícios. Confirma?
+        </Alert>
+      </Modal>
 
-      {clearModalOpen && (
-        <div
-          className="modal-overlay"
-          onClick={() => {
-            if (clearing) return
-            setClearModalOpen(false)
-            setConfirmText('')
-          }}
-        >
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Limpar base de dados</h3>
-            </div>
-            <div className="modal-body">
-              <div className="alert alert-critical">
-                <AlertTriangle className="alert-icon" size={16} />
-                <div className="alert-body">
-                  <strong>Isso é produção — ação irreversível.</strong>
-                  <span>Todos os viveiros e seus registros serão apagados permanentemente.</span>
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Digite <strong>{CONFIRMACAO_LIMPAR}</strong> para confirmar</label>
-                <input
-                  className="form-control"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => { setClearModalOpen(false); setConfirmText('') }} disabled={clearing}>Cancelar</button>
-              <button className="btn btn-danger" onClick={handleClear} disabled={clearing || confirmText !== CONFIRMACAO_LIMPAR}>
-                {clearing ? <><Loader2 className="spinner" size={14} /> Limpando...</> : 'Limpar tudo'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={clearModalOpen}
+        onClose={() => {
+          if (clearing) return
+          setClearModalOpen(false)
+          setConfirmText('')
+        }}
+        title="Limpar base de dados"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => { setClearModalOpen(false); setConfirmText('') }} disabled={clearing}>Cancelar</Button>
+            <Button variant="danger" onClick={handleClear} disabled={clearing || confirmText !== CONFIRMACAO_LIMPAR}>
+              {clearing ? <><Spinner size="sm" /> Limpando...</> : 'Limpar tudo'}
+            </Button>
+          </>
+        }
+      >
+        <Alert tone="danger" icon={<AlertTriangle size={16} />} title="Isso é produção — ação irreversível.">
+          Todos os viveiros e seus registros serão apagados permanentemente.
+        </Alert>
+        <Input
+          label={<>Digite <strong>{CONFIRMACAO_LIMPAR}</strong> para confirmar</>}
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          autoFocus
+        />
+      </Modal>
     </div>
   )
 }

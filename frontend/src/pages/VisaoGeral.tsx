@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { AlertTriangle, CheckCircle2, Droplets, Loader2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Droplets } from 'lucide-react'
+import { Card, StatTile, Alert, EmptyState, Spinner } from '@edubrq/design-system'
 import {
   calcularDOC,
   calcularSobrevivencia,
@@ -78,13 +79,13 @@ function VisaoGeral() {
   }, [viveiroId])
 
   if (loading) {
-    return <div className="page fade-in"><div className="card text-center"><Loader2 className="spinner" size={20} />Carregando...</div></div>
+    return <div className="page fade-in"><Card className="text-center"><Spinner /> Carregando...</Card></div>
   }
   if (error) {
-    return <div className="page fade-in"><div className="card text-center field-error">{error}</div></div>
+    return <div className="page fade-in"><Alert tone="danger">{error}</Alert></div>
   }
   if (!viveiro) {
-    return <div className="page fade-in"><div className="card text-center">Viveiro não encontrado</div></div>
+    return <div className="page fade-in"><EmptyState title="Viveiro não encontrado" /></div>
   }
 
   const doc = calcularDOC(viveiro.data_inicio_ciclo)
@@ -122,66 +123,36 @@ function VisaoGeral() {
 
   return (
     <div className="page fade-in">
-      <div className="card">
+      <Card>
         <div className="page-header">
           <div>
             <h2 className="section-title">{fase.nome}</h2>
             <p className="page-subtitle">{fase.descricao}</p>
           </div>
-          <div className="stat-tile stat-tile-accent" style={{ minWidth: 64 }}>
-            <span className="stat-value">{doc}</span>
-            <span className="stat-label">DOC</span>
-          </div>
+          <StatTile className="stat-tile-accent" style={{ minWidth: 64 }} label="DOC" value={doc} />
         </div>
         {dataColheitaEstimada && (
           <div className="stat-grid">
-            <div className="stat-tile">
-              <span className="stat-value">{new Date(viveiro.data_inicio_ciclo).toLocaleDateString('pt-BR')}</span>
-              <span className="stat-label">Início</span>
-            </div>
-            <div className="stat-tile">
-              <span className="stat-value">{dataColheitaEstimada.toLocaleDateString('pt-BR')}</span>
-              <span className="stat-label">Despesca est.</span>
-            </div>
-            <div className="stat-tile">
-              <span className="stat-value">{diasParaDespesca}</span>
-              <span className="stat-label">Dias restantes</span>
-            </div>
+            <StatTile label="Início" value={new Date(viveiro.data_inicio_ciclo).toLocaleDateString('pt-BR')} />
+            <StatTile label="Despesca est." value={dataColheitaEstimada.toLocaleDateString('pt-BR')} />
+            <StatTile label="Dias restantes" value={diasParaDespesca} />
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="card">
+      <Card>
         <h3 className="section-title">Indicadores</h3>
         <div className="stat-grid">
-          <div className={`stat-tile ${statTileVariant('sobrevivencia', sobrevivencia)}`}>
-            <span className="stat-value">{sobrevivencia.toFixed(1)}<span className="stat-unit">%</span></span>
-            <span className="stat-label">Sobrevivência</span>
-          </div>
-          <div className={`stat-tile ${statTileVariant('fcr', fcr)}`}>
-            <span className="stat-value">{fcr > 0 ? fcr.toFixed(2) : '-'}</span>
-            <span className="stat-label">FCR</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">{biomassa > 0 ? biomassa.toFixed(0) : '-'}<span className="stat-unit">kg</span></span>
-            <span className="stat-label">Biomassa est.</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">{vivos.toLocaleString('pt-BR')}</span>
-            <span className="stat-label">Vivos</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">{racaoTotal.toFixed(1)}<span className="stat-unit">kg</span></span>
-            <span className="stat-label">Ração total</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">{racao.length}</span>
-            <span className="stat-label">Dias alimentados</span>
-          </div>
+          <StatTile className={statTileVariant('sobrevivencia', sobrevivencia)} label="Sobrevivência" value={sobrevivencia.toFixed(1)} unit="%" />
+          <StatTile className={statTileVariant('fcr', fcr)} label="FCR" value={fcr > 0 ? fcr.toFixed(2) : '-'} />
+          <StatTile label="Biomassa est." value={biomassa > 0 ? biomassa.toFixed(0) : '-'} unit="kg" />
+          <StatTile label="Vivos" value={vivos.toLocaleString('pt-BR')} />
+          <StatTile label="Ração total" value={racaoTotal.toFixed(1)} unit="kg" />
+          <StatTile label="Dias alimentados" value={racao.length} />
         </div>
-      </div>
+      </Card>
 
-      <div className="card">
+      <Card>
         <h3 className="section-title">Fases do ciclo</h3>
         <div className="phase-timeline">
           {FASES.map((f, i) => {
@@ -196,23 +167,20 @@ function VisaoGeral() {
             )
           })}
         </div>
-      </div>
+      </Card>
 
       {recomendacoes.length > 0 && (
-        <div className="card">
+        <Card>
           <h3 className="section-title">Recomendações</h3>
           <div className="alert-list">
             {recomendacoes.map((texto, i) => (
-              <div key={i} className="alert alert-warning">
-                <AlertTriangle className="alert-icon" size={16} />
-                <div className="alert-body"><span>{texto}</span></div>
-              </div>
+              <Alert key={i} tone="warning" icon={<AlertTriangle size={16} />}>{texto}</Alert>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
-      <div className="card">
+      <Card>
         <h3 className="section-title"><Droplets size={16} /> Qualidade da água (última medição)</h3>
         {ultimaMedicao ? (
           <div className="stat-grid">
@@ -222,38 +190,35 @@ function VisaoGeral() {
               if (valor === undefined || valor === null) return null
               const isOk = valor >= range.min && valor <= range.max
               return (
-                <div key={param} className={`stat-tile ${isOk ? 'stat-tile-good' : 'stat-tile-critical'}`}>
-                  <span className="stat-value">{valor}<span className="stat-unit">{range.unit}</span></span>
-                  <span className="stat-label">{range.label}</span>
-                </div>
+                <StatTile key={param} className={isOk ? 'stat-tile-good' : 'stat-tile-critical'} label={range.label} value={valor} unit={range.unit} />
               )
             })}
           </div>
         ) : (
-          <div className="empty-state">Nenhuma medição registrada. Acesse "Qualidade da Água" para inserir dados.</div>
+          <EmptyState title="Nenhuma medição registrada. Acesse &quot;Qualidade da Água&quot; para inserir dados." />
         )}
 
         {alertas.length > 0 && (
           <div className="alert-list">
             {alertas.map((alerta, i) => (
-              <div key={i} className={`alert ${alerta.condicao.startsWith('critico') ? 'alert-critical' : 'alert-warning'}`}>
-                <AlertTriangle className="alert-icon" size={16} />
-                <div className="alert-body">
-                  <strong>{alerta.mensagem}</strong>
-                  <span>{alerta.manejo}</span>
-                </div>
-              </div>
+              <Alert
+                key={i}
+                tone={alerta.condicao.startsWith('critico') ? 'danger' : 'warning'}
+                icon={<AlertTriangle size={16} />}
+                title={alerta.mensagem}
+              >
+                {alerta.manejo}
+              </Alert>
             ))}
           </div>
         )}
 
         {alertas.length === 0 && ultimaMedicao && (
-          <div className="empty-state success">
-            <CheckCircle2 size={20} />
+          <Alert tone="success" icon={<CheckCircle2 size={20} />}>
             Todos os parâmetros dentro da faixa ideal
-          </div>
+          </Alert>
         )}
-      </div>
+      </Card>
     </div>
   )
 }
