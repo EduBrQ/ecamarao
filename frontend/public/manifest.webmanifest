@@ -4,8 +4,8 @@
   "description": "Sistema de gestão de viveiros de camarão",
   "start_url": "/home-page",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#5f9ea0",
+  "background_color": "#0a0f14",
+  "theme_color": "#0a0f14",
   "icons": [
     {
       "src": "/img/shrimp.svg",

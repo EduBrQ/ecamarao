@@ -309,7 +309,7 @@ function Racao() {
         onSave={handleSave}
       >
         {recomendacao.faixa && (
-          <div className="alert alert-warning" style={{ borderLeftColor: 'var(--color-accent)', background: 'var(--color-accent-bg)' }}>
+          <div className="alert alert-warning" style={{ borderLeftColor: 'var(--accent)', background: 'var(--accent-soft)' }}>
             <Info className="alert-icon" size={16} />
             <div className="alert-body">
               <strong>Recomendação para DOC {doc}</strong>

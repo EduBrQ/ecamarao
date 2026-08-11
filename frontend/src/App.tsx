@@ -1,9 +1,8 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { ToastProvider } from '@edubrq/design-system'
 import Header from './components/Header'
 import Footer from './components/Footer'
-import Toast from './components/Toast'
 import RequireAuth from './components/RequireAuth'
-import { ToastProvider, useToastGlobal } from './hooks/useToastGlobal'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import Viveiro from './pages/Viveiro'
@@ -47,16 +46,10 @@ function AppContent() {
   )
 }
 
-function ToastRenderer() {
-  const toast = useToastGlobal()
-  return <Toast messages={toast.messages} onRemove={toast.removeMessage} />
-}
-
 function App() {
   return (
     <ToastProvider>
       <AppContent />
-      <ToastRenderer />
     </ToastProvider>
   )
 }

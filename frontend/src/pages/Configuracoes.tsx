@@ -89,7 +89,7 @@ function Configuracoes() {
         </button>
       </div>
 
-      <div className="card" style={{ borderColor: 'var(--color-danger)' }}>
+      <div className="card" style={{ borderColor: 'var(--danger)' }}>
         <h3 className="section-title"><AlertTriangle size={16} /> Zona de risco</h3>
         <p className="page-subtitle">
           Remove permanentemente todos os viveiros e seus registros de ração, mortalidade, qualidade
