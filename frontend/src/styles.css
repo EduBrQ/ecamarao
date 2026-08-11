@@ -180,9 +180,9 @@ button {
 .stat-label {
   display: block;
   font-size: 0.65rem;
+  font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.02em;
   margin-top: 0.15rem;
 }
 

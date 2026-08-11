@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import '@edubrq/design-system/tokens/base.css'
-import '@edubrq/design-system/tokens/brand-aqua.css'
+import '@edubrq/design-system/tokens/theme-g100.css'
 import '@edubrq/design-system/components.css'
 import './styles.css'
 
