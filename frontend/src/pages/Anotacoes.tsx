@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { AlertTriangle, CheckCircle2, Plus, Trash2, Loader2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Plus, Trash2 } from 'lucide-react'
+import { Card, StatTile, Badge, Button, Input, Alert, EmptyState, Spinner } from '@edubrq/design-system'
 import Modal from '../components/Modal'
-import FieldError from '../components/FieldError'
 import { backendApi, getErrorMessage, Medicao } from '../services/backendApi'
 import { gerarAlertas, RANGES_IDEAIS, ParametroAgua } from '../models/types'
 
@@ -52,10 +52,10 @@ function Anotacoes() {
   }, [viveiroId])
 
   if (loading) {
-    return <div className="page fade-in"><div className="card text-center"><Loader2 className="spinner" size={20} />Carregando medições...</div></div>
+    return <div className="page fade-in"><Card className="text-center"><Spinner /> Carregando medições...</Card></div>
   }
   if (error) {
-    return <div className="page fade-in"><div className="card text-center field-error">{error}</div></div>
+    return <div className="page fade-in"><Alert tone="danger">{error}</Alert></div>
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,60 +110,58 @@ function Anotacoes() {
   return (
     <div className="page fade-in">
       {alertas.length > 0 && (
-        <div className="card">
+        <Card>
           <h3 className="section-title">Alertas de qualidade</h3>
           <div className="alert-list">
             {alertas.map((alerta, i) => (
-              <div key={i} className={`alert ${alerta.condicao.startsWith('critico') ? 'alert-critical' : 'alert-warning'}`}>
-                <AlertTriangle className="alert-icon" size={16} />
-                <div className="alert-body">
-                  <strong>{alerta.mensagem}</strong>
-                  <span>{alerta.manejo}</span>
-                </div>
-              </div>
+              <Alert
+                key={i}
+                tone={alerta.condicao.startsWith('critico') ? 'danger' : 'warning'}
+                icon={<AlertTriangle size={16} />}
+                title={alerta.mensagem}
+              >
+                {alerta.manejo}
+              </Alert>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {alertas.length === 0 && ultimaMedicao && (
-        <div className="card">
-          <div className="empty-state success"><CheckCircle2 size={20} />Todos os parâmetros dentro da faixa ideal</div>
-        </div>
+        <Card>
+          <Alert tone="success" icon={<CheckCircle2 size={20} />}>Todos os parâmetros dentro da faixa ideal</Alert>
+        </Card>
       )}
 
-      <div className="card">
+      <Card>
         <h3 className="section-title">Faixas ideais</h3>
         <div className="stat-grid">
           {PARAMS.map((param) => {
             const range = RANGES_IDEAIS[param]
             return (
-              <div key={param} className="stat-tile">
-                <span className="stat-value" style={{ fontSize: '0.9rem' }}>{range.min}-{range.max}{range.unit}</span>
-                <span className="stat-label">{range.label}</span>
-              </div>
+              <StatTile key={param} label={range.label} value={`${range.min}-${range.max}${range.unit}`} />
             )
           })}
         </div>
-      </div>
+      </Card>
 
-      <div className="card">
+      <Card>
         <div className="card-row">
           <h3 className="section-title">Medições ({medicoes.length})</h3>
-          <button className="btn btn-primary btn-sm" onClick={() => setModalOpen(true)}>
+          <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus size={14} /> Nova medição
-          </button>
+          </Button>
         </div>
 
         {medicoes.length === 0 ? (
-          <div className="empty-state">Nenhuma medição registrada ainda.</div>
+          <EmptyState title="Nenhuma medição registrada ainda." />
         ) : (
           <div className="nav-list">
             {medicoes.slice().reverse().map((m) => {
               const mAlertas = gerarAlertas(m)
               const isExpanded = expandedId === m.id
               return (
-                <div key={m.id} className="card" style={{ padding: 0 }}>
+                <Card key={m.id} style={{ padding: 0 }}>
                   <button
                     className="nav-item"
                     style={{ border: 'none', flexWrap: 'wrap' }}
@@ -172,7 +170,7 @@ function Anotacoes() {
                     <span className="nav-item-text">
                       <span className="card-row">
                         <span className="nav-item-title">{formatDate(m.data)}</span>
-                        {mAlertas.length > 0 && <span className="pill pill-warning">{mAlertas.length} alerta(s)</span>}
+                        {mAlertas.length > 0 && <Badge tone="warning">{mAlertas.length} alerta(s)</Badge>}
                       </span>
                       <span className="nav-item-desc">pH {m.ph} &middot; O2 {m.oxigenio} &middot; {m.temperatura}°C</span>
                     </span>
@@ -185,34 +183,35 @@ function Anotacoes() {
                           const range = RANGES_IDEAIS[param]
                           const valor = m[param] as number
                           return (
-                            <div key={param} className={`stat-tile ${paramVariant(param, valor)}`}>
-                              <span className="stat-value">{valor}<span className="stat-unit">{range.unit}</span></span>
-                              <span className="stat-label">{range.label}</span>
-                            </div>
+                            <StatTile key={param} className={paramVariant(param, valor)} label={range.label} value={valor} unit={range.unit} />
                           )
                         })}
                       </div>
                       {mAlertas.length > 0 && (
                         <div className="alert-list" style={{ marginTop: 'var(--space-3)' }}>
                           {mAlertas.map((a, i) => (
-                            <div key={i} className={`alert ${a.condicao.startsWith('critico') ? 'alert-critical' : 'alert-warning'}`}>
-                              <AlertTriangle className="alert-icon" size={16} />
-                              <div className="alert-body"><strong>{a.mensagem}</strong><span>{a.manejo}</span></div>
-                            </div>
+                            <Alert
+                              key={i}
+                              tone={a.condicao.startsWith('critico') ? 'danger' : 'warning'}
+                              icon={<AlertTriangle size={16} />}
+                              title={a.mensagem}
+                            >
+                              {a.manejo}
+                            </Alert>
                           ))}
                         </div>
                       )}
-                      <button className="btn btn-danger btn-sm" style={{ marginTop: 'var(--space-3)' }} onClick={() => removerMedicao(m.id)}>
+                      <Button variant="danger" size="sm" style={{ marginTop: 'var(--space-3)' }} onClick={() => removerMedicao(m.id)}>
                         <Trash2 size={14} /> Excluir medição
-                      </button>
+                      </Button>
                     </div>
                   )}
-                </div>
+                </Card>
               )
             })}
           </div>
         )}
-      </div>
+      </Card>
 
       <Modal
         title="Nova medição"
@@ -221,18 +220,17 @@ function Anotacoes() {
         onSave={handleSave}
       >
         {fields.map((f) => (
-          <div key={f.name} className="form-group">
-            <label className={`form-label required ${submitted && !form[f.name as keyof typeof form] ? 'has-error' : ''}`}>{f.label}</label>
-            <input
-              name={f.name}
-              type={f.type}
-              step={f.type === 'number' ? '0.1' : undefined}
-              className={`form-control ${submitted && !form[f.name as keyof typeof form] ? 'is-invalid' : ''}`}
-              value={form[f.name as keyof typeof form]}
-              onChange={handleChange}
-            />
-            <FieldError show={submitted && !form[f.name as keyof typeof form]} message={f.error} />
-          </div>
+          <Input
+            key={f.name}
+            name={f.name}
+            type={f.type}
+            step={f.type === 'number' ? '0.1' : undefined}
+            label={f.label}
+            required
+            value={form[f.name as keyof typeof form]}
+            onChange={handleChange}
+            error={submitted && !form[f.name as keyof typeof form] ? f.error : undefined}
+          />
         ))}
       </Modal>
     </div>

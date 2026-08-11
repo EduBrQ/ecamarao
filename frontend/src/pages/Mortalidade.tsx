@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Plus, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
+import { Card, StatTile, Table, Button, IconButton, Input, Select, EmptyState, Spinner, Alert } from '@edubrq/design-system'
 import Modal from '../components/Modal'
-import FieldError from '../components/FieldError'
 import { backendApi, getErrorMessage, Viveiro, RegistroMortalidade } from '../services/backendApi'
 import { calcularSobrevivencia } from '../models/types'
 
@@ -56,13 +56,13 @@ function Mortalidade() {
   }, [viveiroId])
 
   if (loading) {
-    return <div className="page fade-in"><div className="card text-center"><Loader2 className="spinner" size={20} />Carregando dados de mortalidade...</div></div>
+    return <div className="page fade-in"><Card className="text-center"><Spinner /> Carregando dados de mortalidade...</Card></div>
   }
   if (error) {
-    return <div className="page fade-in"><div className="card text-center field-error">{error}</div></div>
+    return <div className="page fade-in"><Alert tone="danger">{error}</Alert></div>
   }
   if (!viveiro) {
-    return <div className="page fade-in"><div className="card text-center">Viveiro não encontrado</div></div>
+    return <div className="page fade-in"><EmptyState title="Viveiro não encontrado" /></div>
   }
 
   const mortalidadeTotal = registros.reduce((acc, r) => acc + r.quantidade, 0)
@@ -105,62 +105,48 @@ function Mortalidade() {
 
   return (
     <div className="page fade-in">
-      <div className="card">
+      <Card>
         <h2 className="section-title">Mortalidade &mdash; {viveiro.nome}</h2>
         <div className="stat-grid">
-          <div className={`stat-tile ${sobrevivenciaVariant(sobrevivencia)}`}>
-            <span className="stat-value">{sobrevivencia.toFixed(1)}<span className="stat-unit">%</span></span>
-            <span className="stat-label">Sobrevivência</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">{populacaoInicial.toLocaleString('pt-BR')}</span>
-            <span className="stat-label">Pop. inicial</span>
-          </div>
-          <div className="stat-tile stat-tile-critical">
-            <span className="stat-value">{mortalidadeTotal.toLocaleString('pt-BR')}</span>
-            <span className="stat-label">Mortalidade</span>
-          </div>
-          <div className="stat-tile stat-tile-good">
-            <span className="stat-value">{vivos.toLocaleString('pt-BR')}</span>
-            <span className="stat-label">Vivos est.</span>
-          </div>
+          <StatTile className={sobrevivenciaVariant(sobrevivencia)} label="Sobrevivência" value={sobrevivencia.toFixed(1)} unit="%" />
+          <StatTile label="Pop. inicial" value={populacaoInicial.toLocaleString('pt-BR')} />
+          <StatTile className="stat-tile-critical" label="Mortalidade" value={mortalidadeTotal.toLocaleString('pt-BR')} />
+          <StatTile className="stat-tile-good" label="Vivos est." value={vivos.toLocaleString('pt-BR')} />
         </div>
-      </div>
+      </Card>
 
-      <div className="card">
+      <Card>
         <div className="card-row">
           <h3 className="section-title">Registros</h3>
-          <button className="btn btn-primary btn-sm" onClick={() => setModalOpen(true)}>
+          <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus size={14} /> Registrar
-          </button>
+          </Button>
         </div>
 
         {registros.length === 0 ? (
-          <div className="empty-state success">Nenhum registro de mortalidade. Isso é bom!</div>
+          <EmptyState title="Nenhum registro de mortalidade. Isso é bom!" />
         ) : (
           <div className="table-wrapper">
-            <table className="table">
-              <thead>
-                <tr><th>Data</th><th className="num">Qtd</th><th>Causa</th><th></th></tr>
-              </thead>
-              <tbody>
+            <Table>
+              <Table.Head>
+                <Table.Row><Table.Th>Data</Table.Th><Table.Th className="num">Qtd</Table.Th><Table.Th>Causa</Table.Th><Table.Th></Table.Th></Table.Row>
+              </Table.Head>
+              <Table.Body>
                 {registros.slice().reverse().map((r) => (
-                  <tr key={r.id}>
-                    <td>{formatDate(r.data)}</td>
-                    <td className="num">{r.quantidade.toLocaleString('pt-BR')}</td>
-                    <td>{r.causa}</td>
-                    <td className="num">
-                      <button className="btn btn-ghost btn-sm" onClick={() => removerRegistro(r.id)}>
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
+                  <Table.Row key={r.id}>
+                    <Table.Td>{formatDate(r.data)}</Table.Td>
+                    <Table.Td className="num">{r.quantidade.toLocaleString('pt-BR')}</Table.Td>
+                    <Table.Td>{r.causa}</Table.Td>
+                    <Table.Td className="num">
+                      <IconButton variant="ghost" size="sm" onClick={() => removerRegistro(r.id)} aria-label="Excluir" icon={<Trash2 size={14} />} />
+                    </Table.Td>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+              </Table.Body>
+            </Table>
           </div>
         )}
-      </div>
+      </Card>
 
       <Modal
         title="Registrar mortalidade"
@@ -168,29 +154,24 @@ function Mortalidade() {
         onClose={() => { setModalOpen(false); setSubmitted(false) }}
         onSave={handleSave}
       >
-        <div className="form-group">
-          <label className={`form-label required ${submitted && !form.data ? 'has-error' : ''}`}>Data</label>
-          <input name="data" type="date" className={`form-control ${submitted && !form.data ? 'is-invalid' : ''}`} value={form.data} onChange={handleChange} />
-          <FieldError show={submitted && !form.data} message="Insira a data" />
-        </div>
-        <div className="form-group">
-          <label className={`form-label required ${submitted && !form.quantidade ? 'has-error' : ''}`}>Quantidade</label>
-          <input
-            name="quantidade" type="number"
-            className={`form-control ${submitted && !form.quantidade ? 'is-invalid' : ''}`}
-            value={form.quantidade} onChange={handleChange}
-            placeholder="Número de camarões mortos"
-          />
-          <FieldError show={submitted && !form.quantidade} message="Insira a quantidade" />
-        </div>
-        <div className="form-group">
-          <label className={`form-label required ${submitted && !form.causa ? 'has-error' : ''}`}>Causa provável</label>
-          <select name="causa" className={`form-control ${submitted && !form.causa ? 'is-invalid' : ''}`} value={form.causa} onChange={handleChange}>
-            <option value="">Selecione...</option>
-            {CAUSAS.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <FieldError show={submitted && !form.causa} message="Selecione a causa" />
-        </div>
+        <Input
+          name="data" type="date" label="Data" required
+          value={form.data} onChange={handleChange}
+          error={submitted && !form.data ? 'Insira a data' : undefined}
+        />
+        <Input
+          name="quantidade" type="number" label="Quantidade" required
+          value={form.quantidade} onChange={handleChange}
+          placeholder="Número de camarões mortos"
+          error={submitted && !form.quantidade ? 'Insira a quantidade' : undefined}
+        />
+        <Select
+          name="causa" label="Causa provável" required
+          value={form.causa} onChange={handleChange}
+          placeholder="Selecione..."
+          options={CAUSAS.map((c) => ({ value: c, label: c }))}
+          error={submitted && !form.causa ? 'Selecione a causa' : undefined}
+        />
       </Modal>
     </div>
   )

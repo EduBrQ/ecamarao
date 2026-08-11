@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Wheat, Droplets, Skull, Fan, ChevronRight, Download, Loader2 } from 'lucide-react'
+import { LayoutDashboard, Wheat, Droplets, Skull, Fan, ChevronRight, Download } from 'lucide-react'
+import { Card, StatTile, IconButton, Spinner, Alert, EmptyState } from '@edubrq/design-system'
 import { calcularDOC, calcularSobrevivencia, calcularPopulacaoInicial } from '../models/types'
 import { backendApi, type Viveiro } from '../services/backendApi'
 
@@ -51,15 +52,15 @@ function VivieroPage() {
   if (loading) {
     return (
       <div className="page fade-in">
-        <div className="card text-center"><Loader2 className="spinner" size={20} />Carregando dados do viveiro...</div>
+        <Card className="text-center"><Spinner /> Carregando dados do viveiro...</Card>
       </div>
     )
   }
   if (error) {
-    return <div className="page fade-in"><div className="card text-center field-error">{error}</div></div>
+    return <div className="page fade-in"><Alert tone="danger">{error}</Alert></div>
   }
   if (!viveiro) {
-    return <div className="page fade-in"><div className="card text-center">Viveiro não encontrado</div></div>
+    return <div className="page fade-in"><EmptyState title="Viveiro não encontrado" /></div>
   }
 
   const doc = calcularDOC(viveiro.data_inicio_ciclo)
@@ -148,32 +149,20 @@ function VivieroPage() {
 
   return (
     <div className="page fade-in">
-      <div className="card">
+      <Card>
         <div className="page-header">
           <div>
             <h1 className="page-title">{viveiro.nome}</h1>
             <p className="page-subtitle">{viveiro.status} &middot; {viveiro.area} m²</p>
           </div>
-          <div className="stat-tile stat-tile-accent" style={{ minWidth: 64 }}>
-            <span className="stat-value">{doc}</span>
-            <span className="stat-label">DOC</span>
-          </div>
+          <StatTile className="stat-tile-accent" style={{ minWidth: 64 }} label="DOC" value={doc} />
         </div>
         <div className="stat-grid">
-          <div className="stat-tile">
-            <span className="stat-value">{calcularPopulacaoInicial(viveiro.densidade ?? 0, viveiro.area ?? 0).toLocaleString('pt-BR')}</span>
-            <span className="stat-label">População</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">{viveiro.densidade ?? 0}</span>
-            <span className="stat-label">Densidade/m²</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">{viveiro.area}</span>
-            <span className="stat-label">Área m²</span>
-          </div>
+          <StatTile label="População" value={calcularPopulacaoInicial(viveiro.densidade ?? 0, viveiro.area ?? 0).toLocaleString('pt-BR')} />
+          <StatTile label="Densidade/m²" value={viveiro.densidade ?? 0} />
+          <StatTile label="Área m²" value={viveiro.area} />
         </div>
-      </div>
+      </Card>
 
       <div className="nav-list">
         {MENU_ITEMS.map((item) => (
@@ -190,15 +179,14 @@ function VivieroPage() {
               </span>
               <span className="nav-item-trailing"><ChevronRight size={18} /></span>
             </button>
-            <button
-              className="icon-btn"
+            <IconButton
+              variant="ghost"
               style={{ marginRight: 'var(--space-3)' }}
               onClick={() => handleExport(item.route)}
               aria-label={`Exportar ${item.label}`}
               title={`Exportar ${item.label}`}
-            >
-              <Download size={16} />
-            </button>
+              icon={<Download size={16} />}
+            />
           </div>
         ))}
       </div>

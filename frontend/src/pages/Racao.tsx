@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { AlertTriangle, Info, Plus, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { AlertTriangle, Info, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  Card, StatTile, Badge, Table, Button, IconButton, Input, Alert, EmptyState, Spinner,
+  type BadgeTone,
+} from '@edubrq/design-system'
 import { backendApi, getErrorMessage, Viveiro } from '../services/backendApi'
 import { useToastGlobal } from '../hooks/useToastGlobal'
 import Modal from '../components/Modal'
-import FieldError from '../components/FieldError'
 import {
   ColetaRacao, RegistroMortalidade,
   calcularFCR, calcularDOC,
@@ -16,11 +19,11 @@ function formatDate(d: Date | string): string {
   return date.toLocaleDateString('pt-BR')
 }
 
-function fcrVariant(val: number): string {
-  if (val <= 0) return ''
-  if (val <= 1.5) return 'pill-good'
-  if (val <= 2.0) return 'pill-warning'
-  return 'pill-critical'
+function fcrTone(val: number): BadgeTone {
+  if (val <= 0) return 'neutral'
+  if (val <= 1.5) return 'success'
+  if (val <= 2.0) return 'warning'
+  return 'danger'
 }
 
 function fcrLabel(val: number): string {
@@ -67,16 +70,17 @@ function Racao() {
       }
     }
     loadData()
-  }, [viveiroId, toast])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viveiroId])
 
   if (loading) {
-    return <div className="page fade-in"><div className="card text-center"><Loader2 className="spinner" size={20} />Carregando dados de ração...</div></div>
+    return <div className="page fade-in"><Card className="text-center"><Spinner /> Carregando dados de ração...</Card></div>
   }
   if (error) {
-    return <div className="page fade-in"><div className="card text-center field-error">{error}</div></div>
+    return <div className="page fade-in"><Alert tone="danger">{error}</Alert></div>
   }
   if (!viveiro) {
-    return <div className="page fade-in"><div className="card text-center">Viveiro não encontrado</div></div>
+    return <div className="page fade-in"><EmptyState title="Viveiro não encontrado" /></div>
   }
 
   const racaoTotal = racao.reduce((acc, r) => acc + r.qntManha + r.qntTarde, 0)
@@ -148,20 +152,14 @@ function Racao() {
   return (
     <div className="page fade-in">
       {dadosIncompletos && (
-        <div className="alert alert-warning">
-          <AlertTriangle className="alert-icon" size={16} />
-          <div className="alert-body">
-            <strong>Dados essenciais faltando</strong>
-            <span>
-              {!viveiro?.densidade && 'Densidade (camarões/m²). '}
-              {!viveiro?.data_inicio_ciclo && 'Data de início do ciclo. '}
-              Sem isso não é possível calcular a recomendação de ração. Densidade: {densidadeFormatada} &middot; Ciclo: {cicloFormatado} &middot; DOC: {doc}
-            </span>
-          </div>
-        </div>
+        <Alert tone="warning" icon={<AlertTriangle size={16} />} title="Dados essenciais faltando">
+          {!viveiro?.densidade && 'Densidade (camarões/m²). '}
+          {!viveiro?.data_inicio_ciclo && 'Data de início do ciclo. '}
+          Sem isso não é possível calcular a recomendação de ração. Densidade: {densidadeFormatada} &middot; Ciclo: {cicloFormatado} &middot; DOC: {doc}
+        </Alert>
       )}
 
-      <div className="card">
+      <Card>
         <div className="page-header">
           <div>
             <h2 className="section-title">Ração hoje &mdash; {viveiro.nome}</h2>
@@ -177,18 +175,9 @@ function Racao() {
             </div>
 
             <div className="stat-grid">
-              <div className="stat-tile stat-tile-accent">
-                <span className="stat-value">{recomendacao.totalKg.toFixed(1)}<span className="stat-unit">kg/dia</span></span>
-                <span className="stat-label">Recomendado</span>
-              </div>
-              <div className={`stat-tile ${alimentouHojeManha ? 'stat-tile-good' : 'stat-tile-warning'}`}>
-                <span className="stat-value">{recomendacao.manhaKg.toFixed(1)}<span className="stat-unit">kg</span></span>
-                <span className="stat-label">Manhã (40%)</span>
-              </div>
-              <div className={`stat-tile ${alimentouHojeTarde ? 'stat-tile-good' : 'stat-tile-warning'}`}>
-                <span className="stat-value">{recomendacao.tardeKg.toFixed(1)}<span className="stat-unit">kg</span></span>
-                <span className="stat-label">Tarde (60%)</span>
-              </div>
+              <StatTile className="stat-tile-accent" label="Recomendado" value={recomendacao.totalKg.toFixed(1)} unit="kg/dia" />
+              <StatTile className={alimentouHojeManha ? 'stat-tile-good' : 'stat-tile-warning'} label="Manhã (40%)" value={recomendacao.manhaKg.toFixed(1)} unit="kg" />
+              <StatTile className={alimentouHojeTarde ? 'stat-tile-good' : 'stat-tile-warning'} label="Tarde (60%)" value={recomendacao.tardeKg.toFixed(1)} unit="kg" />
             </div>
 
             <p className="page-subtitle">
@@ -199,108 +188,97 @@ function Racao() {
             </p>
 
             {!registroHoje && (
-              <button className="btn btn-primary btn-block" onClick={preencherRecomendacao}>
+              <Button className="btn-block" onClick={preencherRecomendacao}>
                 Registrar ração de hoje
-              </button>
+              </Button>
             )}
           </>
         ) : (
-          <div className="empty-state">Sem recomendação disponível. Verifique se o ciclo está ativo (DOC: {doc}).</div>
+          <EmptyState title={`Sem recomendação disponível. Verifique se o ciclo está ativo (DOC: ${doc}).`} />
         )}
-      </div>
+      </Card>
 
-      <div className="card">
+      <Card>
         <h3 className="section-title">Indicadores de ração</h3>
         <div className="card-row">
           <div>
-            <span className={`stat-value ${fcr > 0 ? '' : ''}`}>{fcr > 0 ? fcr.toFixed(2) : '-'}</span>
-            {fcr > 0 && <span className={`pill ${fcrVariant(fcr)}`} style={{ marginLeft: 'var(--space-2)' }}>{fcrLabel(fcr)}</span>}
+            <span className="stat-value">{fcr > 0 ? fcr.toFixed(2) : '-'}</span>
+            {fcr > 0 && <Badge tone={fcrTone(fcr)} style={{ marginLeft: 'var(--space-2)' }}>{fcrLabel(fcr)}</Badge>}
             <div className="stat-label">FCR</div>
           </div>
         </div>
         <div className="stat-grid">
-          <div className="stat-tile">
-            <span className="stat-value">{racaoTotal.toFixed(1)}<span className="stat-unit">kg</span></span>
-            <span className="stat-label">Ração total</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">{biomassa > 0 ? biomassa.toFixed(0) : '-'}<span className="stat-unit">kg</span></span>
-            <span className="stat-label">Biomassa est.</span>
-          </div>
-          <div className="stat-tile">
-            <span className="stat-value">R$ {gastoRacao.toFixed(2)}</span>
-            <span className="stat-label">Gasto total</span>
-          </div>
+          <StatTile label="Ração total" value={racaoTotal.toFixed(1)} unit="kg" />
+          <StatTile label="Biomassa est." value={biomassa > 0 ? biomassa.toFixed(0) : '-'} unit="kg" />
+          <StatTile label="Gasto total" value={`R$ ${gastoRacao.toFixed(2)}`} />
         </div>
-      </div>
+      </Card>
 
-      <div className="card">
+      <Card>
         <div className="card-row">
           <h3 className="section-title">Tabela de referência</h3>
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowTabela(!showTabela)}>
+          <Button variant="secondary" size="sm" onClick={() => setShowTabela(!showTabela)}>
             {showTabela ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             {showTabela ? 'Ocultar' : 'Ver tabela'}
-          </button>
+          </Button>
         </div>
         {showTabela && (
           <div className="table-wrapper">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>DOC</th><th>Fase</th><th className="num">Peso (g)</th><th className="num">Taxa</th><th>Ração</th><th className="num">Prot.</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <Table.Head>
+                <Table.Row>
+                  <Table.Th>DOC</Table.Th><Table.Th>Fase</Table.Th><Table.Th className="num">Peso (g)</Table.Th><Table.Th className="num">Taxa</Table.Th><Table.Th>Ração</Table.Th><Table.Th className="num">Prot.</Table.Th>
+                </Table.Row>
+              </Table.Head>
+              <Table.Body>
                 {TABELA_RACAO.map((f) => (
-                  <tr key={f.docMin} className={doc >= f.docMin && doc <= f.docMax ? 'active-row' : ''}>
-                    <td>{f.docMin}-{f.docMax}</td>
-                    <td>{f.fase}</td>
-                    <td className="num">{f.pesoMedioMin}-{f.pesoMedioMax}</td>
-                    <td className="num">{f.taxaAlimentacao}%</td>
-                    <td>{f.tipoRacao}</td>
-                    <td className="num">{f.proteina}%</td>
-                  </tr>
+                  <Table.Row key={f.docMin} className={doc >= f.docMin && doc <= f.docMax ? 'active-row' : ''}>
+                    <Table.Td>{f.docMin}-{f.docMax}</Table.Td>
+                    <Table.Td>{f.fase}</Table.Td>
+                    <Table.Td className="num">{f.pesoMedioMin}-{f.pesoMedioMax}</Table.Td>
+                    <Table.Td className="num">{f.taxaAlimentacao}%</Table.Td>
+                    <Table.Td>{f.tipoRacao}</Table.Td>
+                    <Table.Td className="num">{f.proteina}%</Table.Td>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+              </Table.Body>
+            </Table>
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="card">
+      <Card>
         <div className="card-row">
           <h3 className="section-title">Histórico de arraçoamento</h3>
-          <button className="btn btn-primary btn-sm" onClick={() => setModalOpen(true)}>
+          <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus size={14} /> Inserir
-          </button>
+          </Button>
         </div>
         <div className="table-wrapper">
-          <table className="table">
-            <thead>
-              <tr><th>Data</th><th className="num">Manhã</th><th className="num">Tarde</th><th className="num">Total</th><th></th></tr>
-            </thead>
-            <tbody>
+          <Table>
+            <Table.Head>
+              <Table.Row><Table.Th>Data</Table.Th><Table.Th className="num">Manhã</Table.Th><Table.Th className="num">Tarde</Table.Th><Table.Th className="num">Total</Table.Th><Table.Th></Table.Th></Table.Row>
+            </Table.Head>
+            <Table.Body>
               {racao.length === 0 ? (
-                <tr><td colSpan={5} className="text-center">Nenhum registro</td></tr>
+                <Table.Row><Table.Td colSpan={5} className="text-center">Nenhum registro</Table.Td></Table.Row>
               ) : (
                 racao.slice().reverse().map((r) => (
-                  <tr key={r.id}>
-                    <td>{formatDate(r.data)}</td>
-                    <td className="num">{r.qntManha} kg</td>
-                    <td className="num">{r.qntTarde} kg</td>
-                    <td className="num"><strong>{(r.qntManha + r.qntTarde).toFixed(1)} kg</strong></td>
-                    <td className="num">
-                      <button className="btn btn-ghost btn-sm" onClick={() => removerColeta(r.id)}>
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
+                  <Table.Row key={r.id}>
+                    <Table.Td>{formatDate(r.data)}</Table.Td>
+                    <Table.Td className="num">{r.qntManha} kg</Table.Td>
+                    <Table.Td className="num">{r.qntTarde} kg</Table.Td>
+                    <Table.Td className="num"><strong>{(r.qntManha + r.qntTarde).toFixed(1)} kg</strong></Table.Td>
+                    <Table.Td className="num">
+                      <IconButton variant="ghost" size="sm" onClick={() => removerColeta(r.id)} aria-label="Excluir" icon={<Trash2 size={14} />} />
+                    </Table.Td>
+                  </Table.Row>
                 ))
               )}
-            </tbody>
-          </table>
+            </Table.Body>
+          </Table>
         </div>
-      </div>
+      </Card>
 
       <Modal
         title="Registrar arraçoamento"
@@ -309,39 +287,27 @@ function Racao() {
         onSave={handleSave}
       >
         {recomendacao.faixa && (
-          <div className="alert alert-warning" style={{ borderLeftColor: 'var(--color-accent)', background: 'var(--color-accent-bg)' }}>
-            <Info className="alert-icon" size={16} />
-            <div className="alert-body">
-              <strong>Recomendação para DOC {doc}</strong>
-              <span>Manhã: {recomendacao.manhaKg.toFixed(1)} kg &middot; Tarde: {recomendacao.tardeKg.toFixed(1)} kg &middot; Total: {recomendacao.totalKg.toFixed(1)} kg</span>
-            </div>
-          </div>
+          <Alert tone="accent" icon={<Info size={16} />} title={`Recomendação para DOC ${doc}`}>
+            Manhã: {recomendacao.manhaKg.toFixed(1)} kg &middot; Tarde: {recomendacao.tardeKg.toFixed(1)} kg &middot; Total: {recomendacao.totalKg.toFixed(1)} kg
+          </Alert>
         )}
-        <div className="form-group">
-          <label className={`form-label required ${submitted && !form.data ? 'has-error' : ''}`}>Data</label>
-          <input name="data" type="date" className={`form-control ${submitted && !form.data ? 'is-invalid' : ''}`} value={form.data} onChange={handleChange} />
-          <FieldError show={submitted && !form.data} message="Insira uma data" />
-        </div>
-        <div className="form-group">
-          <label className={`form-label required ${submitted && !form.qntManha ? 'has-error' : ''}`}>Manhã (kg)</label>
-          <input
-            name="qntManha" type="number" step="0.1"
-            className={`form-control ${submitted && !form.qntManha ? 'is-invalid' : ''}`}
-            value={form.qntManha} onChange={handleChange}
-            placeholder={recomendacao.manhaKg > 0 ? `Recomendado: ${recomendacao.manhaKg.toFixed(1)} kg` : ''}
-          />
-          <FieldError show={submitted && !form.qntManha} message="Insira a quantidade" />
-        </div>
-        <div className="form-group">
-          <label className={`form-label required ${submitted && !form.qntTarde ? 'has-error' : ''}`}>Tarde (kg)</label>
-          <input
-            name="qntTarde" type="number" step="0.1"
-            className={`form-control ${submitted && !form.qntTarde ? 'is-invalid' : ''}`}
-            value={form.qntTarde} onChange={handleChange}
-            placeholder={recomendacao.tardeKg > 0 ? `Recomendado: ${recomendacao.tardeKg.toFixed(1)} kg` : ''}
-          />
-          <FieldError show={submitted && !form.qntTarde} message="Insira a quantidade" />
-        </div>
+        <Input
+          name="data" type="date" label="Data" required
+          value={form.data} onChange={handleChange}
+          error={submitted && !form.data ? 'Insira uma data' : undefined}
+        />
+        <Input
+          name="qntManha" type="number" step="0.1" label="Manhã (kg)" required
+          value={form.qntManha} onChange={handleChange}
+          placeholder={recomendacao.manhaKg > 0 ? `Recomendado: ${recomendacao.manhaKg.toFixed(1)} kg` : ''}
+          error={submitted && !form.qntManha ? 'Insira a quantidade' : undefined}
+        />
+        <Input
+          name="qntTarde" type="number" step="0.1" label="Tarde (kg)" required
+          value={form.qntTarde} onChange={handleChange}
+          placeholder={recomendacao.tardeKg > 0 ? `Recomendado: ${recomendacao.tardeKg.toFixed(1)} kg` : ''}
+          error={submitted && !form.qntTarde ? 'Insira a quantidade' : undefined}
+        />
       </Modal>
     </div>
   )

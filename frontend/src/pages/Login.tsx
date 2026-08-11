@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogIn } from 'lucide-react'
+import { Card, Input, Button, Alert } from '@edubrq/design-system'
 import { auth } from '../services/backendApi'
 
 function Login() {
@@ -32,32 +33,28 @@ function Login() {
           <span className="header-title" style={{ fontSize: '1.3rem' }}>ecamarao</span>
         </div>
 
-        <form className="card" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label required">Usuário</label>
-            <input
-              className="form-control"
+        <form onSubmit={handleSubmit}>
+          <Card style={{ gap: 'var(--space-4)' }}>
+            <Input
+              label="Usuário"
+              required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoFocus
-              required
             />
-          </div>
-          <div className="form-group">
-            <label className="form-label required">Senha</label>
-            <input
+            <Input
               type="password"
-              className="form-control"
+              label="Senha"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
             />
-          </div>
-          {error && <p className="field-error">{error}</p>}
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            <LogIn size={16} />
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
+            {error && <Alert tone="danger">{error}</Alert>}
+            <Button type="submit" className="btn-block" disabled={loading}>
+              <LogIn size={16} />
+              {loading ? 'Entrando...' : 'Entrar'}
+            </Button>
+          </Card>
         </form>
       </div>
     </div>

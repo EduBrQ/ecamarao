@@ -1,8 +1,14 @@
 /* =========================================================================
-   ecamarao — design system
-   One shared vocabulary of tokens + components used by every page, so a
-   new screen is built by composing these classes rather than inventing
-   new CSS. Keep additions here instead of ad-hoc styles in page files.
+   ecamarao — local layout vocabulary
+   The generic UI vocabulary (buttons, cards, badges, stat tiles, forms,
+   tables, alerts, modals, empty states) now comes from @edubrq/design-system
+   (imported in main.tsx before this file) — see Button/Card/Badge/StatTile/
+   Input/Select/Table/Alert/Modal/EmptyState there.
+
+   What's left here is what the design system doesn't (yet) model:
+   app-shell chrome (header/footer), the nav-item list pattern, the cycle
+   phase timeline, and page-level layout. Color/radius/spacing/shadow are
+   still tokens from the design system — nothing below hardcodes a color.
    ========================================================================= */
 
 /* --- Reset ------------------------------------------------------------- */
@@ -20,9 +26,9 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--color-bg);
-  color: var(--color-text);
+  font-family: var(--font-app);
+  background: var(--surface-0);
+  color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -38,53 +44,11 @@ button {
   font-family: inherit;
 }
 
-/* --- Tokens -------------------------------------------------------------
-   Colors: a single teal accent (water/aquaculture) plus semantic status
-   colors used consistently for good/warning/critical states everywhere
-   (KPI tiles, badges, alerts, form validation).
+/* --- Local tokens ---------------------------------------------------------
+   Everything else (surface, text, accent, semantic, space, radius, shadow)
+   comes from the design system. This is the one addition it doesn't ship.
    ------------------------------------------------------------------------- */
 :root {
-  /* Surfaces & text */
-  --color-bg: #f5f7f8;
-  --color-surface: #ffffff;
-  --color-border: #e1e6e9;
-  --color-text: #16232a;
-  --color-text-muted: #5b6b73;
-  --color-text-faint: #93a2a9;
-
-  /* Brand accent */
-  --color-accent: #0f7a72;
-  --color-accent-hover: #0b5f59;
-  --color-accent-bg: #e3f3f1;
-
-  /* Semantic status */
-  --color-success: #1a8754;
-  --color-success-bg: #e5f6ec;
-  --color-warning: #b45309;
-  --color-warning-bg: #fdf1e1;
-  --color-danger: #c0362c;
-  --color-danger-bg: #fbe9e7;
-  --color-info: #0a6ebd;
-  --color-info-bg: #e5f1fb;
-
-  /* Spacing scale */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-
-  /* Shape */
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 18px;
-
-  /* Elevation */
-  --shadow-sm: 0 1px 2px rgba(16, 24, 28, 0.06);
-  --shadow: 0 2px 8px rgba(16, 24, 28, 0.08);
-  --shadow-lg: 0 12px 24px rgba(16, 24, 28, 0.14);
-
   --transition: all 0.15s ease;
 }
 
@@ -100,12 +64,12 @@ button {
 }
 
 .header {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
   padding: var(--space-3) var(--space-4);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 10;
 }
 
 .header-inner {
@@ -133,7 +97,7 @@ button {
 .header-title {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--color-accent);
+  color: var(--accent);
   letter-spacing: -0.2px;
 }
 
@@ -141,46 +105,27 @@ button {
   flex: 1;
 }
 
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.icon-btn:hover {
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
 .footer {
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  background: var(--surface-1);
+  border-top: 1px solid var(--border);
   padding: var(--space-3) var(--space-4);
   text-align: center;
   margin-top: auto;
   font-size: 0.75rem;
-  color: var(--color-text-faint);
+  color: var(--text-faint);
 }
 
 /* --- Typography helpers --------------------------------------------------- */
 .page-title {
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text);
   letter-spacing: -0.2px;
 }
 
 .page-subtitle {
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .page-header {
@@ -197,18 +142,7 @@ button {
   gap: var(--space-2);
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--color-text);
-}
-
-/* --- Card ------------------------------------------------------------------ */
-.card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  color: var(--text);
 }
 
 .card-row {
@@ -218,126 +152,35 @@ button {
   gap: var(--space-3);
 }
 
-/* --- Buttons ---------------------------------------------------------------- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: 0.55rem 1rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-sm {
-  padding: 0.35rem 0.65rem;
-  font-size: 0.78rem;
-}
-
+/* --- Button block modifier (composes with the DS Button) ------------------- */
 .btn-block {
   width: 100%;
 }
 
-.btn-primary {
-  background: var(--color-accent);
-  color: #fff;
-}
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-}
-
-.btn-secondary {
-  background: var(--color-surface);
-  color: var(--color-text);
-  border-color: var(--color-border);
-}
-.btn-secondary:hover:not(:disabled) {
-  background: var(--color-bg);
-}
-
-.btn-danger {
-  background: var(--color-danger-bg);
-  color: var(--color-danger);
-}
-.btn-danger:hover:not(:disabled) {
-  background: var(--color-danger);
-  color: #fff;
-}
-
-.btn-ghost {
-  background: none;
-  color: var(--color-text-muted);
-}
-.btn-ghost:hover:not(:disabled) {
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
-/* --- Status pill / badge ----------------------------------------------------- */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 0.2rem 0.55rem;
-  border-radius: 50px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-.pill-neutral { background: var(--color-bg); color: var(--color-text-muted); }
-.pill-good { background: var(--color-success-bg); color: var(--color-success); }
-.pill-warning { background: var(--color-warning-bg); color: var(--color-warning); }
-.pill-critical { background: var(--color-danger-bg); color: var(--color-danger); }
-.pill-info { background: var(--color-info-bg); color: var(--color-info); }
-
-/* --- Stat tile grid (KPIs, indicators, farm totals — everything numeric) --- */
+/* --- Stat tile tone modifiers (compose with the DS StatTile) --------------- */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: var(--space-2);
 }
+.stat-tile-good { background: var(--success-soft); }
+.stat-tile-warning { background: var(--warning-soft); }
+.stat-tile-critical { background: var(--danger-soft); }
+.stat-tile-accent { background: var(--accent-soft); }
 
-.stat-tile {
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  text-align: center;
-  background: var(--color-bg);
-}
-.stat-tile-good { background: var(--color-success-bg); }
-.stat-tile-warning { background: var(--color-warning-bg); }
-.stat-tile-critical { background: var(--color-danger-bg); }
-.stat-tile-accent { background: var(--color-accent-bg); }
-
+/* Standalone big-number readout (Racao FCR display) that isn't a StatTile */
 .stat-value {
   display: block;
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--text);
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
-}
-.stat-unit {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
 }
 .stat-label {
   display: block;
   font-size: 0.65rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.3px;
   margin-top: 0.15rem;
@@ -354,9 +197,9 @@ button {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   cursor: pointer;
   transition: var(--transition);
@@ -364,8 +207,8 @@ button {
   width: 100%;
 }
 .nav-item:hover {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-sm);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-card);
 }
 .nav-item:active {
   transform: scale(0.99);
@@ -379,8 +222,8 @@ button {
   height: 40px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  background: var(--color-accent-bg);
-  color: var(--color-accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .nav-item-text {
@@ -393,236 +236,49 @@ button {
 .nav-item-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text);
 }
 .nav-item-desc {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .nav-item-trailing {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--color-text-faint);
+  color: var(--text-faint);
   flex-shrink: 0;
 }
 
-/* --- Forms -------------------------------------------------------------------- */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.form-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-.form-label.required::after {
-  content: ' *';
-  color: var(--color-danger);
-}
-.form-label.has-error {
-  color: var(--color-danger);
-}
-.form-control {
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  font-family: inherit;
-  background: var(--color-surface);
-  color: var(--color-text);
-  transition: border-color 0.15s;
-  -webkit-appearance: none;
-}
-.form-control:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-accent-bg);
-}
-.form-control.is-invalid {
-  border-color: var(--color-danger);
-}
+/* --- Form hint (DS Input/Select only render label/error, not a standalone hint) */
 .form-hint {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-.field-error {
-  font-size: 0.75rem;
-  color: var(--color-danger);
-}
-.form-check {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.form-check-input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--color-accent);
+  color: var(--text-muted);
 }
 
-/* --- Table ----------------------------------------------------------------- */
+/* --- Table modifiers (compose with the DS Table) --------------------------- */
 .table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-}
-.table th,
-.table td {
-  padding: 0.55rem 0.65rem;
-  text-align: left;
-  white-space: nowrap;
-}
-.table thead th {
-  font-weight: 600;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-border);
-}
-.table tbody tr {
-  border-bottom: 1px solid var(--color-border);
-}
-.table tbody tr:hover {
-  background: var(--color-bg);
-}
-.table tbody tr.active-row {
-  background: var(--color-accent-bg);
-  font-weight: 600;
-}
-.table .num {
+.eds-table .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-
-/* --- Modal ------------------------------------------------------------------- */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(16, 24, 28, 0.45);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.15s ease;
-}
-.modal {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  width: 100%;
-  max-width: 480px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.2s ease;
-}
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-  position: sticky;
-  top: 0;
-  background: var(--color-surface);
-}
-.modal-header h3 {
-  font-size: 1rem;
-  font-weight: 700;
-}
-.modal-body {
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-.modal-footer {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: flex-end;
-  padding: var(--space-4);
-  border-top: 1px solid var(--color-border);
-  position: sticky;
-  bottom: 0;
-  background: var(--color-surface);
-}
-@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
-
-/* --- Empty state -------------------------------------------------------------- */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  text-align: center;
-  padding: var(--space-5) var(--space-3);
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-}
-.empty-state-icon {
-  color: var(--color-text-faint);
-}
-.empty-state.success {
-  color: var(--color-success);
+.eds-table tr.active-row td {
+  background: var(--accent-soft);
+  font-weight: 600;
 }
 
-/* --- Alerts ------------------------------------------------------------------ */
+/* --- Alert list (layout wrapper around multiple DS Alerts) ----------------- */
 .alert-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
-.alert {
-  display: flex;
-  gap: var(--space-2);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  font-size: 0.8rem;
-}
-.alert-warning {
-  background: var(--color-warning-bg);
-  border-left: 3px solid var(--color-warning);
-}
-.alert-critical {
-  background: var(--color-danger-bg);
-  border-left: 3px solid var(--color-danger);
-}
-.alert-icon {
-  flex-shrink: 0;
-}
-.alert-body strong {
-  display: block;
-  color: var(--color-text);
-  margin-bottom: 0.15rem;
-}
-.alert-body span {
-  color: var(--color-text-muted);
-  line-height: 1.4;
-}
 
-/* --- Progress / cycle phase --------------------------------------------------- */
-.progress-track {
-  height: 8px;
-  background: var(--color-border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  background: var(--color-accent);
-  transition: width 0.4s ease;
-}
+/* --- Cycle phase timeline ---------------------------------------------------- */
 .phase-timeline {
   display: flex;
   flex-direction: column;
@@ -639,114 +295,24 @@ button {
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: var(--color-border);
+  background: var(--border);
 }
 .phase-step.done .phase-dot,
 .phase-step.current .phase-dot {
-  background: var(--color-accent);
+  background: var(--accent);
 }
 .phase-step.current .phase-name {
   font-weight: 700;
-  color: var(--color-accent);
+  color: var(--accent);
 }
 .phase-name {
   font-size: 0.85rem;
-  color: var(--color-text);
+  color: var(--text);
 }
 .phase-doc {
   font-size: 0.7rem;
-  color: var(--color-text-faint);
+  color: var(--text-faint);
   margin-left: auto;
-}
-
-/* --- Toast --------------------------------------------------------------------- */
-.toast-container {
-  position: fixed;
-  top: var(--space-4);
-  right: var(--space-4);
-  left: var(--space-4);
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  pointer-events: none;
-}
-.toast {
-  pointer-events: auto;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-left: 4px solid var(--color-text-faint);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-3);
-  max-width: 360px;
-  margin-left: auto;
-  animation: slideIn 0.2s ease;
-}
-.toast-success { border-left-color: var(--color-success); }
-.toast-error { border-left-color: var(--color-danger); }
-.toast-warning { border-left-color: var(--color-warning); }
-.toast-info { border-left-color: var(--color-info); }
-.toast-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.toast-icon.success { color: var(--color-success); }
-.toast-icon.error { color: var(--color-danger); }
-.toast-icon.warning { color: var(--color-warning); }
-.toast-icon.info { color: var(--color-info); }
-.toast-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  flex: 1;
-}
-.toast-message {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  margin-top: 0.25rem;
-}
-@keyframes slideIn { from { opacity: 0; transform: translateY(-8px) } to { opacity: 1; transform: translateY(0) } }
-
-/* --- Confirm dialog -------------------------------------------------------------- */
-.confirm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(16, 24, 28, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1100;
-  padding: var(--space-4);
-}
-.confirm-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  max-width: 380px;
-  width: 100%;
-  text-align: center;
-  box-shadow: var(--shadow-lg);
-}
-.confirm-icon {
-  color: var(--color-danger);
-  margin-bottom: var(--space-2);
-}
-.confirm-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: var(--space-2);
-}
-.confirm-text {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-4);
-  line-height: 1.5;
-}
-.confirm-actions {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: center;
 }
 
 /* --- Login ------------------------------------------------------------------------ */
@@ -769,7 +335,7 @@ button {
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  color: var(--color-accent);
+  color: var(--accent);
 }
 .login-brand svg {
   width: 40px;
@@ -778,26 +344,13 @@ button {
 
 /* --- Utility ----------------------------------------------------------------------- */
 .text-center { text-align: center; }
-.text-muted { color: var(--color-text-muted); }
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-border);
-  border-top-color: var(--color-accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: var(--space-2) auto;
-}
+.text-muted { color: var(--text-muted); }
 @keyframes spin { to { transform: rotate(360deg) } }
 .fan-spin { animation: spin 1.4s linear infinite; }
 .fade-in { animation: fadeInPage 0.2s ease; }
 @keyframes fadeInPage { from { opacity: 0 } to { opacity: 1 } }
 
 /* --- Responsive ---------------------------------------------------------------------- */
-@media (min-width: 640px) {
-  .modal-overlay { align-items: center; }
-  .modal { border-radius: var(--radius-lg); }
-}
 @media (min-width: 768px) {
   .header-inner, .page { padding-left: var(--space-5); padding-right: var(--space-5); }
 }

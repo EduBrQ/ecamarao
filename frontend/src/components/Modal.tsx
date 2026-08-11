@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { Modal as DsModal, Button } from '@edubrq/design-system'
 
 interface ModalProps {
   title: string
@@ -10,26 +10,20 @@ interface ModalProps {
 }
 
 function Modal({ title, isOpen, onClose, onSave, children }: ModalProps) {
-  if (!isOpen) return null
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{title}</h3>
-          <button className="icon-btn" onClick={onClose} aria-label="Fechar">
-            <X size={18} />
-          </button>
-        </div>
-        <div className="modal-body">
-          {children}
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-primary" onClick={onSave}>Salvar</button>
-        </div>
-      </div>
-    </div>
+    <DsModal
+      open={isOpen}
+      onClose={onClose}
+      title={title}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+          <Button variant="primary" onClick={onSave}>Salvar</Button>
+        </>
+      }
+    >
+      {children}
+    </DsModal>
   )
 }
 

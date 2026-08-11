@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sprout, Wheat, Scale, TrendingUp, Sunrise, Sunset, ChevronRight, Download, Loader2 } from 'lucide-react'
+import { Sprout, Wheat, Scale, TrendingUp, Sunrise, Sunset, ChevronRight, Download } from 'lucide-react'
+import { Card, StatTile, Badge, Table, Button, Spinner, Alert, EmptyState, type BadgeTone } from '@edubrq/design-system'
 import { backendApi, getErrorMessage } from '../services/backendApi'
 import { useToastGlobal } from '../hooks/useToastGlobal'
 
@@ -38,10 +39,10 @@ interface DashboardResponse {
   totais: TotaisFazenda
 }
 
-function feedStatus(v: ViveiroDashboard): { label: string; variant: string } {
-  if (v.alimentouManha && v.alimentouTarde) return { label: 'Completo', variant: 'pill-good' }
-  if (v.alimentouManha || v.alimentouTarde) return { label: 'Parcial', variant: 'pill-warning' }
-  return { label: 'Pendente', variant: 'pill-critical' }
+function feedStatus(v: ViveiroDashboard): { label: string; tone: BadgeTone } {
+  if (v.alimentouManha && v.alimentouTarde) return { label: 'Completo', tone: 'success' }
+  if (v.alimentouManha || v.alimentouTarde) return { label: 'Parcial', tone: 'warning' }
+  return { label: 'Pendente', tone: 'danger' }
 }
 
 function FazendaRacao() {
@@ -66,7 +67,8 @@ function FazendaRacao() {
       }
     }
     loadDashboard()
-  }, [toast])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleExport = () => {
     if (!dashboard) return
@@ -104,13 +106,13 @@ function FazendaRacao() {
   }
 
   if (loading) {
-    return <div className="page fade-in"><div className="card text-center"><Loader2 className="spinner" size={20} />Carregando dados da fazenda...</div></div>
+    return <div className="page fade-in"><Card className="text-center"><Spinner /> Carregando dados da fazenda...</Card></div>
   }
   if (error) {
-    return <div className="page fade-in"><div className="card text-center field-error">{error}</div></div>
+    return <div className="page fade-in"><Alert tone="danger">{error}</Alert></div>
   }
   if (!dashboard) {
-    return <div className="page fade-in"><div className="card text-center">Nenhum dado disponível</div></div>
+    return <div className="page fade-in"><EmptyState title="Nenhum dado disponível" /></div>
   }
 
   return (
@@ -120,107 +122,86 @@ function FazendaRacao() {
           <h1 className="page-title">Ração da fazenda</h1>
           <p className="page-subtitle">Visão geral e controle de todos os viveiros</p>
         </div>
-        <button className="btn btn-secondary" onClick={handleExport}>
+        <Button variant="secondary" onClick={handleExport}>
           <Download size={16} /> Exportar
-        </button>
+        </Button>
       </div>
 
       <div className="stat-grid">
-        <div className="stat-tile stat-tile-accent">
-          <span className="stat-value">{dashboard.totais.totalViveiros}</span>
-          <span className="stat-label"><Sprout size={12} style={{ verticalAlign: 'text-bottom' }} /> Viveiros ativos</span>
-        </div>
-        <div className="stat-tile stat-tile-accent">
-          <span className="stat-value">{dashboard.totais.totalRacaoHoje.toFixed(1)}<span className="stat-unit">kg</span></span>
-          <span className="stat-label"><Wheat size={12} style={{ verticalAlign: 'text-bottom' }} /> Ração hoje</span>
-        </div>
-        <div className="stat-tile stat-tile-accent">
-          <span className="stat-value">{dashboard.totais.totalBiomassa.toFixed(0)}<span className="stat-unit">kg</span></span>
-          <span className="stat-label"><Scale size={12} style={{ verticalAlign: 'text-bottom' }} /> Biomassa total</span>
-        </div>
-        <div className="stat-tile stat-tile-accent">
-          <span className="stat-value">{dashboard.totais.fcrMedio > 0 ? dashboard.totais.fcrMedio.toFixed(2) : '-'}</span>
-          <span className="stat-label"><TrendingUp size={12} style={{ verticalAlign: 'text-bottom' }} /> FCR médio</span>
-        </div>
+        <StatTile className="stat-tile-accent" label={<><Sprout size={12} style={{ verticalAlign: 'text-bottom' }} /> Viveiros ativos</>} value={dashboard.totais.totalViveiros} />
+        <StatTile className="stat-tile-accent" label={<><Wheat size={12} style={{ verticalAlign: 'text-bottom' }} /> Ração hoje</>} value={dashboard.totais.totalRacaoHoje.toFixed(1)} unit="kg" />
+        <StatTile className="stat-tile-accent" label={<><Scale size={12} style={{ verticalAlign: 'text-bottom' }} /> Biomassa total</>} value={dashboard.totais.totalBiomassa.toFixed(0)} unit="kg" />
+        <StatTile className="stat-tile-accent" label={<><TrendingUp size={12} style={{ verticalAlign: 'text-bottom' }} /> FCR médio</>} value={dashboard.totais.fcrMedio > 0 ? dashboard.totais.fcrMedio.toFixed(2) : '-'} />
       </div>
 
       <div className="card-row" style={{ gap: 'var(--space-2)' }}>
-        <span className="pill pill-good">{dashboard.totais.viveirosAlimentados} completos</span>
-        <span className="pill pill-warning">{dashboard.totais.viveirosParciais} parciais</span>
-        <span className="pill pill-critical">{dashboard.totais.viveirosPendentes} pendentes</span>
+        <Badge tone="success">{dashboard.totais.viveirosAlimentados} completos</Badge>
+        <Badge tone="warning">{dashboard.totais.viveirosParciais} parciais</Badge>
+        <Badge tone="danger">{dashboard.totais.viveirosPendentes} pendentes</Badge>
       </div>
 
       <div className="nav-list">
         {dashboard.viveiros.map((v) => {
           const status = feedStatus(v)
           return (
-            <div key={v.viveiro.id} className="card">
+            <Card key={v.viveiro.id}>
               <div className="card-row">
                 <div>
                   <strong>{v.viveiro.nome}</strong>
                   <span className="page-subtitle" style={{ marginLeft: 'var(--space-2)' }}>DOC {v.doc} &middot; {v.fase}</span>
                 </div>
-                <span className={`pill ${status.variant}`}>{status.label}</span>
+                <Badge tone={status.tone}>{status.label}</Badge>
               </div>
 
               <div className="stat-grid">
-                <div className="stat-tile">
-                  <span className="stat-value">{v.racaoHojeTotal.toFixed(1)}/{v.recomendadoTotal.toFixed(1)}<span className="stat-unit">kg</span></span>
-                  <span className="stat-label">Ração hoje</span>
-                </div>
-                <div className="stat-tile">
-                  <span className="stat-value">{v.biomassa.toFixed(0)}<span className="stat-unit">kg</span></span>
-                  <span className="stat-label">Biomassa</span>
-                </div>
-                <div className="stat-tile">
-                  <span className="stat-value">{v.fcrAtual > 0 ? v.fcrAtual.toFixed(2) : '-'}</span>
-                  <span className="stat-label">FCR</span>
-                </div>
+                <StatTile label="Ração hoje" value={`${v.racaoHojeTotal.toFixed(1)}/${v.recomendadoTotal.toFixed(1)}`} unit="kg" />
+                <StatTile label="Biomassa" value={v.biomassa.toFixed(0)} unit="kg" />
+                <StatTile label="FCR" value={v.fcrAtual > 0 ? v.fcrAtual.toFixed(2) : '-'} />
               </div>
 
               <div className="card-row" style={{ gap: 'var(--space-2)' }}>
-                <button className="btn btn-secondary btn-sm" onClick={() => handleAlimentacaoRapida(v.viveiro.id, 'manha')} disabled={v.alimentouManha}>
+                <Button variant="secondary" size="sm" onClick={() => handleAlimentacaoRapida(v.viveiro.id, 'manha')} disabled={v.alimentouManha}>
                   <Sunrise size={14} /> Manhã
-                </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => handleAlimentacaoRapida(v.viveiro.id, 'tarde')} disabled={v.alimentouTarde}>
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => handleAlimentacaoRapida(v.viveiro.id, 'tarde')} disabled={v.alimentouTarde}>
                   <Sunset size={14} /> Tarde
-                </button>
-                <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => navigate(`/viveiro/${v.viveiro.id}/racao`)}>
+                </Button>
+                <Button variant="ghost" size="sm" style={{ marginLeft: 'auto' }} onClick={() => navigate(`/viveiro/${v.viveiro.id}/racao`)}>
                   Detalhes <ChevronRight size={14} />
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           )
         })}
       </div>
 
-      <div className="card">
+      <Card>
         <h3 className="section-title">Resumo detalhado</h3>
         <div className="table-wrapper">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Viveiro</th><th>DOC</th><th>Fase</th><th className="num">Ração hoje</th>
-                <th className="num">Recomendado</th><th className="num">Biomassa</th><th className="num">FCR</th><th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <Table.Head>
+              <Table.Row>
+                <Table.Th>Viveiro</Table.Th><Table.Th>DOC</Table.Th><Table.Th>Fase</Table.Th><Table.Th className="num">Ração hoje</Table.Th>
+                <Table.Th className="num">Recomendado</Table.Th><Table.Th className="num">Biomassa</Table.Th><Table.Th className="num">FCR</Table.Th><Table.Th>Status</Table.Th>
+              </Table.Row>
+            </Table.Head>
+            <Table.Body>
               {dashboard.viveiros.map((v) => (
-                <tr key={v.viveiro.id}>
-                  <td><strong>{v.viveiro.nome}</strong></td>
-                  <td>{v.doc}</td>
-                  <td>{v.fase}</td>
-                  <td className="num">{v.racaoHojeTotal.toFixed(1)} kg</td>
-                  <td className="num">{v.recomendadoTotal.toFixed(1)} kg</td>
-                  <td className="num">{v.biomassa.toFixed(0)} kg</td>
-                  <td className="num">{v.fcrAtual > 0 ? v.fcrAtual.toFixed(2) : '-'}</td>
-                  <td><span className={`pill ${feedStatus(v).variant}`}>{feedStatus(v).label}</span></td>
-                </tr>
+                <Table.Row key={v.viveiro.id}>
+                  <Table.Td><strong>{v.viveiro.nome}</strong></Table.Td>
+                  <Table.Td>{v.doc}</Table.Td>
+                  <Table.Td>{v.fase}</Table.Td>
+                  <Table.Td className="num">{v.racaoHojeTotal.toFixed(1)} kg</Table.Td>
+                  <Table.Td className="num">{v.recomendadoTotal.toFixed(1)} kg</Table.Td>
+                  <Table.Td className="num">{v.biomassa.toFixed(0)} kg</Table.Td>
+                  <Table.Td className="num">{v.fcrAtual > 0 ? v.fcrAtual.toFixed(2) : '-'}</Table.Td>
+                  <Table.Td><Badge tone={feedStatus(v).tone}>{feedStatus(v).label}</Badge></Table.Td>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+            </Table.Body>
+          </Table>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
