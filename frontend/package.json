@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@edubrq/design-system": "github:EduBrQ/design-system#63c947960c1649c8c16690dca44e93689e9e8ff3",
+    "@edubrq/design-system": "github:EduBrQ/design-system#5539ae37ab59583d855aa59bcf612a883eb11ce9",
     "axios": "^1.6.0",
     "lucide-react": "^1.31.0",
     "react": "^18.3.1",
